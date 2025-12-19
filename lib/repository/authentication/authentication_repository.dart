@@ -147,8 +147,6 @@ class AuthenticationRepository {
   //   }
   // }
 
-  //!Por tiempo no haré el bloc para esto, luego hacer su bloc
-  //!Registro de user
   Future<User> signUp({
     required String username,
     required String name,
@@ -212,24 +210,38 @@ class AuthenticationRepository {
     String surname,
     String email,
     String phone,
-    String profilePictureUrl,
+    String? profilePictureUrl,
   ) async {
     try {
+      final now = FieldValue.serverTimestamp();
+
       await FirebaseFirestore.instance
           .collection('users')
           .doc(firebaseUser.uid)
           .set({
-            'username': username,
+            'uid': firebaseUser.uid,
+            'username': username.toLowerCase(),
+            'email': email.toLowerCase(),
+
             'name': name,
             'surname': surname,
-            'email': email,
+            'displayName': '$name $surname',
+
             'phoneNumber': phone,
             'profilePictureUrl': profilePictureUrl,
+
+            'role': 'user',
+            'isActive': true,
+
+            'createdAt': now,
+            'updatedAt': now,
           });
-      print("📍📍📍📍 ");
+
+      print("✅ Usuario registrado correctamente");
     } catch (e) {
-      print("No sirvio el registro del usuario: ❌❌❌❌❌");
+      print("❌ Error registrando usuario");
       print(e);
+      rethrow;
     }
   }
 

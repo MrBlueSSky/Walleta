@@ -79,12 +79,12 @@ class _AppViewState extends State<AppView> {
                     );
                     break;
 
-                  // case AuthenticationStatus.authenticated:
-                  //   _navigatorKey.currentState?.pushNamedAndRemoveUntil(
-                  //     '/home',
-                  //     (route) => false,
-                  //   );
-                  //   break;
+                  case AuthenticationStatus.authenticated:
+                    _navigatorKey.currentState?.pushNamedAndRemoveUntil(
+                      '/home',
+                      (route) => false,
+                    );
+                    break;
                   // case AuthenticationStatus.unknown:
                   //   _navigatorKey.currentState?.pushNamedAndRemoveUntil(
                   //     '/splash',
