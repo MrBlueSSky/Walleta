@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "26455666286",
+    "project_id": "walleta-dbf81",
+    "storage_bucket": "walleta-dbf81.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:26455666286:android:6d76eccee7853a607bc07f",
+        "android_client_info": {
+          "package_name": "com.example.walleta"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAmU10GFDHbpDza4CuGs1Tcn4BNSQc0O_I"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
