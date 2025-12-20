@@ -22,8 +22,6 @@ class AuthenticationBloc
     );
 
     on<AuthenticationPasswordResetRequested>((event, emit) async {
-      print("c📍📍📍📍ontraaaaaaaaaaaa ${event.email}");
-
       try {
         await _authenticationRepository.resetPassword(email: event.email);
       } catch (e) {
@@ -64,14 +62,10 @@ class AuthenticationBloc
           email: event.email,
           password: event.password,
         );
-        print("✅✅✅✅✅✅✅✅✅✅");
-        print(user);
 
         emit(AuthenticationState.authenticated(user));
       } catch (e) {
-        // Manejo de errores específicos de Firebase Auth
         String errorMessage = _getErrorMessage(e);
-        print("❌ Error en sign in: $e"); // Debug
         emit(AuthenticationState.error(errorMessage));
 
         // Después de mostrar el error, volver a unauthenticated para permitir nuevos intentos
@@ -162,9 +156,6 @@ class AuthenticationBloc
   AuthenticationState _mapAuthenticationUserChangedToState(
     AuthenticationUserChanged event,
   ) {
-    print(event.user);
-    print("💐💐💐💐💐");
-
     return event.user != User.empty
         ? AuthenticationState.authenticated(event.user)
         : const AuthenticationState.unauthenticated();

@@ -47,6 +47,8 @@ app.*.map.json
 
 # Firebase configuration (contains sensitive keys)
 lib/firebase_options.dart
+lib/firebase_config.dart
+
 
 # Environment files
 .env

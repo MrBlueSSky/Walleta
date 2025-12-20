@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-
+import 'package:walleta/screens/dashboard/dashbard.dart';
+import 'package:walleta/screens/profile/profile.dart';
 import 'package:walleta/themes/app_colors.dart';
 import 'package:walleta/widgets/layaout/navbar/navBar.dart';
 
-//!Cambiar todo esto
 class Home extends StatefulWidget {
   const Home({super.key});
 
@@ -12,6 +12,8 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
+  int selectedIndex = 0;
+
   @override
   void initState() {
     super.initState();
@@ -19,8 +21,6 @@ class _HomeState extends State<Home> {
     //   context.read<DriverPostBloc>().add(LoadDriversPosts());
     // });
   }
-
-  int selectedIndex = 0;
 
   void handleTabChange(int index) {
     setState(() {
@@ -31,13 +31,13 @@ class _HomeState extends State<Home> {
   Widget _buildBody() {
     switch (selectedIndex) {
       case 0:
-        return const Text("Inicio");
+        return const Dashboard();
       case 1:
-        return const Text("Quien me debe/debo");
+        return const Center(child: Text("Quien me debe/debo"));
       case 2:
-        return const Text("Gastos Compartidos");
+        return const Center(child: Text("Gastos Compartidos"));
       case 3:
-        return const Text("Perfil");
+        return const Profile();
       default:
         return const Center(child: Text("Pantalla no encontrada"));
     }
@@ -47,19 +47,7 @@ class _HomeState extends State<Home> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.scaffoldBackground,
-      appBar: AppBar(
-        backgroundColor: AppColors.scaffoldBackground,
-        title: const Text(
-          'Clientes Home',
-          style: TextStyle(color: AppColors.textPrimary),
-        ),
-      ),
-      body: Center(
-        child: Text(
-          'Bienvenido al Home de Clientes',
-          style: TextStyle(color: AppColors.textPrimary, fontSize: 20),
-        ),
-      ),
+      body: _buildBody(),
       bottomNavigationBar: NavBar(
         onTabChanged: handleTabChange,
         currentIndex: selectedIndex,

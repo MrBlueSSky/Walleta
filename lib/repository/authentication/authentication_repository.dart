@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
-import '';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:walleta/models/user.dart';
 
@@ -21,10 +20,12 @@ class PasswordResetFailure implements Exception {
 class AuthenticationRepository {
   final firebase_auth.FirebaseAuth _firebaseAuth;
 
+  //!Lo dio gepeto para quitar el cuando se quita de fireAuth
+  firebase_auth.User? get currentUser => _firebaseAuth.currentUser;
+
   AuthenticationRepository({firebase_auth.FirebaseAuth? firebaseAuth})
     : _firebaseAuth = firebaseAuth ?? firebase_auth.FirebaseAuth.instance;
 
-  // 🔥 Stream de usuario autenticado
   Stream<User> get user {
     return _firebaseAuth.authStateChanges().asyncMap((firebaseUser) async {
       if (firebaseUser == null) {
@@ -50,9 +51,6 @@ class AuthenticationRepository {
     return await _firebaseAuth.signInWithPopup(googleProvider);
   }
 
-  //!Lo dio gepeto para quitar el cuando se quita de fireAuth
-  firebase_auth.User? get currentUser => _firebaseAuth.currentUser;
-
   //!Iniciar sesion con email y password
   Future<User> logInWithEmailAndPassword({
     required String email,
@@ -71,9 +69,6 @@ class AuthenticationRepository {
       Map<String, dynamic> userData = await getUserDataFromFirestore(
         authUser.uid,
       );
-
-      print('☁️☁️☁️☁️☁️☁️ $authUser.uid');
-
       return userData.toUser(authUser.uid);
     } on Exception {
       print("No sirvio el login con email y password: ❌❌❌❌❌");
@@ -105,10 +100,7 @@ class AuthenticationRepository {
   Future<void> resetPassword({required String email}) async {
     try {
       await _firebaseAuth.sendPasswordResetEmail(email: email);
-      print("✅ Correo de recuperación enviado a: $email");
     } on firebase_auth.FirebaseAuthException catch (e) {
-      print("❌ Error al enviar correo de recuperación: ${e.code}");
-
       String errorMessage;
       switch (e.code) {
         case 'user-not-found':
@@ -245,7 +237,6 @@ class AuthenticationRepository {
     }
   }
 
-  //!Quiza deba retonar el user modificado para que se cargue ese
   Future<User> updateUser({
     required String uid,
     required String username,

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:walleta/themes/app_colors.dart';
 import 'package:walleta/widgets/buttons/animated_icon_button.dart';
 
@@ -82,31 +81,15 @@ class _NavBarState extends State<NavBar> {
             child: Center(
               child: RawMaterialButton(
                 onPressed: () {
-                  // if (state == UserRole.client) {
-                  // Navigator.of(context).push(
-                  //   MaterialPageRoute(
-                  //     builder:
-                  //         (context) => CreateClientRideScreen(
-                  //           onClose: () => Navigator.of(context).pop(),
-                  //         ),
-                  //     fullscreenDialog: true,
-                  //   ),
-                  // );
-                  // } else if (state == UserRole.driver) {
-                  //   Navigator.of(context).push(
-                  //     MaterialPageRoute(
-                  //       builder:
-                  //           (context) => CreateDriverRideScreen(
-                  //             onClose: () => Navigator.of(context).pop(),
-                  //           ),
-                  //       fullscreenDialog: true,
-                  //     ),
-                  //   );
-                  // }
+                  //! Acción Micorofono para agendar por comando de voz
                 },
                 elevation: 2.0,
                 fillColor: AppColors.iconsNavBarColor,
-                child: const Icon(Icons.add, size: 30.0, color: Colors.white),
+                child: const Icon(
+                  Icons.mic_none_rounded,
+                  size: 30.0,
+                  color: Colors.white,
+                ),
                 padding: const EdgeInsets.all(15.0),
                 shape: const CircleBorder(),
               ),
