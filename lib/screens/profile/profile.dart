@@ -120,7 +120,10 @@ class _ProfileState extends State<Profile> {
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(context).pop(),
-                child: Text('OK', style: TextStyle(color: AppColors.primary)),
+                child: Text(
+                  'OK',
+                  style: TextStyle(color: Theme.of(context).primaryColor),
+                ),
               ),
             ],
           ),

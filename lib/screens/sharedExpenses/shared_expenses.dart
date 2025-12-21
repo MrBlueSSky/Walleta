@@ -323,10 +323,11 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
 
   @override
   Widget build(BuildContext context) {
+    Color imputColor = Theme.of(context).textTheme.labelSmall!.color!;
     return Container(
       height: MediaQuery.of(context).size.height * 0.9,
-      decoration: const BoxDecoration(
-        color: Colors.white,
+      decoration: BoxDecoration(
+        color: Theme.of(context).scaffoldBackgroundColor,
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       child: Column(
@@ -336,7 +337,7 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
             width: 40,
             height: 4,
             decoration: BoxDecoration(
-              color: const Color(0xFFCBD5E0),
+              color: Theme.of(context).primaryColor,
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -382,7 +383,7 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
                       decoration: InputDecoration(
                         hintText: 'Ej: Cena en restaurante',
                         filled: true,
-                        fillColor: const Color(0xFFF7FAFC),
+                        fillColor: imputColor,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: BorderSide.none,
@@ -419,7 +420,7 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
                                   hintText: '0',
                                   prefixText: '₡ ',
                                   filled: true,
-                                  fillColor: const Color(0xFFF7FAFC),
+                                  fillColor: imputColor,
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(12),
                                     borderSide: BorderSide.none,
@@ -457,7 +458,7 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
                                   hintText: '0',
                                   prefixText: '₡ ',
                                   filled: true,
-                                  fillColor: const Color(0xFFF7FAFC),
+                                  fillColor: imputColor,
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(12),
                                     borderSide: BorderSide.none,
@@ -509,7 +510,7 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
                                           ? (cat['color'] as Color).withOpacity(
                                             0.1,
                                           )
-                                          : const Color(0xFFF7FAFC),
+                                          : imputColor,
                                   borderRadius: BorderRadius.circular(12),
                                   border: Border.all(
                                     color:
@@ -546,54 +547,14 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
                           }).toList(),
                     ),
                     const SizedBox(height: 20),
-                    const Text(
+                    Text(
                       'Participantes',
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
-                        color: Color(0xFF2D3748),
+                        color: Theme.of(context).textTheme.bodyLarge?.color,
                       ),
                     ),
-                    const SizedBox(height: 12),
-                    ...availableParticipants.map((participant) {
-                      final isSelected = selectedParticipants.contains(
-                        participant,
-                      );
-                      return Container(
-                        margin: const EdgeInsets.only(bottom: 8),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFF7FAFC),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: CheckboxListTile(
-                          value: isSelected,
-                          onChanged: (value) {
-                            setState(() {
-                              if (value == true) {
-                                selectedParticipants.add(participant);
-                              } else {
-                                selectedParticipants.remove(participant);
-                              }
-                            });
-                          },
-                          title: Text(
-                            participant,
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w500,
-                              color: Color(0xFF2D3748),
-                            ),
-                          ),
-                          activeColor: const Color(0xFF6366F1),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                          ),
-                        ),
-                      );
-                    }).toList(),
                     const SizedBox(height: 80),
                   ],
                 ),
