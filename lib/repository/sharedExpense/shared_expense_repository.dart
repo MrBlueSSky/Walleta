@@ -38,11 +38,7 @@ class SharedExpenseRepository {
     }
   }
 
-  Future<void> deleteSharedExpense(SharedExpense expenseId) async {
-    // Implement deletion logic
-  }
+  Future<void> deleteSharedExpense(SharedExpense expenseId) async {}
 
-  Future<void> updateSharedExpense(SharedExpense expense) async {
-    // Implement updating logic
-  }
+  Future<void> updateSharedExpense(SharedExpense expense) async {}
 }
