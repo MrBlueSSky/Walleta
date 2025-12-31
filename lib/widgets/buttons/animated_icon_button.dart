@@ -29,13 +29,15 @@ class _AnimatedIconButtonState extends State<AnimatedIconButton>
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 200),
+      duration: const Duration(milliseconds: 180),
     );
 
     _scaleAnimation = Tween<double>(
       begin: 1.0,
-      end: 1.2,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
+      end: 1.15,
+    ).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeOut),
+    );
 
     if (widget.isSelected) {
       _controller.forward();
@@ -43,7 +45,7 @@ class _AnimatedIconButtonState extends State<AnimatedIconButton>
   }
 
   @override
-  void didUpdateWidget(AnimatedIconButton oldWidget) {
+  void didUpdateWidget(covariant AnimatedIconButton oldWidget) {
     super.didUpdateWidget(oldWidget);
 
     if (widget.isSelected && !oldWidget.isSelected) {
@@ -61,21 +63,27 @@ class _AnimatedIconButtonState extends State<AnimatedIconButton>
 
   @override
   Widget build(BuildContext context) {
-    return IconButton(
-      icon: ScaleTransition(
-        scale: _scaleAnimation,
-        child: Icon(
-          widget.icon,
-          size: widget.size,
-          color:
-              widget.isSelected
-                  ? AppColors.iconsNavBarColor
-                  : AppColors.primaryLight,
+    final color = widget.isSelected
+        ? AppColors.iconsNavBarColor
+        : AppColors.primaryLight;
+
+    return GestureDetector(
+      onTap: widget.onPressed,
+      behavior: HitTestBehavior.opaque,
+      child: SizedBox(
+        width: 56,
+        height: 56,
+        child: Center(
+          child: ScaleTransition(
+            scale: _scaleAnimation,
+            child: Icon(
+              widget.icon,
+              size: widget.size,
+              color: color,
+            ),
+          ),
         ),
       ),
-      onPressed: () {
-        widget.onPressed();
-      },
     );
   }
 }

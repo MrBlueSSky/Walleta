@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:walleta/screens/dashboard/dashbard.dart';
+import 'package:walleta/screens/dashboard/dashboardTest.dart';
 import 'package:walleta/screens/profile/profile.dart';
+import 'package:walleta/screens/savings/savings_account.dart';
 import 'package:walleta/screens/sharedExpenses/shared_expenses.dart';
+import 'package:walleta/screens/loans/loans.dart';
+import 'package:walleta/screens/profile/profileTest.dart';
 import 'package:walleta/themes/app_colors.dart';
 import 'package:walleta/widgets/layaout/navbar/navBar.dart';
 
@@ -15,32 +18,24 @@ class Home extends StatefulWidget {
 class _HomeState extends State<Home> {
   int selectedIndex = 0;
 
-  @override
-  void initState() {
-    super.initState();
-    // WidgetsBinding.instance.addPostFrameCallback((_) {
-    //   context.read<DriverPostBloc>().add(LoadDriversPosts());
-    // });
-  }
-
   void handleTabChange(int index) {
-    setState(() {
-      selectedIndex = index;
-    });
+    setState(() => selectedIndex = index);
   }
 
   Widget _buildBody() {
     switch (selectedIndex) {
       case 0:
-        return const Dashboard();
+        return const Dashboardtest();         
       case 1:
-        return const Center(child: Text("Quien me debe/debo"));
+        return const SavingsAccountScreen();  
       case 2:
-        return const SharedExpensesScreen();
+        return const SharedExpensesScreen();   
       case 3:
-        return const Profile();
+        return const Loans();                
+      case 4:
+        return const Profile();           
       default:
-        return const Center(child: Text("Pantalla no encontrada"));
+        return const SizedBox();
     }
   }
 
@@ -50,8 +45,8 @@ class _HomeState extends State<Home> {
       backgroundColor: AppColors.scaffoldBackground,
       body: _buildBody(),
       bottomNavigationBar: NavBar(
-        onTabChanged: handleTabChange,
         currentIndex: selectedIndex,
+        onTabChanged: handleTabChange,
       ),
     );
   }
