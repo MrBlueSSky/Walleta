@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:walleta/screens/dashboard/dashbard.dart';
+import 'package:walleta/screens/dashboard/dashboardTest.dart';
 import 'package:walleta/screens/profile/profile.dart';
 import 'package:walleta/screens/sharedExpenses/shared_expenses.dart';
 import 'package:walleta/themes/app_colors.dart';
@@ -32,7 +33,7 @@ class _HomeState extends State<Home> {
   Widget _buildBody() {
     switch (selectedIndex) {
       case 0:
-        return const Dashboard();
+        return const FinancialDashboard();
       case 1:
         return const Center(child: Text("Quien me debe/debo"));
       case 2:

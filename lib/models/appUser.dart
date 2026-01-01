@@ -1,6 +1,6 @@
 import 'package:equatable/equatable.dart';
 
-class User extends Equatable {
+class AppUser extends Equatable {
   final String uid;
   final String username;
   final String name;
@@ -9,7 +9,7 @@ class User extends Equatable {
   final String phoneNumber;
   final String profilePictureUrl;
 
-  const User({
+  const AppUser({
     required this.uid,
     required this.username,
     required this.name,
@@ -17,9 +17,9 @@ class User extends Equatable {
     required this.email,
     required this.phoneNumber,
     required this.profilePictureUrl,
-  }) : assert(username != null);
+  });
 
-  static const empty = User(
+  static const empty = AppUser(
     uid: '',
     username: '',
     name: '',
@@ -28,6 +28,18 @@ class User extends Equatable {
     phoneNumber: '',
     profilePictureUrl: '',
   );
+
+  factory AppUser.fromFirestore(Map<String, dynamic> data) {
+    return AppUser(
+      uid: data['uid'] ?? '',
+      username: data['username'] ?? '',
+      name: data['name'] ?? '',
+      surname: data['surname'] ?? '',
+      email: data['email'] ?? '',
+      phoneNumber: data['phoneNumber'] ?? '',
+      profilePictureUrl: data['profilePictureUrl'] ?? '',
+    );
+  }
 
   @override
   List<Object?> get props => [
@@ -39,7 +51,4 @@ class User extends Equatable {
     phoneNumber,
     profilePictureUrl,
   ];
-
-  @override
-  bool get stringify => true;
 }

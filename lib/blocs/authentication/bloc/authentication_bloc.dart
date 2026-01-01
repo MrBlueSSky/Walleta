@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
-import 'package:walleta/models/user.dart';
+import 'package:walleta/models/appUser.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:walleta/repository/repository.dart';
 
@@ -11,7 +11,7 @@ part 'authentication_event.dart';
 class AuthenticationBloc
     extends Bloc<AuthenticationEvent, AuthenticationState> {
   final AuthenticationRepository _authenticationRepository;
-  late StreamSubscription<User> _userSubscription;
+  late StreamSubscription<AppUser> _userSubscription;
 
   AuthenticationBloc({
     required AuthenticationRepository authenticationRepository,
@@ -156,7 +156,7 @@ class AuthenticationBloc
   AuthenticationState _mapAuthenticationUserChangedToState(
     AuthenticationUserChanged event,
   ) {
-    return event.user != User.empty
+    return event.user != AppUser.empty
         ? AuthenticationState.authenticated(event.user)
         : const AuthenticationState.unauthenticated();
   }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:provider/provider.dart';
+import 'package:walleta/providers/auth_provider.dart';
 import 'package:walleta/providers/theme_provider.dart';
 import 'package:walleta/repository/repository.dart';
 import 'package:walleta/routes/routes.dart';
@@ -20,8 +21,8 @@ class App extends StatelessWidget {
       value: authenticationRepository,
       child: MultiProvider(
         providers: [
-          // ThemeProvider agregado aquí
           ChangeNotifierProvider(create: (_) => ThemeProvider()),
+          ChangeNotifierProvider(create: (_) => AuthProvider()),
 
           BlocProvider(
             create:

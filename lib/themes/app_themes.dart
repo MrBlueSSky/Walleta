@@ -29,12 +29,12 @@ class AppThemes {
   static ThemeData darkTheme = ThemeData(
     brightness: Brightness.dark,
     indicatorColor: Colors.black,
-    scaffoldBackgroundColor: Color(0xFF1C1C1E),
+    scaffoldBackgroundColor: const Color(0xFF0F172A),
 
     primaryColor: Color(0xFFFA243C), //!Ver
     secondaryHeaderColor: Color(0xFFFF2D92), // Apple Music pink accent
 
-    cardColor: Color(0xFF2C2C2E),
+    cardColor: Color(0xFF1E293B),
     shadowColor: Colors.white.withOpacity(0.04),
     textTheme: const TextTheme(
       labelSmall: TextStyle(color: Color(0xFF8E8E93)),

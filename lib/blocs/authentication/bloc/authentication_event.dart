@@ -8,7 +8,7 @@ abstract class AuthenticationEvent extends Equatable {
 }
 
 class AuthenticationUserChanged extends AuthenticationEvent {
-  final User user; //!Este es el user que viene del stream de firebase.
+  final AppUser user; //!Este es el user que viene del stream de firebase.
 
   const AuthenticationUserChanged(this.user);
 

@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:walleta/models/user.dart';
+import 'package:walleta/models/appUser.dart';
 
 //!Luego meto todos estos posibles fallos en un archivo de errores
 class SignUpFailure implements Exception {}
@@ -26,17 +26,17 @@ class AuthenticationRepository {
   AuthenticationRepository({firebase_auth.FirebaseAuth? firebaseAuth})
     : _firebaseAuth = firebaseAuth ?? firebase_auth.FirebaseAuth.instance;
 
-  Stream<User> get user {
+  Stream<AppUser> get user {
     return _firebaseAuth.authStateChanges().asyncMap((firebaseUser) async {
       if (firebaseUser == null) {
-        return User.empty;
+        return AppUser.empty;
       }
 
       Map<String, dynamic> userData = await getUserDataFromFirestore(
         firebaseUser.uid,
       );
 
-      return userData.toUser(firebaseUser.uid);
+      return userData.toAppUser(firebaseUser.uid);
     });
   }
 
@@ -52,7 +52,7 @@ class AuthenticationRepository {
   }
 
   //!Iniciar sesion con email y password
-  Future<User> logInWithEmailAndPassword({
+  Future<AppUser> logInWithEmailAndPassword({
     required String email,
     required String password,
   }) async {
@@ -69,7 +69,7 @@ class AuthenticationRepository {
       Map<String, dynamic> userData = await getUserDataFromFirestore(
         authUser.uid,
       );
-      return userData.toUser(authUser.uid);
+      return userData.toAppUser(authUser.uid);
     } on Exception {
       print("No sirvio el login con email y password: ❌❌❌❌❌");
       throw LoginWithEmailAndPasswordFailure();
@@ -139,7 +139,7 @@ class AuthenticationRepository {
   //   }
   // }
 
-  Future<User> signUp({
+  Future<AppUser> signUp({
     required String username,
     required String name,
     required String surname,
@@ -170,7 +170,7 @@ class AuthenticationRepository {
         profilePictureUrl,
       );
 
-      return User(
+      return AppUser(
         uid: authUser.uid,
         username: username,
         name: name,
@@ -217,8 +217,8 @@ class AuthenticationRepository {
 
             'name': name,
             'surname': surname,
-            'displayName': '$name $surname',
 
+            // 'displayName': '$name $surname',
             'phoneNumber': phone,
             'profilePictureUrl': profilePictureUrl,
 
@@ -237,7 +237,7 @@ class AuthenticationRepository {
     }
   }
 
-  Future<User> updateUser({
+  Future<AppUser> updateUser({
     required String uid,
     required String username,
     required String name,
@@ -256,7 +256,7 @@ class AuthenticationRepository {
         profilePictureUrl: profilePictureUrl,
       );
 
-      return User(
+      return AppUser(
         uid: uid,
         username: username,
         name: name,
@@ -296,8 +296,8 @@ class AuthenticationRepository {
 }
 
 extension on firebase_auth.User {
-  User get toUserAuth {
-    return User(
+  AppUser get toAppUser {
+    return AppUser(
       uid: uid,
       username: '',
       name: displayName ?? '',
@@ -310,8 +310,8 @@ extension on firebase_auth.User {
 }
 
 extension UserFromMap on Map<String, dynamic> {
-  User toUser(String uid) {
-    return User(
+  AppUser toAppUser(String uid) {
+    return AppUser(
       uid: uid,
       username: this['username'] ?? '',
       name: this['name'] ?? '',

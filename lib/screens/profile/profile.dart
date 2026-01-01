@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:walleta/blocs/authentication/bloc/authentication_bloc.dart';
-import 'package:walleta/models/user.dart';
+import 'package:walleta/models/appUser.dart';
 import 'package:walleta/themes/app_colors.dart';
 import 'package:walleta/widgets/layaout/appbar/drawer/custom_drawer.dart';
 
@@ -451,7 +451,7 @@ class _ProfileState extends State<Profile> {
     );
   }
 
-  Widget _buildProfileDetails(User user) {
+  Widget _buildProfileDetails(AppUser user) {
     return Container(
       margin: EdgeInsets.all(20),
       padding: EdgeInsets.all(20),

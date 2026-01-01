@@ -10,24 +10,24 @@ enum AuthenticationStatus {
 
 class AuthenticationState extends Equatable {
   final AuthenticationStatus status;
-  final User user;
+  final AppUser user;
   final String? errorMessage; // Mensaje de error opcional
 
   const AuthenticationState({
     this.status = AuthenticationStatus.unknown,
-    this.user = User.empty,
+    this.user = AppUser.empty,
     this.errorMessage,
   });
 
   const AuthenticationState.unknown() : this();
 
-  const AuthenticationState.authenticated(User user)
+  const AuthenticationState.authenticated(AppUser user)
     : this(status: AuthenticationStatus.authenticated, user: user);
 
   const AuthenticationState.unauthenticated()
     : this(status: AuthenticationStatus.unauthenticated);
 
-  const AuthenticationState.modified(User user)
+  const AuthenticationState.modified(AppUser user)
     : this(status: AuthenticationStatus.modified, user: user);
 
   // Nuevo constructor para estado de error
