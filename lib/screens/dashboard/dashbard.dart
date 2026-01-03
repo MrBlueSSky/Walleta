@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
 import 'package:iconsax/iconsax.dart';
-import 'package:walleta/blocs/authentication/bloc/authentication_bloc.dart';
 import 'package:walleta/providers/auth_provider.dart';
 
 class FinancialDashboard extends StatefulWidget {
@@ -110,20 +109,40 @@ class _FinancialDashboardState extends State<FinancialDashboard> {
                         ),
                       ],
                     ),
-                    Container(
-                      decoration: BoxDecoration(
-                        color: cardColor,
-                        borderRadius: BorderRadius.circular(12),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.05),
-                            blurRadius: 8,
-                            offset: const Offset(0, 2),
+                    Row(
+                      children: [
+                        Container(
+                          decoration: BoxDecoration(
+                            color: cardColor,
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.05),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
-                      padding: const EdgeInsets.all(12),
-                      child: const Icon(Iconsax.notification, size: 24),
+                          padding: const EdgeInsets.all(12),
+                          child: const Icon(Iconsax.notification, size: 24),
+                        ),
+                        const SizedBox(width: 5),
+                        Container(
+                          decoration: BoxDecoration(
+                            color: cardColor,
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.05),
+                                blurRadius: 8,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          padding: const EdgeInsets.all(12),
+                          child: const Icon(Iconsax.search_normal, size: 24),
+                        ),
+                      ],
                     ),
                   ],
                 ),
