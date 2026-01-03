@@ -59,7 +59,6 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
     if (!alreadyAdded) {
       setState(() {
         selectedParticipants.add(user);
-        // Desplazarse hacia abajo para mostrar el nuevo participante
         WidgetsBinding.instance.addPostFrameCallback((_) {
           _scrollController.animateTo(
             _scrollController.position.maxScrollExtent,
@@ -110,7 +109,7 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
             Container(
               padding: const EdgeInsets.only(top: 8, bottom: 16),
               decoration: BoxDecoration(
-                color: cardColor,
+                color: backgroundColor,
                 borderRadius: const BorderRadius.vertical(
                   top: Radius.circular(24),
                 ),
@@ -129,7 +128,7 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
                     width: 40,
                     height: 4,
                     decoration: BoxDecoration(
-                      color: const Color(0xFFE5E7EB),
+                      color: textColor,
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
@@ -149,20 +148,11 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
                             color: textColor,
                           ),
                         ),
-                        GestureDetector(
-                          onTap: () => Navigator.pop(context),
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFF3F4F6),
-                              shape: BoxShape.circle,
-                            ),
-                            padding: const EdgeInsets.all(8),
-                            child: const Icon(
-                              Iconsax.close_circle,
-                              size: 20,
-                              color: Color(0xFF9CA3AF),
-                            ),
-                          ),
+                        IconButton(
+                          onPressed: () => Navigator.pop(context),
+                          icon: const Icon(Iconsax.close_circle, size: 22),
+                          padding: EdgeInsets.zero,
+                          constraints: const BoxConstraints(),
                         ),
                       ],
                     ),
@@ -257,7 +247,10 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
                                         TextFormField(
                                           controller: _totalController,
                                           keyboardType: TextInputType.number,
-                                          style: TextStyle(color: textColor),
+                                          style: TextStyle(
+                                            color: textColor,
+                                            height: 1.0,
+                                          ),
                                           decoration: InputDecoration(
                                             hintText: '0',
                                             hintStyle: TextStyle(
@@ -268,17 +261,27 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
                                                 left: 16,
                                                 right: 8,
                                               ),
-                                              child: Text(
-                                                '₡',
-                                                style: TextStyle(
-                                                  fontSize: 16,
-                                                  fontWeight: FontWeight.w600,
-                                                  color: const Color(
-                                                    0xFF00C896,
+                                              child: Align(
+                                                widthFactor: 1.0,
+                                                heightFactor: 1.0,
+                                                child: Text(
+                                                  '₡',
+                                                  style: TextStyle(
+                                                    fontSize: 16,
+                                                    fontWeight: FontWeight.w600,
+                                                    color: const Color(
+                                                      0xFF00C896,
+                                                    ),
+                                                    height: 1.0,
                                                   ),
                                                 ),
                                               ),
                                             ),
+                                            prefixIconConstraints:
+                                                const BoxConstraints(
+                                                  minWidth: 24,
+                                                  minHeight: 0,
+                                                ),
                                             filled: true,
                                             fillColor:
                                                 isDark
@@ -305,14 +308,35 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
                                               ),
                                             ),
                                             contentPadding:
-                                                const EdgeInsets.all(16),
+                                                const EdgeInsets.symmetric(
+                                                  horizontal: 16,
+                                                  vertical: 16,
+                                                ),
+                                            alignLabelWithHint: true,
                                           ),
                                           validator: (value) {
                                             if (value == null ||
                                                 value.isEmpty) {
                                               return 'Requerido';
                                             }
+                                            final total = double.tryParse(
+                                              value,
+                                            );
+                                            if (total == null) {
+                                              return 'Ingresa un número válido';
+                                            }
+                                            if (total <= 0) {
+                                              return 'El total debe ser mayor a 0';
+                                            }
                                             return null;
+                                          },
+                                          onChanged: (_) {
+                                            // Forzar validación cruzada cuando cambia el total
+                                            if (_paidController
+                                                .text
+                                                .isNotEmpty) {
+                                              _formKey.currentState?.validate();
+                                            }
                                           },
                                         ),
                                       ],
@@ -329,7 +353,10 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
                                         TextFormField(
                                           controller: _paidController,
                                           keyboardType: TextInputType.number,
-                                          style: TextStyle(color: textColor),
+                                          style: TextStyle(
+                                            color: textColor,
+                                            height: 1.0,
+                                          ),
                                           decoration: InputDecoration(
                                             hintText: '0',
                                             hintStyle: TextStyle(
@@ -340,17 +367,27 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
                                                 left: 16,
                                                 right: 8,
                                               ),
-                                              child: Text(
-                                                '₡',
-                                                style: TextStyle(
-                                                  fontSize: 16,
-                                                  fontWeight: FontWeight.w600,
-                                                  color: const Color(
-                                                    0xFF00C896,
+                                              child: Align(
+                                                widthFactor: 1.0,
+                                                heightFactor: 1.0,
+                                                child: Text(
+                                                  '₡',
+                                                  style: TextStyle(
+                                                    fontSize: 16,
+                                                    fontWeight: FontWeight.w600,
+                                                    color: const Color(
+                                                      0xFF00C896,
+                                                    ),
+                                                    height: 1.0,
                                                   ),
                                                 ),
                                               ),
                                             ),
+                                            prefixIconConstraints:
+                                                const BoxConstraints(
+                                                  minWidth: 24,
+                                                  minHeight: 0,
+                                                ),
                                             filled: true,
                                             fillColor:
                                                 isDark
@@ -377,14 +414,47 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
                                               ),
                                             ),
                                             contentPadding:
-                                                const EdgeInsets.all(16),
+                                                const EdgeInsets.symmetric(
+                                                  horizontal: 16,
+                                                  vertical: 16,
+                                                ),
+                                            alignLabelWithHint: true,
                                           ),
                                           validator: (value) {
                                             if (value == null ||
                                                 value.isEmpty) {
                                               return 'Requerido';
                                             }
+                                            final paid = double.tryParse(value);
+                                            if (paid == null) {
+                                              return 'Ingresa un número válido';
+                                            }
+                                            if (paid < 0) {
+                                              return 'El monto no puede ser negativo';
+                                            }
+
+                                            // NUEVA VALIDACIÓN: Pagado debe ser menor o igual al total
+                                            final totalText =
+                                                _totalController.text;
+                                            if (totalText.isNotEmpty) {
+                                              final total = double.tryParse(
+                                                totalText,
+                                              );
+                                              if (total != null &&
+                                                  paid > total) {
+                                                return 'No puede pagar más del total';
+                                              }
+                                            }
+
                                             return null;
+                                          },
+                                          onChanged: (_) {
+                                            // Forzar validación cruzada cuando cambia lo pagado
+                                            if (_totalController
+                                                .text
+                                                .isNotEmpty) {
+                                              _formKey.currentState?.validate();
+                                            }
                                           },
                                         ),
                                       ],
@@ -392,6 +462,14 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
                                   ),
                                 ],
                               ),
+
+                              // Mensaje informativo de validación
+                              if (_totalController.text.isNotEmpty &&
+                                  _paidController.text.isNotEmpty)
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 12),
+                                  child: _buildValidationMessage(),
+                                ),
                             ],
                           ),
                         ),
@@ -571,7 +649,6 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
                                   child: InkWell(
                                     borderRadius: BorderRadius.circular(12),
                                     onTap: () {
-                                      // Aquí se abriría el buscador
                                       showDialog(
                                         context: context,
                                         builder:
@@ -715,7 +792,6 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
                         ),
                       ),
 
-                      // Espacio extra para evitar que el botón tape contenido
                       const SizedBox(height: 80),
                     ],
                   ),
@@ -732,6 +808,67 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildValidationMessage() {
+    final totalText = _totalController.text;
+    final paidText = _paidController.text;
+
+    if (totalText.isEmpty || paidText.isEmpty) return const SizedBox();
+
+    final total = double.tryParse(totalText) ?? 0;
+    final paid = double.tryParse(paidText) ?? 0;
+    final remaining = total - paid;
+
+    Color getMessageColor() {
+      if (paid == 0) return const Color(0xFFF59E0B); // Amarillo/naranja
+      if (paid < total) return const Color(0xFF2D5BFF); // Azul
+      return const Color(0xFF10B981); // Verde
+    }
+
+    String getMessage() {
+      if (paid == 0) return 'Falta pagar: ₡${remaining.toStringAsFixed(2)}';
+      if (paid < total) return 'Restante: ₡${remaining.toStringAsFixed(2)}';
+      return '✓ Pago completo';
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: getMessageColor().withOpacity(0.1),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: getMessageColor().withOpacity(0.2), width: 1),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            paid >= total ? Iconsax.tick_circle : Iconsax.info_circle,
+            size: 16,
+            color: getMessageColor(),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              getMessage(),
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+                color: getMessageColor(),
+              ),
+            ),
+          ),
+          if (paid < total)
+            Text(
+              '${((paid / total) * 100).toStringAsFixed(0)}%',
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: getMessageColor(),
+              ),
+            ),
+        ],
       ),
     );
   }
@@ -764,8 +901,6 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
               },
               iconColor: const Color(0xFF2D5BFF),
               size: 20,
-              // backgroundColor:
-              // isDark ? const Color(0xFF0F172A) : const Color(0xFFF9FAFB),
             ),
 
             const SizedBox(height: 20),
@@ -903,14 +1038,34 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
     if (_formKey.currentState!.validate() &&
         selectedCategory != null &&
         selectedParticipants.isNotEmpty) {
+      // VALIDACIÓN FINAL: Asegurar que pagado <= total
+      final total = double.tryParse(_totalController.text) ?? 0;
+      final paid = double.tryParse(_paidController.text) ?? 0;
+
+      if (paid > total) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('El monto pagado no puede ser mayor al total'),
+            backgroundColor: const Color(0xFFFF6B6B),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            margin: const EdgeInsets.all(16),
+          ),
+        );
+        return;
+      }
+
       final category = categories.firstWhere(
         (cat) => cat['name'] == selectedCategory,
       );
 
       final expense = SharedExpense(
         title: _titleController.text,
-        total: double.parse(_totalController.text),
-        paid: double.parse(_paidController.text),
+        total: total,
+        paid: paid,
         participants:
             selectedParticipants.map((p) => p['username'] as String).toList(),
         category: selectedCategory!,

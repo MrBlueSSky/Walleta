@@ -573,6 +573,14 @@ class _CreateSavingGoalScreenState extends State<CreateSavingGoalScreen> {
   Widget build(BuildContext context) {
     final mediaQuery = MediaQuery.of(context);
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final backgroundColor =
+        isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFD);
+    final cardColor = isDark ? const Color(0xFF1E293B) : Colors.white;
+    final textColor = isDark ? Colors.white : const Color(0xFF1F2937);
+    final secondaryTextColor =
+        isDark ? Colors.white70 : const Color(0xFF6B7280);
+
     return SingleChildScrollView(
       child: Container(
         padding: EdgeInsets.only(
@@ -585,6 +593,18 @@ class _CreateSavingGoalScreenState extends State<CreateSavingGoalScreen> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: textColor,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 12),
             // Header
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
