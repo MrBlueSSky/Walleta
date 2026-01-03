@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:iconsax/iconsax.dart';
 import 'package:walleta/blocs/authentication/bloc/authentication_bloc.dart';
 import 'package:walleta/blocs/sharedExpense/sharedExpense.dart';
 import 'package:walleta/models/shared_expense.dart';
 import 'package:walleta/models/appUser.dart';
-import 'package:walleta/themes/app_colors.dart';
 import 'package:walleta/widgets/buttons/search_button.dart';
 
 class AddExpenseSheet extends StatefulWidget {
@@ -21,21 +21,37 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
   final _titleController = TextEditingController();
   final _totalController = TextEditingController();
   final _paidController = TextEditingController();
+  final ScrollController _scrollController = ScrollController();
 
   String? selectedCategory;
   List<Map<String, dynamic>> selectedParticipants = [];
 
   final List<Map<String, dynamic>> categories = [
-    {'name': 'Comida', 'icon': Icons.restaurant, 'color': Colors.orange},
-    {'name': 'Viajes', 'icon': Icons.flight, 'color': Colors.blue},
-    {'name': 'Entretenimiento', 'icon': Icons.movie, 'color': Colors.purple},
-    {'name': 'Hogar', 'icon': Icons.home, 'color': Colors.green},
-    {'name': 'Transporte', 'icon': Icons.directions_car, 'color': Colors.red},
-    {'name': 'Otros', 'icon': Icons.more_horiz, 'color': Colors.grey},
+    {
+      'name': 'Comida',
+      'icon': Icons.restaurant,
+      'color': const Color(0xFF00C896),
+    },
+    {
+      'name': 'Viajes',
+      'icon': Iconsax.airplane,
+      'color': const Color(0xFF2D5BFF),
+    },
+    {
+      'name': 'Entretenimiento',
+      'icon': Iconsax.video_play,
+      'color': const Color(0xFF9C27B0),
+    },
+    {'name': 'Hogar', 'icon': Iconsax.home, 'color': const Color(0xFFFFA726)},
+    {
+      'name': 'Transporte',
+      'icon': Iconsax.car,
+      'color': const Color(0xFFFF6B6B),
+    },
+    {'name': 'Otros', 'icon': Iconsax.more, 'color': const Color(0xFF9CA3AF)},
   ];
 
   void _addParticipant(Map<String, dynamic> user) {
-    // Verificar si el usuario ya está agregado
     bool alreadyAdded = selectedParticipants.any(
       (participant) => participant['username'] == user['username'],
     );
@@ -43,6 +59,14 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
     if (!alreadyAdded) {
       setState(() {
         selectedParticipants.add(user);
+        // Desplazarse hacia abajo para mostrar el nuevo participante
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _scrollController.animateTo(
+            _scrollController.position.maxScrollExtent,
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeOut,
+          );
+        });
       });
     }
   }
@@ -54,295 +78,734 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
   }
 
   @override
+  void dispose() {
+    _titleController.dispose();
+    _totalController.dispose();
+    _paidController.dispose();
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    Color inputColor = Theme.of(context).textTheme.labelSmall!.color!;
-    return Container(
-      height: MediaQuery.of(context).size.height * 0.9,
-      decoration: BoxDecoration(
-        color: Theme.of(context).scaffoldBackgroundColor,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      child: Column(
-        children: [
-          // Handle bar
-          Container(
-            margin: const EdgeInsets.only(top: 8),
-            width: 40,
-            height: 4,
-            decoration: BoxDecoration(
-              color: Theme.of(context).primaryColor.withOpacity(0.3),
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final backgroundColor =
+        isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFD);
+    final cardColor = isDark ? const Color(0xFF1E293B) : Colors.white;
+    final textColor = isDark ? Colors.white : const Color(0xFF1F2937);
+    final secondaryTextColor =
+        isDark ? Colors.white70 : const Color(0xFF6B7280);
 
-          // Header
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 16, 12, 12),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                const Text(
-                  'Nuevo Gasto Compartido',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.primary,
-                  ),
+    return GestureDetector(
+      onTap: () => FocusScope.of(context).unfocus(),
+      child: Container(
+        height: MediaQuery.of(context).size.height * 0.9,
+        decoration: BoxDecoration(
+          color: backgroundColor,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: Column(
+          children: [
+            // Header fijo
+            Container(
+              padding: const EdgeInsets.only(top: 8, bottom: 16),
+              decoration: BoxDecoration(
+                color: cardColor,
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(24),
                 ),
-                IconButton(
-                  icon: Icon(
-                    Icons.close,
-                    color: Theme.of(context).iconTheme.color,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, 2),
                   ),
-                  onPressed: () => Navigator.pop(context),
-                ),
-              ],
-            ),
-          ),
-
-          // Form content
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Título del gasto
-                    _buildSectionLabel(context, 'Título del gasto'),
-                    const SizedBox(height: 8),
-                    TextFormField(
-                      controller: _titleController,
-                      decoration: InputDecoration(
-                        hintText: 'Ej: Cena en restaurante',
-                        filled: true,
-                        fillColor: inputColor,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide.none,
-                        ),
-                        contentPadding: const EdgeInsets.all(16),
-                      ),
-                      validator: (value) {
-                        if (value == null || value.isEmpty) {
-                          return 'Por favor ingresa un título';
-                        }
-                        return null;
-                      },
+                ],
+              ),
+              child: Column(
+                children: [
+                  // Handle bar
+                  Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFE5E7EB),
+                      borderRadius: BorderRadius.circular(2),
                     ),
+                  ),
+                  const SizedBox(height: 12),
 
-                    const SizedBox(height: 24),
-
-                    // Montos (Total y Pagado)
-                    Row(
+                  // Título y botón de cerrar
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              _buildSectionLabel(context, 'Total'),
-                              const SizedBox(height: 8),
-                              TextFormField(
-                                controller: _totalController,
-                                keyboardType: TextInputType.number,
-                                decoration: InputDecoration(
-                                  hintText: '0',
-                                  prefixText: '₡ ',
-                                  prefixStyle: const TextStyle(
-                                    color: AppColors.accentGreen,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                  filled: true,
-                                  fillColor: inputColor,
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                    borderSide: BorderSide.none,
-                                  ),
-                                  contentPadding: const EdgeInsets.all(16),
-                                ),
-                                validator: (value) {
-                                  if (value == null || value.isEmpty) {
-                                    return 'Requerido';
-                                  }
-                                  return null;
-                                },
-                              ),
-                            ],
+                        Text(
+                          'Nuevo Gasto Compartido',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w700,
+                            color: textColor,
                           ),
                         ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              _buildSectionLabel(context, 'Pagado'),
-                              const SizedBox(height: 8),
-                              TextFormField(
-                                controller: _paidController,
-                                keyboardType: TextInputType.number,
-                                decoration: InputDecoration(
-                                  hintText: '0',
-                                  prefixText: '₡ ',
-                                  prefixStyle: const TextStyle(
-                                    color: AppColors.accentGreen,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                  filled: true,
-                                  fillColor: inputColor,
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                    borderSide: BorderSide.none,
-                                  ),
-                                  contentPadding: const EdgeInsets.all(16),
-                                ),
-                                validator: (value) {
-                                  if (value == null || value.isEmpty) {
-                                    return 'Requerido';
-                                  }
-                                  return null;
-                                },
-                              ),
-                            ],
+                        GestureDetector(
+                          onTap: () => Navigator.pop(context),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF3F4F6),
+                              shape: BoxShape.circle,
+                            ),
+                            padding: const EdgeInsets.all(8),
+                            child: const Icon(
+                              Iconsax.close_circle,
+                              size: 20,
+                              color: Color(0xFF9CA3AF),
+                            ),
                           ),
                         ),
                       ],
                     ),
+                  ),
+                ],
+              ),
+            ),
 
-                    const SizedBox(height: 24),
-
-                    // Categoría
-                    _buildSectionLabel(context, 'Categoría'),
-                    const SizedBox(height: 12),
-                    Wrap(
-                      spacing: 12,
-                      runSpacing: 12,
-                      children:
-                          categories.map((cat) {
-                            final isSelected = selectedCategory == cat['name'];
-                            return GestureDetector(
-                              onTap: () {
-                                setState(() {
-                                  selectedCategory = cat['name'];
-                                });
-                              },
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 12,
+            // Contenido principal con SingleChildScrollView
+            Expanded(
+              child: Form(
+                key: _formKey,
+                child: SingleChildScrollView(
+                  controller: _scrollController,
+                  physics: const BouncingScrollPhysics(),
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Sección 1: Información básica
+                      Card(
+                        elevation: 0,
+                        color: cardColor,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          side: BorderSide(
+                            color: const Color(0xFFE5E7EB).withOpacity(0.5),
+                            width: 1,
+                          ),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(20),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Título del gasto
+                              _buildSectionLabel('Título del gasto', isDark),
+                              const SizedBox(height: 12),
+                              TextFormField(
+                                controller: _titleController,
+                                style: TextStyle(color: textColor),
+                                decoration: InputDecoration(
+                                  hintText:
+                                      'Ej: Cena en restaurante, Viaje a la playa...',
+                                  hintStyle: TextStyle(
+                                    color: secondaryTextColor,
+                                  ),
+                                  filled: true,
+                                  fillColor:
+                                      isDark
+                                          ? const Color(0xFF0F172A)
+                                          : const Color(0xFFF9FAFB),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: BorderSide.none,
+                                  ),
+                                  enabledBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: const BorderSide(
+                                      color: Color(0xFFE5E7EB),
+                                    ),
+                                  ),
+                                  focusedBorder: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: const BorderSide(
+                                      color: Color(0xFF2D5BFF),
+                                      width: 2,
+                                    ),
+                                  ),
+                                  contentPadding: const EdgeInsets.all(16),
                                 ),
+                                validator: (value) {
+                                  if (value == null || value.isEmpty) {
+                                    return 'Por favor ingresa un título';
+                                  }
+                                  return null;
+                                },
+                              ),
+
+                              const SizedBox(height: 20),
+
+                              // Montos (Total y Pagado)
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        _buildSectionLabel('Total', isDark),
+                                        const SizedBox(height: 8),
+                                        TextFormField(
+                                          controller: _totalController,
+                                          keyboardType: TextInputType.number,
+                                          style: TextStyle(color: textColor),
+                                          decoration: InputDecoration(
+                                            hintText: '0',
+                                            hintStyle: TextStyle(
+                                              color: secondaryTextColor,
+                                            ),
+                                            prefixIcon: Padding(
+                                              padding: const EdgeInsets.only(
+                                                left: 16,
+                                                right: 8,
+                                              ),
+                                              child: Text(
+                                                '₡',
+                                                style: TextStyle(
+                                                  fontSize: 16,
+                                                  fontWeight: FontWeight.w600,
+                                                  color: const Color(
+                                                    0xFF00C896,
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                            filled: true,
+                                            fillColor:
+                                                isDark
+                                                    ? const Color(0xFF0F172A)
+                                                    : const Color(0xFFF9FAFB),
+                                            border: OutlineInputBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
+                                              borderSide: BorderSide.none,
+                                            ),
+                                            enabledBorder: OutlineInputBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
+                                              borderSide: const BorderSide(
+                                                color: Color(0xFFE5E7EB),
+                                              ),
+                                            ),
+                                            focusedBorder: OutlineInputBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
+                                              borderSide: const BorderSide(
+                                                color: Color(0xFF2D5BFF),
+                                                width: 2,
+                                              ),
+                                            ),
+                                            contentPadding:
+                                                const EdgeInsets.all(16),
+                                          ),
+                                          validator: (value) {
+                                            if (value == null ||
+                                                value.isEmpty) {
+                                              return 'Requerido';
+                                            }
+                                            return null;
+                                          },
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        _buildSectionLabel('Pagado', isDark),
+                                        const SizedBox(height: 8),
+                                        TextFormField(
+                                          controller: _paidController,
+                                          keyboardType: TextInputType.number,
+                                          style: TextStyle(color: textColor),
+                                          decoration: InputDecoration(
+                                            hintText: '0',
+                                            hintStyle: TextStyle(
+                                              color: secondaryTextColor,
+                                            ),
+                                            prefixIcon: Padding(
+                                              padding: const EdgeInsets.only(
+                                                left: 16,
+                                                right: 8,
+                                              ),
+                                              child: Text(
+                                                '₡',
+                                                style: TextStyle(
+                                                  fontSize: 16,
+                                                  fontWeight: FontWeight.w600,
+                                                  color: const Color(
+                                                    0xFF00C896,
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                            filled: true,
+                                            fillColor:
+                                                isDark
+                                                    ? const Color(0xFF0F172A)
+                                                    : const Color(0xFFF9FAFB),
+                                            border: OutlineInputBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
+                                              borderSide: BorderSide.none,
+                                            ),
+                                            enabledBorder: OutlineInputBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
+                                              borderSide: const BorderSide(
+                                                color: Color(0xFFE5E7EB),
+                                              ),
+                                            ),
+                                            focusedBorder: OutlineInputBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
+                                              borderSide: const BorderSide(
+                                                color: Color(0xFF2D5BFF),
+                                                width: 2,
+                                              ),
+                                            ),
+                                            contentPadding:
+                                                const EdgeInsets.all(16),
+                                          ),
+                                          validator: (value) {
+                                            if (value == null ||
+                                                value.isEmpty) {
+                                              return 'Requerido';
+                                            }
+                                            return null;
+                                          },
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 16),
+
+                      // Sección 2: Categoría
+                      Card(
+                        elevation: 0,
+                        color: cardColor,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          side: BorderSide(
+                            color: const Color(0xFFE5E7EB).withOpacity(0.5),
+                            width: 1,
+                          ),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(20),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              _buildSectionLabel('Categoría', isDark),
+                              const SizedBox(height: 16),
+
+                              // Grid de categorías (2x3)
+                              GridView.count(
+                                crossAxisCount: 3,
+                                crossAxisSpacing: 12,
+                                mainAxisSpacing: 12,
+                                shrinkWrap: true,
+                                physics: const NeverScrollableScrollPhysics(),
+                                childAspectRatio: 1.2,
+                                children:
+                                    categories.map((cat) {
+                                      final isSelected =
+                                          selectedCategory == cat['name'];
+                                      return GestureDetector(
+                                        onTap: () {
+                                          setState(() {
+                                            selectedCategory = cat['name'];
+                                          });
+                                        },
+                                        child: Container(
+                                          decoration: BoxDecoration(
+                                            color:
+                                                isSelected
+                                                    ? cat['color'] as Color
+                                                    : isDark
+                                                    ? const Color(0xFF0F172A)
+                                                    : const Color(0xFFF9FAFB),
+                                            borderRadius: BorderRadius.circular(
+                                              12,
+                                            ),
+                                            border: Border.all(
+                                              color:
+                                                  isSelected
+                                                      ? cat['color'] as Color
+                                                      : const Color(0xFFE5E7EB),
+                                              width: isSelected ? 0 : 1,
+                                            ),
+                                            boxShadow:
+                                                isSelected
+                                                    ? [
+                                                      BoxShadow(
+                                                        color: (cat['color']
+                                                                as Color)
+                                                            .withOpacity(0.3),
+                                                        blurRadius: 8,
+                                                        offset: const Offset(
+                                                          0,
+                                                          2,
+                                                        ),
+                                                      ),
+                                                    ]
+                                                    : null,
+                                          ),
+                                          child: Column(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.center,
+                                            children: [
+                                              Icon(
+                                                cat['icon'] as IconData,
+                                                color:
+                                                    isSelected
+                                                        ? Colors.white
+                                                        : cat['color'] as Color,
+                                                size: 22,
+                                              ),
+                                              const SizedBox(height: 8),
+                                              Text(
+                                                cat['name'],
+                                                style: TextStyle(
+                                                  fontSize: 11,
+                                                  fontWeight: FontWeight.w600,
+                                                  color:
+                                                      isSelected
+                                                          ? Colors.white
+                                                          : textColor,
+                                                ),
+                                                textAlign: TextAlign.center,
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      );
+                                    }).toList(),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 16),
+
+                      // Sección 3: Participantes
+                      Card(
+                        elevation: 0,
+                        color: cardColor,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          side: BorderSide(
+                            color: const Color(0xFFE5E7EB).withOpacity(0.5),
+                            width: 1,
+                          ),
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.all(20),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  _buildSectionLabel('Participantes', isDark),
+                                  if (selectedParticipants.isNotEmpty)
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 10,
+                                        vertical: 4,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: const Color(
+                                          0xFF2D5BFF,
+                                        ).withOpacity(0.1),
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: Text(
+                                        '${selectedParticipants.length}',
+                                        style: const TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w600,
+                                          color: Color(0xFF2D5BFF),
+                                        ),
+                                      ),
+                                    ),
+                                ],
+                              ),
+                              const SizedBox(height: 16),
+
+                              // Botón de búsqueda de participantes (CON TEXTO)
+                              Container(
                                 decoration: BoxDecoration(
                                   color:
-                                      isSelected
-                                          ? (cat['color'] as Color).withOpacity(
-                                            0.1,
-                                          )
-                                          : inputColor,
+                                      isDark
+                                          ? const Color(0xFF0F172A)
+                                          : const Color(0xFFF9FAFB),
                                   borderRadius: BorderRadius.circular(12),
                                   border: Border.all(
-                                    color:
-                                        isSelected
-                                            ? cat['color'] as Color
-                                            : Colors.transparent,
-                                    width: 2,
+                                    color: const Color(0xFFE5E7EB),
                                   ),
                                 ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(
-                                      cat['icon'] as IconData,
-                                      color: cat['color'] as Color,
-                                      size: 20,
-                                    ),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      cat['name'],
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w600,
-                                        color:
-                                            isSelected
-                                                ? cat['color'] as Color
-                                                : Theme.of(
-                                                  context,
-                                                ).textTheme.bodyLarge?.color,
+                                child: Material(
+                                  color: Colors.transparent,
+                                  child: InkWell(
+                                    borderRadius: BorderRadius.circular(12),
+                                    onTap: () {
+                                      // Aquí se abriría el buscador
+                                      showDialog(
+                                        context: context,
+                                        builder:
+                                            (context) =>
+                                                _buildParticipantSearchDialog(
+                                                  isDark,
+                                                ),
+                                      );
+                                    },
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 16,
+                                        vertical: 16,
                                       ),
+                                      child: Row(
+                                        children: [
+                                          Icon(
+                                            Iconsax.search_normal,
+                                            color: const Color(0xFF2D5BFF),
+                                            size: 20,
+                                          ),
+                                          const SizedBox(width: 12),
+                                          Expanded(
+                                            child: Text(
+                                              'Buscar participantes...',
+                                              style: TextStyle(
+                                                color: secondaryTextColor,
+                                                fontSize: 14,
+                                              ),
+                                            ),
+                                          ),
+                                          Icon(
+                                            Iconsax.arrow_right_3,
+                                            color: secondaryTextColor,
+                                            size: 18,
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+
+                              const SizedBox(height: 20),
+
+                              // Lista de participantes seleccionados
+                              if (selectedParticipants.isNotEmpty)
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Participantes seleccionados:',
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w500,
+                                        color: secondaryTextColor,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 12),
+                                    Wrap(
+                                      spacing: 8,
+                                      runSpacing: 8,
+                                      children:
+                                          selectedParticipants
+                                              .asMap()
+                                              .entries
+                                              .map((entry) {
+                                                final index = entry.key;
+                                                final participant = entry.value;
+                                                final colorIndex =
+                                                    index % categories.length;
+                                                final chipColor =
+                                                    categories[colorIndex]['color']
+                                                        as Color;
+
+                                                return _buildParticipantChip(
+                                                  participant['username'] ??
+                                                      'Usuario',
+                                                  index,
+                                                  chipColor,
+                                                  isDark,
+                                                );
+                                              })
+                                              .toList(),
                                     ),
                                   ],
                                 ),
-                              ),
-                            );
-                          }).toList(),
-                    ),
 
-                    const SizedBox(height: 24),
+                              if (selectedParticipants.isEmpty)
+                                Container(
+                                  width: double.infinity,
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 24,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color:
+                                        isDark
+                                            ? const Color(0xFF0F172A)
+                                            : const Color(0xFFF9FAFB),
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(
+                                      color: const Color(0xFFE5E7EB),
+                                      width: 1,
+                                      style: BorderStyle.solid,
+                                    ),
+                                  ),
+                                  child: Column(
+                                    children: [
+                                      Icon(
+                                        Iconsax.people,
+                                        size: 32,
+                                        color: secondaryTextColor.withOpacity(
+                                          0.5,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 12),
+                                      Text(
+                                        'No hay participantes',
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          color: secondaryTextColor,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        'Agrega amigos usando el buscador',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: secondaryTextColor.withOpacity(
+                                            0.7,
+                                          ),
+                                        ),
+                                        textAlign: TextAlign.center,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                      ),
 
-                    // Participantes
-                    _buildSectionLabel(context, 'Participantes'),
-                    const SizedBox(height: 12),
-
-                    // Botón de búsqueda
-                    SearchButton(
-                      onUserSelected: (user) {
-                        _addParticipant(user);
-                      },
-                      iconColor: Theme.of(context).iconTheme.color,
-                      size: 26,
-                    ),
-
-                    const SizedBox(height: 16),
-
-                    // Lista de participantes seleccionados
-                    Wrap(
-                      spacing: 8, // espacio horizontal entre chips
-                      runSpacing: 8, // espacio vertical entre filas
-                      children: [
-                        if (selectedParticipants.isNotEmpty)
-                          ...selectedParticipants.asMap().entries.map((entry) {
-                            final index = entry.key;
-                            final participant = entry.value;
-
-                            return _buildParticipantChip(
-                              participant['username'] ?? 'Usuario',
-                              index,
-                            );
-                          }),
-                      ],
-                    ),
-
-                    const SizedBox(height: 100),
-                  ],
+                      // Espacio extra para evitar que el botón tape contenido
+                      const SizedBox(height: 80),
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
 
-          // Bottom button
-          _buildBottomBar(),
-        ],
+            // Botón flotante (FIXED)
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              child: _buildBottomBar(isDark),
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildSectionLabel(BuildContext context, String text) {
+  Widget _buildParticipantSearchDialog(bool isDark) {
+    return Dialog(
+      backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      insetPadding: const EdgeInsets.all(20),
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'Buscar Participantes',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: isDark ? Colors.white : const Color(0xFF1F2937),
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            // Aquí iría el SearchButton real
+            SearchButton(
+              onUserSelected: (user) {
+                _addParticipant(user);
+                Navigator.pop(context);
+              },
+              iconColor: const Color(0xFF2D5BFF),
+              size: 20,
+              // backgroundColor:
+              // isDark ? const Color(0xFF0F172A) : const Color(0xFFF9FAFB),
+            ),
+
+            const SizedBox(height: 20),
+
+            SizedBox(
+              width: double.infinity,
+              child: TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Cancelar'),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSectionLabel(String text, bool isDark) {
     return Text(
       text,
       style: TextStyle(
-        fontSize: 16,
+        fontSize: 14,
         fontWeight: FontWeight.w600,
-        color: Theme.of(context).textTheme.bodyLarge?.color,
+        color: isDark ? Colors.white : const Color(0xFF374151),
       ),
     );
   }
 
-  Widget _buildParticipantChip(String username, int index) {
+  Widget _buildParticipantChip(
+    String username,
+    int index,
+    Color color,
+    bool isDark,
+  ) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: AppColors.primary.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.primary.withOpacity(0.3), width: 1),
+        color: color.withOpacity(isDark ? 0.15 : 0.08),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withOpacity(0.3), width: 1),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -351,16 +814,13 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
           Container(
             width: 24,
             height: 24,
-            decoration: BoxDecoration(
-              color: AppColors.primary,
-              shape: BoxShape.circle,
-            ),
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
             child: Center(
               child: Text(
                 username[0].toUpperCase(),
                 style: const TextStyle(
                   color: Colors.white,
-                  fontSize: 12,
+                  fontSize: 11,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -370,10 +830,10 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
           // Nombre de usuario
           Text(
             username,
-            style: const TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: AppColors.primary,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+              color: isDark ? Colors.white : const Color(0xFF1F2937),
             ),
           ),
           const SizedBox(width: 8),
@@ -381,16 +841,12 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
           GestureDetector(
             onTap: () => _removeParticipant(index),
             child: Container(
-              padding: const EdgeInsets.all(2),
+              padding: const EdgeInsets.all(4),
               decoration: BoxDecoration(
-                color: AppColors.primary.withOpacity(0.2),
+                color: color.withOpacity(0.2),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(
-                Icons.close,
-                size: 16,
-                color: AppColors.primary,
-              ),
+              child: Icon(Icons.close, size: 12, color: color),
             ),
           ),
         ],
@@ -398,36 +854,44 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
     );
   }
 
-  Widget _buildBottomBar() {
+  Widget _buildBottomBar(bool isDark) {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
       decoration: BoxDecoration(
-        color: Theme.of(context).scaffoldBackgroundColor,
+        color: isDark ? const Color(0xFF1E293B) : Colors.white,
+        border: Border(
+          top: BorderSide(
+            color: isDark ? const Color(0xFF334155) : const Color(0xFFE5E7EB),
+            width: 1,
+          ),
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 20,
             offset: const Offset(0, -5),
           ),
         ],
       ),
       child: SafeArea(
+        top: false,
         child: SizedBox(
           width: double.infinity,
-          height: 56,
+          height: 52,
           child: ElevatedButton(
             onPressed: _saveExpense,
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
+              backgroundColor: const Color(0xFF2D5BFF),
               foregroundColor: Colors.white,
               elevation: 0,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
+              shadowColor: const Color(0xFF2D5BFF).withOpacity(0.3),
             ),
             child: const Text(
-              'Crear Gasto',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+              'Crear Gasto Compartido',
+              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
             ),
           ),
         ),
@@ -455,12 +919,11 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
       );
 
       final AppUser user = context.read<AuthenticationBloc>().state.user;
-      print("📍📍📍📍User ID: ${user.uid} aaaaa ${expense}");
       context.read<SharedExpenseBloc>().add(
         AddSharedExpense(userId: user.uid, expense: expense),
       );
 
-      // widget.onSave(expense);
+      widget.onSave(expense);
       Navigator.pop(context);
     } else {
       String message = 'Por favor completa todos los campos';
@@ -473,21 +936,15 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(message),
-          backgroundColor: Colors.red,
+          backgroundColor: const Color(0xFFFF6B6B),
           behavior: SnackBarBehavior.floating,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(12),
           ),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          margin: const EdgeInsets.all(16),
         ),
       );
     }
-  }
-
-  @override
-  void dispose() {
-    _titleController.dispose();
-    _totalController.dispose();
-    _paidController.dispose();
-    super.dispose();
   }
 }
