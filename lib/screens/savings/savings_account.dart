@@ -20,30 +20,6 @@ class _SavingsAccountScreenState extends State<SavingsAccountScreen> {
       targetDate: DateTime.now().add(const Duration(days: 90)), // 3 meses
     ),
     SavingGoal(
-      title: "Viaje a la playa",
-      saved: 30000,
-      goal: 50000,
-      icon: Icons.beach_access,
-      color: const Color(0xFF00C896),
-      targetDate: DateTime.now().add(const Duration(days: 90)), // 3 meses
-    ),
-    SavingGoal(
-      title: "Viaje a Coto",
-      saved: 30000,
-      goal: 50000,
-      icon: Icons.beach_access,
-      color: const Color.fromARGB(255, 44, 154, 29),
-      targetDate: DateTime.now().add(const Duration(days: 90)), // 3 meses
-    ),
-    SavingGoal(
-      title: "Viaje a la playa",
-      saved: 30000,
-      goal: 50000,
-      icon: Icons.beach_access,
-      color: const Color(0xFF00C896),
-      targetDate: DateTime.now().add(const Duration(days: 90)), // 3 meses
-    ),
-    SavingGoal(
       title: "Fondo de emergencia",
       saved: 50000,
       goal: 100000,
@@ -106,15 +82,15 @@ class _SavingsAccountScreenState extends State<SavingsAccountScreen> {
             ),
 
             // Sección de total ahorrado
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 8,
-                ),
-                child: _buildTotalSavings(isDark),
-              ),
-            ),
+            // SliverToBoxAdapter(
+            //   child: Padding(
+            //     padding: const EdgeInsets.symmetric(
+            //       horizontal: 16,
+            //       vertical: 8,
+            //     ),
+            //     child: _buildTotalSavings(isDark),
+            //   ),
+            // ),
 
             // Título de metas
             SliverToBoxAdapter(

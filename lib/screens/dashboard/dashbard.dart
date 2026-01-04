@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:walleta/providers/auth_provider.dart';
+import 'package:walleta/widgets/buttons/search_button.dart';
 
 class FinancialDashboard extends StatefulWidget {
   const FinancialDashboard({super.key});
@@ -62,6 +63,14 @@ class _FinancialDashboardState extends State<FinancialDashboard> {
   //   });
   // }
 
+  bool _isSearchActive = false;
+
+  void _onSearchStateChanged(bool isActive) {
+    setState(() {
+      _isSearchActive = isActive;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final user = context.watch<AuthProvider>().appUser;
@@ -111,36 +120,47 @@ class _FinancialDashboardState extends State<FinancialDashboard> {
                     ),
                     Row(
                       children: [
-                        Container(
-                          decoration: BoxDecoration(
-                            color: cardColor,
-                            borderRadius: BorderRadius.circular(12),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.05),
-                                blurRadius: 8,
-                                offset: const Offset(0, 2),
-                              ),
-                            ],
-                          ),
-                          padding: const EdgeInsets.all(12),
-                          child: const Icon(Iconsax.notification, size: 24),
+                        SearchButton(
+                          onSearchStateChanged: _onSearchStateChanged,
                         ),
                         const SizedBox(width: 5),
-                        Container(
-                          decoration: BoxDecoration(
-                            color: cardColor,
-                            borderRadius: BorderRadius.circular(12),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.05),
-                                blurRadius: 8,
-                                offset: const Offset(0, 2),
+
+                        AnimatedSwitcher(
+                          duration: const Duration(milliseconds: 200),
+                          switchInCurve: Curves.easeInOut,
+                          switchOutCurve: Curves.easeInOut,
+                          transitionBuilder: (child, animation) {
+                            return FadeTransition(
+                              opacity: animation,
+                              child: SizeTransition(
+                                sizeFactor: animation,
+                                axis: Axis.horizontal,
+                                child: child,
                               ),
-                            ],
-                          ),
-                          padding: const EdgeInsets.all(12),
-                          child: const Icon(Iconsax.search_normal, size: 24),
+                            );
+                          },
+                          child:
+                              _isSearchActive
+                                  ? const SizedBox(width: 0, height: 48)
+                                  : Container(
+                                    key: const ValueKey('notification'),
+                                    decoration: BoxDecoration(
+                                      color: cardColor,
+                                      borderRadius: BorderRadius.circular(12),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withOpacity(0.05),
+                                          blurRadius: 8,
+                                          offset: const Offset(0, 2),
+                                        ),
+                                      ],
+                                    ),
+                                    padding: const EdgeInsets.all(12),
+                                    child: const Icon(
+                                      Iconsax.notification,
+                                      size: 24,
+                                    ),
+                                  ),
                         ),
                       ],
                     ),
@@ -169,29 +189,12 @@ class _FinancialDashboardState extends State<FinancialDashboard> {
                   childAspectRatio: 1.2,
                   children: [
                     _buildMetricCard(
-                      title: 'Balance Actual',
-                      amount: currentBalance,
-                      icon: Iconsax.wallet_3,
-                      color:
-                          currentBalance >= 0
-                              ? const Color(0xFF00C896)
-                              : const Color(0xFFFF6B6B),
-                      cardColor: cardColor,
-                    ),
-                    _buildMetricCard(
                       title: 'Gastos del Mes',
-                      amount: monthlyExpenses,
+                      amount: 0,
                       icon: Iconsax.arrow_down_2,
                       color: const Color(0xFFFF6B6B),
                       cardColor: cardColor,
                       isExpense: true,
-                    ),
-                    _buildMetricCard(
-                      title: 'Ingresos del Mes',
-                      amount: monthlyIncome,
-                      icon: Iconsax.arrow_up_2,
-                      color: const Color(0xFF00C896),
-                      cardColor: cardColor,
                     ),
                     _buildChangeCard(cardColor, textColor),
                   ],

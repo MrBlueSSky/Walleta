@@ -31,7 +31,7 @@ class AppThemes {
     indicatorColor: Colors.black,
     scaffoldBackgroundColor: const Color(0xFF0F172A),
 
-    primaryColor: Color(0xFFFA243C), //!Ver
+    primaryColor: Color(0xFF2D5BFF), //!Ver
     secondaryHeaderColor: Color(0xFFFF2D92), // Apple Music pink accent
 
     cardColor: Color(0xFF1E293B),

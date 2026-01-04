@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:walleta/screens/dashboard/dashbard.dart';
+import 'package:walleta/screens/loans/loans.dart';
 import 'package:walleta/screens/profile/profile.dart';
 import 'package:walleta/screens/savings/savings_account.dart';
 import 'package:walleta/screens/sharedExpenses/shared_expenses.dart';
@@ -24,7 +25,7 @@ class _HomeState extends State<Home> {
 
   final List<Widget> _screens = [
     const FinancialDashboard(), // Tu dashboard
-    const SavingsAccountScreen(),
+    const Loans(),
     const SharedExpensesScreen(),
     const Profile(),
   ];

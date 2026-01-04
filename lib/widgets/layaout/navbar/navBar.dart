@@ -182,8 +182,8 @@ class _CustomBottomNavBarState extends State<CustomBottomNavBar>
                                 isDark: isDark,
                               ),
                               _NavBarItem(
-                                icon: Iconsax.receipt,
-                                label: 'Transacciones',
+                                icon: Icons.handshake_outlined,
+                                label: 'Prestamos',
                                 isActive: widget.currentIndex == 1,
                                 onTap: () => widget.onTap(1),
                                 isDark: isDark,
