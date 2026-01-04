@@ -566,36 +566,88 @@ class _LoansState extends State<Loans> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 12),
-
-                Container(
-                  height: 6,
-                  decoration: BoxDecoration(
-                    color:
-                        isDark
-                            ? const Color(0xFF334155)
-                            : const Color(0xFFF3F4F6),
-                    borderRadius: BorderRadius.circular(3),
-                  ),
-                  child: Stack(
-                    children: [
-                      AnimatedContainer(
-                        duration: const Duration(milliseconds: 800),
-                        curve: Curves.easeOutCubic,
-                        width: double.infinity * loan.progress,
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [loan.color, loan.color.withOpacity(0.8)],
-                            begin: Alignment.centerLeft,
-                            end: Alignment.centerRight,
+                const SizedBox(height: 16), // Aumentado de 12 a 16
+                // BARRA DE PROGRESO ANIMADA
+                TweenAnimationBuilder<double>(
+                  duration: const Duration(milliseconds: 1500),
+                  curve: Curves.easeOutQuart,
+                  tween: Tween<double>(begin: 0.0, end: loan.progress),
+                  builder: (context, value, child) {
+                    return Container(
+                      height: 8, // Aumentado de 6 a 8
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(4),
+                        color:
+                            isDark
+                                ? const Color(0xFF334155)
+                                : const Color(0xFFF3F4F6),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.05),
+                            blurRadius: 2,
+                            offset: const Offset(0, 1),
                           ),
-                          borderRadius: BorderRadius.circular(3),
-                        ),
+                        ],
                       ),
-                    ],
-                  ),
+                      child: Stack(
+                        children: [
+                          // Fondo
+                          Container(
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(4),
+                              color:
+                                  isDark
+                                      ? const Color(0xFF334155)
+                                      : const Color(0xFFF3F4F6),
+                            ),
+                          ),
+                          // Barra de progreso animada
+                          FractionallySizedBox(
+                            widthFactor: value,
+                            child: Container(
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(4),
+                                gradient: LinearGradient(
+                                  colors: [
+                                    loan.color,
+                                    Color.lerp(loan.color, Colors.white, 0.2)!,
+                                  ],
+                                  begin: Alignment.centerLeft,
+                                  end: Alignment.centerRight,
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: loan.color.withOpacity(0.3),
+                                    blurRadius: 4,
+                                    offset: const Offset(0, 1),
+                                  ),
+                                ],
+                              ),
+                              child: Stack(
+                                children: [
+                                  // Efecto de brillo
+                                  Container(
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(4),
+                                      gradient: LinearGradient(
+                                        colors: [
+                                          Colors.white.withOpacity(0.2),
+                                          Colors.transparent,
+                                        ],
+                                        stops: const [0.0, 0.3],
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 12),
 
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -604,16 +656,27 @@ class _LoansState extends State<Loans> {
                       children: [
                         Icon(Iconsax.money_send, size: 14, color: loan.color),
                         const SizedBox(width: 6),
-                        Text(
-                          '${(loan.progress * 100).toInt()}% pagado',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color:
-                                isDark
-                                    ? Colors.white70
-                                    : const Color(0xFF6B7280),
-                            fontWeight: FontWeight.w500,
+                        // Porcentaje animado también
+                        TweenAnimationBuilder<int>(
+                          duration: const Duration(milliseconds: 1500),
+                          curve: Curves.easeOutQuart,
+                          tween: IntTween(
+                            begin: 0,
+                            end: (loan.progress * 100).toInt(),
                           ),
+                          builder: (context, value, child) {
+                            return Text(
+                              '$value% pagado',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color:
+                                    isDark
+                                        ? Colors.white70
+                                        : const Color(0xFF6B7280),
+                                fontWeight: FontWeight.w500,
+                              ),
+                            );
+                          },
                         ),
                       ],
                     ),

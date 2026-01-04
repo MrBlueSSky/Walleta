@@ -19,8 +19,11 @@ class SavingsCard extends StatefulWidget {
   State<SavingsCard> createState() => _SavingsCardState();
 }
 
-class _SavingsCardState extends State<SavingsCard> {
+class _SavingsCardState extends State<SavingsCard>
+    with SingleTickerProviderStateMixin {
   bool _isTapped = false;
+  late AnimationController _progressController;
+  late Animation<double> _progressAnimation;
 
   double get progress =>
       widget.monthlyGoal > 0
@@ -31,6 +34,45 @@ class _SavingsCardState extends State<SavingsCard> {
       '₡${widget.currentSavings.toStringAsFixed(0)}';
   String get formattedMonthlyGoal =>
       '₡${widget.monthlyGoal.toStringAsFixed(0)}';
+
+  @override
+  void initState() {
+    super.initState();
+    _progressController = AnimationController(
+      duration: const Duration(milliseconds: 1500),
+      vsync: this,
+    );
+
+    _progressAnimation = Tween<double>(begin: 0.0, end: progress).animate(
+      CurvedAnimation(parent: _progressController, curve: Curves.easeOutQuart),
+    );
+
+    // Iniciar animación después de un pequeño delay
+    Future.delayed(const Duration(milliseconds: 300), () {
+      if (mounted) {
+        _progressController.forward();
+      }
+    });
+  }
+
+  @override
+  void didUpdateWidget(SavingsCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.currentSavings != widget.currentSavings ||
+        oldWidget.monthlyGoal != widget.monthlyGoal) {
+      _progressController.animateTo(
+        progress,
+        duration: const Duration(milliseconds: 800),
+        curve: Curves.easeInOut,
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    _progressController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -119,27 +161,33 @@ class _SavingsCardState extends State<SavingsCard> {
                             ),
                           ],
                         ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: progressColor.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: progressColor.withOpacity(0.3),
-                              width: 0.5,
-                            ),
-                          ),
-                          child: Text(
-                            '${(progress * 100).toInt()}%',
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                              color: progressColor,
-                            ),
-                          ),
+                        // Porcentaje animado
+                        AnimatedBuilder(
+                          animation: _progressAnimation,
+                          builder: (context, child) {
+                            return Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: progressColor.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: progressColor.withOpacity(0.3),
+                                  width: 0.5,
+                                ),
+                              ),
+                              child: Text(
+                                '${(_progressAnimation.value * 100).toInt()}%',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: progressColor,
+                                ),
+                              ),
+                            );
+                          },
                         ),
                       ],
                     ),
@@ -203,40 +251,20 @@ class _SavingsCardState extends State<SavingsCard> {
                         ),
                       ],
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 16),
 
-                    // Progress Bar
-                    Container(
-                      height: 6,
-                      decoration: BoxDecoration(
-                        color:
-                            isDark
-                                ? const Color(0xFF334155)
-                                : const Color(0xFFF3F4F6),
-                        borderRadius: BorderRadius.circular(3),
-                      ),
-                      child: Stack(
-                        children: [
-                          AnimatedContainer(
-                            duration: const Duration(milliseconds: 800),
-                            curve: Curves.easeOutCubic,
-                            width: double.infinity * progress,
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: [
-                                  progressColor,
-                                  progressColor.withOpacity(0.8),
-                                ],
-                                begin: Alignment.centerLeft,
-                                end: Alignment.centerRight,
-                              ),
-                              borderRadius: BorderRadius.circular(3),
-                            ),
-                          ),
-                        ],
-                      ),
+                    // Progress Bar MEJORADA
+                    AnimatedBuilder(
+                      animation: _progressAnimation,
+                      builder: (context, child) {
+                        return _buildAnimatedProgressBar(
+                          _progressAnimation.value,
+                          progressColor,
+                          isDark,
+                        );
+                      },
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 12),
 
                     // Remaining amount
                     Row(
@@ -284,6 +312,76 @@ class _SavingsCardState extends State<SavingsCard> {
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildAnimatedProgressBar(
+    double progress,
+    Color progressColor,
+    bool isDark,
+  ) {
+    return Container(
+      height: 8,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(4),
+        color: isDark ? const Color(0xFF334155) : const Color(0xFFF3F4F6),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 2,
+            offset: const Offset(0, 1),
+          ),
+        ],
+      ),
+      child: Stack(
+        children: [
+          // Fondo
+          Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(4),
+              color: isDark ? const Color(0xFF334155) : const Color(0xFFF3F4F6),
+            ),
+          ),
+          // Barra de progreso animada
+          FractionallySizedBox(
+            widthFactor: progress,
+            child: Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(4),
+                gradient: LinearGradient(
+                  colors: [
+                    progressColor,
+                    Color.lerp(progressColor, Colors.white, 0.2)!,
+                  ],
+                  begin: Alignment.centerLeft,
+                  end: Alignment.centerRight,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: progressColor.withOpacity(0.3),
+                    blurRadius: 4,
+                    offset: const Offset(0, 1),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          // Efecto de brillo
+          if (progress > 0)
+            FractionallySizedBox(
+              widthFactor: progress,
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(4),
+                  gradient: LinearGradient(
+                    colors: [Colors.white.withOpacity(0.2), Colors.transparent],
+                    stops: const [0.0, 0.3],
+                  ),
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }
