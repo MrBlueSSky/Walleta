@@ -144,9 +144,10 @@ class _SignInFormState extends State<SignInForm>
           _showErrorSnackBar(state.errorMessage ?? 'Error al iniciar sesión');
         }
 
-        if (state.status == AuthenticationStatus.authenticated) {
-          _showSuccessSnackBar('¡Inicio de sesión exitoso!');
-        }
+        //!Quiza mostrar un bienenvenido al usuario o algo similar
+        // if (state.status == AuthenticationStatus.authenticated) {
+        //   _showSuccessSnackBar('¡Inicio de sesión exitoso!');
+        // }
       },
       child: Form(
         key: _formKey,

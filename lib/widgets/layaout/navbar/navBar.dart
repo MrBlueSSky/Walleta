@@ -27,6 +27,10 @@ class _CustomBottomNavBarState extends State<CustomBottomNavBar>
   late Animation<double> _pulseAnimation;
   bool _isMicPressed = false;
 
+  // Para el gesto de slide
+  double _dragStartX = 0.0;
+  double _dragThreshold = 30.0; // Sensibilidad del gesto
+
   @override
   void initState() {
     super.initState();
@@ -94,257 +98,289 @@ class _CustomBottomNavBarState extends State<CustomBottomNavBar>
     _micController.reverse();
   }
 
+  // Manejo de gestos horizontales en el navbar
+  void _handleHorizontalDragStart(DragStartDetails details) {
+    _dragStartX = details.globalPosition.dx;
+  }
+
+  void _handleHorizontalDragUpdate(DragUpdateDetails details) {
+    // Si el drag está sobre el micrófono, ignorar
+    final screenWidth = MediaQuery.of(context).size.width;
+    final dragX = details.globalPosition.dx;
+    final micCenter = screenWidth / 2;
+    final micRadius = 35.0; // Radio aproximado del micrófono
+
+    // Verificar si el toque está cerca del micrófono
+    if ((dragX - micCenter).abs() < micRadius) {
+      return; // Ignorar gestos cerca del micrófono
+    }
+
+    final dragEndX = details.globalPosition.dx;
+    final dragDistance = _dragStartX - dragEndX;
+
+    if (dragDistance.abs() > _dragThreshold) {
+      if (dragDistance > 0) {
+        // Deslizó hacia la izquierda -> siguiente pantalla
+        _changeToNextPage();
+      } else {
+        // Deslizó hacia la derecha -> pantalla anterior
+        _changeToPreviousPage();
+      }
+      _dragStartX = dragEndX; // Reset para el siguiente gesto
+    }
+  }
+
+  void _changeToNextPage() {
+    final nextIndex = (widget.currentIndex + 1) % 4; // 4 pantallas totales
+    if (nextIndex != widget.currentIndex) {
+      widget.onTap(nextIndex);
+    }
+  }
+
+  void _changeToPreviousPage() {
+    final prevIndex = (widget.currentIndex - 1).clamp(0, 3);
+    if (prevIndex != widget.currentIndex) {
+      widget.onTap(prevIndex);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final screenWidth = MediaQuery.of(context).size.width;
 
-    return SizedBox(
-      //!Sumarle algo para que se vea el contenedor
-      height: 65 + MediaQuery.of(context).padding.bottom,
-      child: Stack(
-        clipBehavior:
-            Clip.none, // IMPORTANTE: Permite que los hijos salgan del Stack
-        children: [
-          // Navbar principal (solo la parte inferior)
-          Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
-            child: Container(
-              height: 70 + MediaQuery.of(context).padding.bottom,
-              decoration: BoxDecoration(
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    blurRadius: 20,
-                    spreadRadius: -5,
-                    offset: const Offset(0, -5),
-                  ),
-                ],
-              ),
-              child: ClipRRect(
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(24),
+    return GestureDetector(
+      onHorizontalDragStart: _handleHorizontalDragStart,
+      onHorizontalDragUpdate: _handleHorizontalDragUpdate,
+      excludeFromSemantics: true,
+      child: SizedBox(
+        height: 65 + MediaQuery.of(context).padding.bottom,
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            // Navbar principal
+            Positioned(
+              bottom: 0,
+              left: 0,
+              right: 0,
+              child: Container(
+                height: 70 + MediaQuery.of(context).padding.bottom,
+                decoration: BoxDecoration(
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.1),
+                      blurRadius: 20,
+                      spreadRadius: -5,
+                      offset: const Offset(0, -5),
+                    ),
+                  ],
                 ),
-                child: BackdropFilter(
-                  filter:
-                      widget.isRecording
-                          ? const ColorFilter.mode(
-                            Colors.transparent,
-                            BlendMode.srcOver,
-                          )
-                          : ColorFilter.mode(
-                            Colors.black.withOpacity(0.03),
-                            BlendMode.srcOver,
-                          ),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          isDark
-                              ? const Color(0xFF1E293B).withOpacity(0.95)
-                              : Colors.white.withOpacity(0.95),
-                          isDark
-                              ? const Color(0xFF1E293B).withOpacity(0.98)
-                              : Colors.white.withOpacity(0.98),
-                        ],
-                      ),
-                      border: Border(
-                        top: BorderSide(
-                          color:
-                              isDark
-                                  ? const Color(0xFF334155).withOpacity(0.3)
-                                  : const Color(0xFFE5E7EB).withOpacity(0.8),
-                          width: 0.5,
-                        ),
-                      ),
-                    ),
-                    padding: EdgeInsets.only(
-                      top: 15, // Espacio extra arriba para el micrófono
-                      bottom: MediaQuery.of(context).padding.bottom,
-                    ),
-                    child: Row(
-                      children: [
-                        // Primera sección (Inicio y Transacciones)
-                        Expanded(
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                            children: [
-                              _NavBarItem(
-                                icon: Iconsax.home_2,
-                                label: 'Inicio',
-                                isActive: widget.currentIndex == 0,
-                                onTap: () => widget.onTap(0),
-                                isDark: isDark,
-                              ),
-                              _NavBarItem(
-                                icon: Icons.handshake_outlined,
-                                label: 'Prestamos',
-                                isActive: widget.currentIndex == 1,
-                                onTap: () => widget.onTap(1),
-                                isDark: isDark,
-                              ),
-                            ],
-                          ),
-                        ),
-
-                        // Espacio para el micrófono (centro - vacío)
-                        SizedBox(width: 70), // Ancho igual al micrófono
-                        // Segunda sección (Compartidos y Perfil)
-                        Expanded(
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                            children: [
-                              _NavBarItem(
-                                icon: Iconsax.people,
-                                label: 'Compartidos',
-                                isActive: widget.currentIndex == 2,
-                                onTap: () => widget.onTap(2),
-                                isDark: isDark,
-                              ),
-                              _NavBarItem(
-                                icon: Iconsax.profile_circle,
-                                label: 'Perfil',
-                                isActive: widget.currentIndex == 3,
-                                onTap: () => widget.onTap(3),
-                                isDark: isDark,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
+                child: ClipRRect(
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(24),
                   ),
-                ),
-              ),
-            ),
-          ),
-
-          // Micrófono FLOTANTE - POSICIONADO EN NEGATIVO para que salga del Stack
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: MediaQuery.of(context).padding.bottom,
-            child: Center(
-              child: GestureDetector(
-                onTapDown: _onMicTapDown,
-                onTapUp: _onMicTapUp,
-                onTapCancel: _onMicTapCancel,
-                child: AnimatedBuilder(
-                  animation: _micController,
-                  builder: (context, child) {
-                    return Transform.translate(
-                      // offset: Offset(0, -_micElevationAnimation.value), //!Aqui es lo que hace el efecto de elevacion
-                      offset: Offset(0, 0),
-
-                      child: Transform.scale(
-                        scale:
-                            widget.isRecording
-                                ? _pulseAnimation.value
-                                : _micScaleAnimation.value,
-                        child: Container(
-                          width: 70,
-                          height: 70,
-                          decoration: BoxDecoration(
-                            gradient:
-                                _isMicPressed || widget.isRecording
-                                    ? const LinearGradient(
-                                      colors: [
-                                        Color(0xFF2D5BFF),
-                                        Color(0xFF6366F1),
-                                      ],
-                                      begin: Alignment.topLeft,
-                                      end: Alignment.bottomRight,
-                                    )
-                                    : const LinearGradient(
-                                      colors: [Colors.white, Color(0xFFF8FAFD)],
-                                      begin: Alignment.topLeft,
-                                      end: Alignment.bottomRight,
-                                    ),
-                            shape: BoxShape.circle,
-                            boxShadow: [
-                              BoxShadow(
-                                color: (_isMicPressed || widget.isRecording
-                                        ? const Color(0xFF2D5BFF)
-                                        : Colors.black)
-                                    .withOpacity(
-                                      0.25 +
-                                          (_micElevationAnimation.value / 30) *
-                                              0.3,
-                                    ),
-                                blurRadius: 25 + _micElevationAnimation.value,
-                                spreadRadius: -8,
-                                offset: Offset(
-                                  0,
-                                  10 + _micElevationAnimation.value / 2,
-                                ),
-                              ),
-                              BoxShadow(
-                                color: Colors.white.withOpacity(0.9),
-                                blurRadius: 3,
-                                spreadRadius: 1.5,
-                                offset: const Offset(0, -2),
-                              ),
-                            ],
-                            border: Border.all(
-                              color:
-                                  _isMicPressed || widget.isRecording
-                                      ? const Color(0xFF2D5BFF).withOpacity(0.3)
-                                      : const Color(0xFFE5E7EB),
-                              width: 2.5,
+                  child: BackdropFilter(
+                    filter:
+                        widget.isRecording
+                            ? const ColorFilter.mode(
+                              Colors.transparent,
+                              BlendMode.srcOver,
+                            )
+                            : ColorFilter.mode(
+                              Colors.black.withOpacity(0.03),
+                              BlendMode.srcOver,
                             ),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            isDark
+                                ? const Color(0xFF1E293B).withOpacity(0.95)
+                                : Colors.white.withOpacity(0.95),
+                            isDark
+                                ? const Color(0xFF1E293B).withOpacity(0.98)
+                                : Colors.white.withOpacity(0.98),
+                          ],
+                        ),
+                        border: Border(
+                          top: BorderSide(
+                            color:
+                                isDark
+                                    ? const Color(0xFF334155).withOpacity(0.3)
+                                    : const Color(0xFFE5E7EB).withOpacity(0.8),
+                            width: 0.5,
                           ),
-                          child: Center(
-                            child: Stack(
+                        ),
+                      ),
+                      padding: EdgeInsets.only(
+                        top: 15,
+                        bottom: MediaQuery.of(context).padding.bottom,
+                      ),
+                      child: Row(
+                        children: [
+                          // Primera sección
+                          Expanded(
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                               children: [
-                                // Efecto de pulso cuando está grabando
-                                // if (widget.isRecording)
-                                //   Positioned.fill(
-                                //     child: Container(
-                                //       decoration: BoxDecoration(
-                                //         shape: BoxShape.circle,
-                                //         gradient: RadialGradient(
-                                //           colors: [
-                                //             const Color(
-                                //               0xFF2D5BFF,
-                                //             ).withOpacity(0.4),
-                                //             const Color(
-                                //               0xFF2D5BFF,
-                                //             ).withOpacity(0),
-                                //           ],
-                                //           stops: const [0.3, 1.0],
-                                //         ),
-                                //       ),
-                                //     ),
-                                //   ),
-
-                                // Ícono del micrófono
-                                Icon(
-                                  widget.isRecording
-                                      ? Iconsax.microphone_slash5
-                                      : Iconsax.microphone_2,
-                                  color:
-                                      _isMicPressed || widget.isRecording
-                                          ? Colors.white
-                                          : const Color(0xFF2D5BFF),
-                                  size: 30,
+                                _NavBarItem(
+                                  icon: Iconsax.home_2,
+                                  label: 'Inicio',
+                                  isActive: widget.currentIndex == 0,
+                                  onTap: () => widget.onTap(0),
+                                  isDark: isDark,
+                                ),
+                                _NavBarItem(
+                                  icon: Icons.handshake_outlined,
+                                  label: 'Prestamos',
+                                  isActive: widget.currentIndex == 1,
+                                  onTap: () => widget.onTap(1),
+                                  isDark: isDark,
                                 ),
                               ],
                             ),
                           ),
-                        ),
+
+                          // Espacio para el micrófono
+                          SizedBox(width: 70),
+
+                          // Segunda sección
+                          Expanded(
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                              children: [
+                                _NavBarItem(
+                                  icon: Iconsax.people,
+                                  label: 'Compartidos',
+                                  isActive: widget.currentIndex == 2,
+                                  onTap: () => widget.onTap(2),
+                                  isDark: isDark,
+                                ),
+                                _NavBarItem(
+                                  icon: Iconsax.profile_circle,
+                                  label: 'Perfil',
+                                  isActive: widget.currentIndex == 3,
+                                  onTap: () => widget.onTap(3),
+                                  isDark: isDark,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
-                    );
-                  },
+                    ),
+                  ),
                 ),
               ),
             ),
-          ),
-        ],
+
+            // Micrófono
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: MediaQuery.of(context).padding.bottom,
+              child: Center(
+                child: GestureDetector(
+                  onTapDown: _onMicTapDown,
+                  onTapUp: _onMicTapUp,
+                  onTapCancel: _onMicTapCancel,
+                  child: AnimatedBuilder(
+                    animation: _micController,
+                    builder: (context, child) {
+                      return Transform.translate(
+                        offset: Offset(0, 0),
+                        child: Transform.scale(
+                          scale:
+                              widget.isRecording
+                                  ? _pulseAnimation.value
+                                  : _micScaleAnimation.value,
+                          child: Container(
+                            width: 70,
+                            height: 70,
+                            decoration: BoxDecoration(
+                              gradient:
+                                  _isMicPressed || widget.isRecording
+                                      ? const LinearGradient(
+                                        colors: [
+                                          Color(0xFF2D5BFF),
+                                          Color(0xFF6366F1),
+                                        ],
+                                        begin: Alignment.topLeft,
+                                        end: Alignment.bottomRight,
+                                      )
+                                      : const LinearGradient(
+                                        colors: [
+                                          Colors.white,
+                                          Color(0xFFF8FAFD),
+                                        ],
+                                        begin: Alignment.topLeft,
+                                        end: Alignment.bottomRight,
+                                      ),
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: (_isMicPressed || widget.isRecording
+                                          ? const Color(0xFF2D5BFF)
+                                          : Colors.black)
+                                      .withOpacity(
+                                        0.25 +
+                                            (_micElevationAnimation.value /
+                                                    30) *
+                                                0.3,
+                                      ),
+                                  blurRadius: 25 + _micElevationAnimation.value,
+                                  spreadRadius: -8,
+                                  offset: Offset(
+                                    0,
+                                    10 + _micElevationAnimation.value / 2,
+                                  ),
+                                ),
+                                BoxShadow(
+                                  color: Colors.white.withOpacity(0.9),
+                                  blurRadius: 3,
+                                  spreadRadius: 1.5,
+                                  offset: const Offset(0, -2),
+                                ),
+                              ],
+                              border: Border.all(
+                                color:
+                                    _isMicPressed || widget.isRecording
+                                        ? const Color(
+                                          0xFF2D5BFF,
+                                        ).withOpacity(0.3)
+                                        : const Color(0xFFE5E7EB),
+                                width: 2.5,
+                              ),
+                            ),
+                            child: Center(
+                              child: Stack(
+                                children: [
+                                  Icon(
+                                    widget.isRecording
+                                        ? Iconsax.microphone_slash5
+                                        : Iconsax.microphone_2,
+                                    color:
+                                        _isMicPressed || widget.isRecording
+                                            ? Colors.white
+                                            : const Color(0xFF2D5BFF),
+                                    size: 30,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

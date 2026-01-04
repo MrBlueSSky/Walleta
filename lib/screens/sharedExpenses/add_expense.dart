@@ -34,21 +34,25 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
     },
     {
       'name': 'Viajes',
-      'icon': Iconsax.airplane,
+      'icon': Icons.airplanemode_active,
       'color': const Color(0xFF2D5BFF),
     },
     {
       'name': 'Entretenimiento',
-      'icon': Iconsax.video_play,
+      'icon': Icons.videogame_asset,
       'color': const Color(0xFF9C27B0),
     },
     {'name': 'Hogar', 'icon': Iconsax.home, 'color': const Color(0xFFFFA726)},
     {
       'name': 'Transporte',
-      'icon': Iconsax.car,
+      'icon': Icons.directions_car,
       'color': const Color(0xFFFF6B6B),
     },
-    {'name': 'Otros', 'icon': Iconsax.more, 'color': const Color(0xFF9CA3AF)},
+    {
+      'name': 'Otros',
+      'icon': Icons.more_horiz,
+      'color': const Color(0xFF9CA3AF),
+    },
   ];
 
   void _addParticipant(Map<String, dynamic> user) {
