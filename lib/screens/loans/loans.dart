@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:walleta/models/appUser.dart';
+import 'package:walleta/widgets/buttons/search_button.dart';
 
 class Loans extends StatefulWidget {
   const Loans({super.key});
@@ -11,6 +13,12 @@ class Loans extends StatefulWidget {
 class _LoansState extends State<Loans> {
   int _selectedTab = 0; // 0: Me deben, 1: Debo
   final PageController _pageController = PageController();
+  AppUser? _selectedUser;
+  TextEditingController _personController = TextEditingController();
+  TextEditingController _amountController = TextEditingController();
+  TextEditingController _descriptionController = TextEditingController();
+  String _selectedType = 'Yo debo';
+  DateTime? _selectedDate;
 
   final List<LoanData> _owedToMe = [
     LoanData(
@@ -73,6 +81,9 @@ class _LoansState extends State<Loans> {
   @override
   void dispose() {
     _pageController.dispose();
+    _personController.dispose();
+    _amountController.dispose();
+    _descriptionController.dispose();
     super.dispose();
   }
 
@@ -89,12 +100,12 @@ class _LoansState extends State<Loans> {
     return Scaffold(
       backgroundColor:
           isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFD),
-      // floatingActionButton: _buildFloatingActionButton(isDark),
       body: SafeArea(
         child: CustomScrollView(
           slivers: [
             SliverAppBar(
               floating: true,
+              pinned: true,
               backgroundColor: backgroundColor,
               elevation: 0,
               title: Text(
@@ -107,16 +118,20 @@ class _LoansState extends State<Loans> {
               ),
               actions: [
                 IconButton(
-                  icon: Icon(Iconsax.add, color: iconsColor),
+                  icon: Icon(Iconsax.add, color: iconsColor, size: 24),
                   onPressed: () {
                     _showAddLoanDialog(isDark);
                   },
                 ),
                 IconButton(
-                  icon: Icon(Iconsax.filter, color: iconsColor),
-                  onPressed: () {},
+                  icon: Icon(Iconsax.filter, color: iconsColor, size: 24),
+                  onPressed: () => _showFilterDialog(isDark),
                 ),
               ],
+              // bottom: PreferredSize(
+              //   preferredSize: const Size.fromHeight(60),
+              //   child: _buildHeaderStats(isDark),
+              // ),
             ),
             SliverToBoxAdapter(child: _buildTabDrawer(isDark, screenWidth)),
             SliverFillRemaining(
@@ -134,107 +149,111 @@ class _LoansState extends State<Loans> {
           ],
         ),
       ),
-      // body: Column(
-      //   children: [
-      //     // Header con estadísticas
-      //     _buildHeader(isDark),
-
-      //     // Tabs drawer superior
-      //     _buildTabDrawer(isDark, screenWidth),
-
-      //     // Contenido de las pestañas
-      //     Expanded(
-      //       child: PageView(
-      //         controller: _pageController,
-      //         onPageChanged: (index) {
-      //           setState(() => _selectedTab = index);
-      //         },
-      //         children: [
-      //           _buildLoansList(_owedToMe, 'Te deben', isDark),
-      //           _buildLoansList(_iOwe, 'Debes', isDark),
-      //         ],
-      //       ),
-      //     ),
-      //   ],
-      // ),
     );
   }
 
-  Widget _buildHeader(bool isDark) {
+  Widget _buildHeaderStats(bool isDark) {
     return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E293B) : Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
+        color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFD),
+        border: Border(
+          bottom: BorderSide(
+            color: isDark ? const Color(0xFF334155) : const Color(0xFFE5E7EB),
+            width: 0.5,
+          ),
+        ),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Balance Neto',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: isDark ? Colors.white70 : const Color(0xFF6B7280),
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                '₡${netBalance.toInt()}',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.w700,
+                  color:
+                      netBalance >= 0
+                          ? const Color(0xFF00C896)
+                          : const Color(0xFFFF6B6B),
+                ),
+              ),
+            ],
+          ),
+          Row(
+            children: [
+              _buildStatChip(
+                label: 'Te deben',
+                amount: totalOwedToMe,
+                color: const Color(0xFF00C896),
+                isDark: isDark,
+              ),
+              const SizedBox(width: 12),
+              _buildStatChip(
+                label: 'Debes',
+                amount: totalIOwe,
+                color: const Color(0xFFFF6B6B),
+                isDark: isDark,
+              ),
+            ],
           ),
         ],
       ),
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-      child: SafeArea(
-        bottom: false,
-        child: Column(
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Deudas y Préstamos',
-                  style: TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.w700,
-                    color: isDark ? Colors.white : const Color(0xFF1F2937),
-                  ),
-                ),
-                IconButton(
-                  icon: Icon(
-                    Iconsax.filter,
-                    color: isDark ? Colors.white70 : const Color(0xFF6B7280),
-                  ),
-                  onPressed: () => _showFilterDialog(isDark),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
     );
   }
 
-  Widget _buildStatItem({
+  Widget _buildStatChip({
     required String label,
-    required String value,
+    required double amount,
     required Color color,
     required bool isDark,
   }) {
-    return Column(
-      children: [
-        Text(
-          value,
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w700,
-            color: color,
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withOpacity(0.3), width: 0.5),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 11,
+              color: color,
+              fontWeight: FontWeight.w600,
+            ),
           ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 12,
-            color: isDark ? Colors.white70 : const Color(0xFF6B7280),
-            fontWeight: FontWeight.w500,
+          const SizedBox(height: 2),
+          Text(
+            '₡${amount.toInt()}',
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w700,
+              color: isDark ? Colors.white : const Color(0xFF1F2937),
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
   Widget _buildTabDrawer(bool isDark, double screenWidth) {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       decoration: BoxDecoration(
         color: isDark ? const Color(0xFF1E293B) : Colors.white,
         borderRadius: BorderRadius.circular(16),
@@ -307,7 +326,7 @@ class _LoansState extends State<Loans> {
                     : Colors.transparent,
             borderRadius: BorderRadius.circular(14),
           ),
-          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
           child: Center(
             child: Text(
               label,
@@ -334,24 +353,37 @@ class _LoansState extends State<Loans> {
     return Column(
       children: [
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
           child: Row(
             children: [
-              Text(
-                '$title (${loans.length})',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: isDark ? Colors.white : const Color(0xFF1F2937),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color:
+                      isDark
+                          ? const Color(0xFF1E293B)
+                          : const Color(0xFFF3F4F6),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  '${loans.length} ${title.toLowerCase()}',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: isDark ? Colors.white70 : const Color(0xFF6B7280),
+                  ),
                 ),
               ),
               const Spacer(),
               Text(
-                'Total: ₡${loans.fold(0.0, (sum, item) => sum + item.amount).toInt()}',
+                '₡${loans.fold(0.0, (sum, item) => sum + item.amount).toInt()}',
                 style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: isDark ? Colors.white70 : const Color(0xFF6B7280),
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: isDark ? Colors.white : const Color(0xFF1F2937),
                 ),
               ),
             ],
@@ -401,7 +433,6 @@ class _LoansState extends State<Loans> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Header con nombre y estado
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -480,7 +511,6 @@ class _LoansState extends State<Loans> {
                 ),
                 const SizedBox(height: 16),
 
-                // Monto y fecha
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -538,7 +568,6 @@ class _LoansState extends State<Loans> {
                 ),
                 const SizedBox(height: 12),
 
-                // Barra de progreso
                 Container(
                   height: 6,
                   decoration: BoxDecoration(
@@ -568,7 +597,6 @@ class _LoansState extends State<Loans> {
                 ),
                 const SizedBox(height: 8),
 
-                // Porcentaje y acción
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -705,16 +733,15 @@ class _LoansState extends State<Loans> {
     );
   }
 
-  // Widget _buildFloatingActionButton(bool isDark) {
-  //   return FloatingActionButton(
-  //     backgroundColor: const Color(0xFF2D5BFF),
-  //     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-  //     onPressed: () => _showAddLoanDialog(isDark),
-  //     child: const Icon(Iconsax.add, size: 24),
-  //   );
-  // }
-
   void _showAddLoanDialog(bool isDark) {
+    // Resetear campos
+    _selectedUser = null;
+    _personController.clear();
+    _amountController.clear();
+    _descriptionController.clear();
+    _selectedType = 'Yo debo';
+    _selectedDate = null;
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -726,7 +753,7 @@ class _LoansState extends State<Loans> {
           child: Container(
             color: Colors.black.withOpacity(0.5),
             child: DraggableScrollableSheet(
-              initialChildSize: 0.85,
+              initialChildSize: 0.9,
               minChildSize: 0.5,
               maxChildSize: 0.95,
               builder: (context, scrollController) {
@@ -769,179 +796,594 @@ class _LoansState extends State<Loans> {
           Text(
             'Nuevo Préstamo/Deuda',
             style: TextStyle(
-              fontSize: 20,
+              fontSize: 24,
               fontWeight: FontWeight.w700,
               color: isDark ? Colors.white : const Color(0xFF1F2937),
             ),
           ),
           const SizedBox(height: 24),
-          // Formulario aquí (similar al AddLoanScreen original)
-          _buildFormField(
-            label: 'Nombre de la persona',
-            icon: Iconsax.user,
-            isDark: isDark,
+
+          // Campo de persona con buscador
+          _buildPersonSearchField(isDark),
+          const SizedBox(height: 20),
+
+          // Campo de monto
+          Text(
+            'Monto',
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: isDark ? Colors.white : const Color(0xFF1F2937),
+            ),
           ),
-          const SizedBox(height: 16),
-          _buildFormField(
-            label: 'Monto',
-            icon: Iconsax.money,
-            isDark: isDark,
-            keyboardType: TextInputType.number,
+          const SizedBox(height: 8),
+          Container(
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF3F4F6),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color:
+                    isDark
+                        ? const Color(0xFF334155).withOpacity(0.3)
+                        : const Color(0xFFE5E7EB),
+                width: 0.5,
+              ),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    child: TextField(
+                      controller: _amountController,
+                      keyboardType: TextInputType.number,
+                      style: TextStyle(
+                        color: isDark ? Colors.white : const Color(0xFF1F2937),
+                        fontSize: 16,
+                        height: 1.2, // Ajusta la altura del texto
+                      ),
+                      decoration: InputDecoration(
+                        hintText: '0.00',
+                        hintStyle: TextStyle(
+                          color:
+                              isDark ? Colors.white60 : const Color(0xFF9CA3AF),
+                          fontSize: 16,
+                          height: 1.2,
+                        ),
+                        border: InputBorder.none,
+                        contentPadding: const EdgeInsets.symmetric(
+                          vertical: 16,
+                        ), // Ajuste importante
+                        prefixIcon: Padding(
+                          padding: const EdgeInsets.only(left: 12, right: 8),
+                          child: Icon(
+                            Iconsax.money,
+                            size: 20,
+                            color: const Color(0xFF6B7280),
+                          ),
+                        ),
+                        isDense: true, // Hace que el campo sea menos alto
+                      ),
+                    ),
+                  ),
+                ),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Text(
+                    '₡',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: isDark ? Colors.white70 : const Color(0xFF6B7280),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
-          const SizedBox(height: 16),
-          _buildDropdownField(
-            label: 'Tipo',
-            items: ['Yo debo', 'Me deben'],
-            isDark: isDark,
+          const SizedBox(height: 20),
+
+          //! Campo de tipo
+
+          // Text(
+          //   'Tipo',
+          //   style: TextStyle(
+          //     fontSize: 14,
+          //     fontWeight: FontWeight.w600,
+          //     color: isDark ? Colors.white : const Color(0xFF1F2937),
+          //   ),
+          // ),
+          // const SizedBox(height: 8),
+          // Container(
+          //   decoration: BoxDecoration(
+          //     color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF3F4F6),
+          //     borderRadius: BorderRadius.circular(12),
+          //     border: Border.all(
+          //       color:
+          //           isDark
+          //               ? const Color(0xFF334155).withOpacity(0.3)
+          //               : const Color(0xFFE5E7EB),
+          //       width: 0.5,
+          //     ),
+          //   ),
+          //   child: DropdownButtonFormField<String>(
+          //     value: _selectedType,
+          //     decoration: InputDecoration(
+          //       border: InputBorder.none,
+          //       contentPadding: const EdgeInsets.symmetric(
+          //         vertical: 16,
+          //         horizontal: 12,
+          //       ), // Ajuste
+          //       hintText: 'Seleccionar tipo',
+          //       hintStyle: TextStyle(
+          //         color: isDark ? Colors.white60 : const Color(0xFF9CA3AF),
+          //         fontSize: 16,
+          //       ),
+          //       prefixIcon: Padding(
+          //         padding: const EdgeInsets.only(left: 12, right: 8),
+          //         child: Icon(
+          //           Iconsax.category,
+          //           size: 20,
+          //           color: const Color(0xFF6B7280),
+          //         ),
+          //       ),
+          //     ),
+          //     items:
+          //         ['Yo debo', 'Me deben'].map((String value) {
+          //           return DropdownMenuItem<String>(
+          //             value: value,
+          //             child: Text(
+          //               value,
+          //               style: TextStyle(
+          //                 color:
+          //                     isDark ? Colors.white : const Color(0xFF1F2937),
+          //                 fontSize: 16,
+          //               ),
+          //             ),
+          //           );
+          //         }).toList(),
+          //     onChanged: (value) {
+          //       setState(() {
+          //         _selectedType = value!;
+          //       });
+          //     },
+          //     style: TextStyle(
+          //       color: isDark ? Colors.white : const Color(0xFF1F2937),
+          //       fontSize: 16,
+          //     ),
+          //     isExpanded: true,
+          //     icon: Icon(
+          //       Iconsax.arrow_down_2,
+          //       size: 20,
+          //       color: const Color(0xFF6B7280),
+          //     ),
+          //   ),
+          // ),
+          // const SizedBox(height: 20),
+
+          // Campo de descripción
+          Text(
+            'Descripción',
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: isDark ? Colors.white : const Color(0xFF1F2937),
+            ),
           ),
-          const SizedBox(height: 16),
-          _buildFormField(
-            label: 'Descripción',
-            icon: Iconsax.note,
-            isDark: isDark,
+          const SizedBox(height: 8),
+          Container(
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF3F4F6),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(
+                color:
+                    isDark
+                        ? const Color(0xFF334155).withOpacity(0.3)
+                        : const Color(0xFFE5E7EB),
+                width: 0.5,
+              ),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              child: TextField(
+                controller: _descriptionController,
+                style: TextStyle(
+                  color: isDark ? Colors.white : const Color(0xFF1F2937),
+                  fontSize: 16,
+                  height: 1.2,
+                ),
+                decoration: InputDecoration(
+                  hintText: 'Ej: Préstamo para...',
+                  hintStyle: TextStyle(
+                    color: isDark ? Colors.white60 : const Color(0xFF9CA3AF),
+                    fontSize: 16,
+                    height: 1.2,
+                  ),
+                  border: InputBorder.none,
+                  contentPadding: const EdgeInsets.symmetric(
+                    vertical: 16,
+                  ), // Ajuste
+                  prefixIcon: Padding(
+                    padding: const EdgeInsets.only(left: 0, right: 8),
+                    child: Icon(
+                      Iconsax.note,
+                      size: 20,
+                      color: const Color(0xFF6B7280),
+                    ),
+                  ),
+                ),
+                maxLines: 2,
+              ),
+            ),
           ),
-          const SizedBox(height: 16),
-          _buildDateField(isDark),
+          const SizedBox(height: 20),
+
+          // Campo de fecha
+          Text(
+            'Fecha límite',
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+              color: isDark ? Colors.white : const Color(0xFF1F2937),
+            ),
+          ),
+          const SizedBox(height: 8),
+          GestureDetector(
+            onTap: () => _pickDate(isDark),
+            child: Container(
+              decoration: BoxDecoration(
+                color:
+                    isDark ? const Color(0xFF0F172A) : const Color(0xFFF3F4F6),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color:
+                      isDark
+                          ? const Color(0xFF334155).withOpacity(0.3)
+                          : const Color(0xFFE5E7EB),
+                  width: 0.5,
+                ),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+              child: Row(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(right: 12),
+                    child: Icon(
+                      Iconsax.calendar,
+                      size: 20,
+                      color: const Color(0xFF6B7280),
+                    ),
+                  ),
+                  Expanded(
+                    child: Text(
+                      _selectedDate != null
+                          ? '${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}'
+                          : 'Seleccionar fecha límite',
+                      style: TextStyle(
+                        color:
+                            _selectedDate != null
+                                ? (isDark
+                                    ? Colors.white
+                                    : const Color(0xFF1F2937))
+                                : (isDark
+                                    ? Colors.white60
+                                    : const Color(0xFF9CA3AF)),
+                        fontSize: 16,
+                      ),
+                    ),
+                  ),
+                  if (_selectedDate != null)
+                    IconButton(
+                      icon: const Icon(Iconsax.close_circle, size: 18),
+                      color: const Color(0xFF6B7280),
+                      onPressed: () {
+                        setState(() {
+                          _selectedDate = null;
+                        });
+                      },
+                    ),
+                ],
+              ),
+            ),
+          ),
           const SizedBox(height: 32),
+
+          // Botón de guardar
           SizedBox(
             width: double.infinity,
-            height: 50,
+            height: 56,
             child: ElevatedButton(
-              onPressed: () => Navigator.pop(context),
+              onPressed: () {
+                if (_validateForm()) {
+                  _saveLoan();
+                  Navigator.pop(context);
+                }
+              },
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFF2D5BFF),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
+                elevation: 0,
               ),
               child: const Text(
-                'Guardar',
+                'Guardar Préstamo',
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
               ),
             ),
           ),
+          const SizedBox(height: 20),
         ],
       ),
     );
   }
 
-  Widget _buildFormField({
-    required String label,
-    required IconData icon,
-    required bool isDark,
-    TextInputType keyboardType = TextInputType.text,
-  }) {
-    return Container(
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF3F4F6),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color:
-              isDark
-                  ? const Color(0xFF334155).withOpacity(0.3)
-                  : const Color(0xFFE5E7EB),
-          width: 0.5,
-        ),
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      child: TextField(
-        keyboardType: keyboardType,
-        style: TextStyle(
-          color: isDark ? Colors.white : const Color(0xFF1F2937),
-        ),
-        decoration: InputDecoration(
-          labelText: label,
-          labelStyle: TextStyle(
-            color: isDark ? Colors.white70 : const Color(0xFF6B7280),
-          ),
-          border: InputBorder.none,
-          prefixIcon: Icon(icon, size: 20, color: const Color(0xFF6B7280)),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDropdownField({
-    required String label,
-    required List<String> items,
-    required bool isDark,
-  }) {
-    return Container(
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF3F4F6),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color:
-              isDark
-                  ? const Color(0xFF334155).withOpacity(0.3)
-                  : const Color(0xFFE5E7EB),
-          width: 0.5,
-        ),
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      child: DropdownButtonFormField<String>(
-        decoration: InputDecoration(
-          labelText: label,
-          labelStyle: TextStyle(
-            color: isDark ? Colors.white70 : const Color(0xFF6B7280),
-          ),
-          border: InputBorder.none,
-          prefixIcon: Icon(
-            Iconsax.category,
-            size: 20,
-            color: const Color(0xFF6B7280),
-          ),
-        ),
-        items:
-            items.map((String value) {
-              return DropdownMenuItem<String>(
-                value: value,
-                child: Text(
-                  value,
-                  style: TextStyle(
-                    color: isDark ? Colors.white : const Color(0xFF1F2937),
-                  ),
-                ),
-              );
-            }).toList(),
-        onChanged: (_) {},
-        style: TextStyle(
-          color: isDark ? Colors.white : const Color(0xFF1F2937),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDateField(bool isDark) {
-    return GestureDetector(
-      onTap: () => _pickDate(isDark),
-      child: Container(
-        decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF3F4F6),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color:
-                isDark
-                    ? const Color(0xFF334155).withOpacity(0.3)
-                    : const Color(0xFFE5E7EB),
-            width: 0.5,
-          ),
-        ),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
-        child: Row(
+  Widget _buildPersonSearchField(bool isDark) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Icon(Iconsax.calendar, size: 20, color: const Color(0xFF6B7280)),
-            const SizedBox(width: 12),
             Text(
-              'Seleccionar fecha límite',
+              'Persona',
               style: TextStyle(
-                color: isDark ? Colors.white70 : const Color(0xFF6B7280),
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: isDark ? Colors.white : const Color(0xFF1F2937),
+              ),
+            ),
+            Container(
+              margin: const EdgeInsets.only(right: 4),
+              child: SearchButton(
+                size: 22,
+                onUserSelected: (user) {
+                  setState(() {
+                    _selectedUser = AppUser(
+                      name: user['name'] ?? '',
+                      surname: user['surname'] ?? '',
+                      email: user['email'] ?? '',
+                      username: user['username'] ?? '',
+                      profilePictureUrl: user['profilePictureUrl'] ?? '',
+                      uid: user['uid'] ?? '',
+                      phoneNumber: user['phoneNumber'] ?? '',
+                    );
+                    _personController.text =
+                        '${user['name']} ${user['surname']}';
+                  });
+                },
               ),
             ),
           ],
         ),
+        const SizedBox(height: 8),
+        Container(
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF3F4F6),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color:
+                  isDark
+                      ? const Color(0xFF334155).withOpacity(0.3)
+                      : const Color(0xFFE5E7EB),
+              width: 0.5,
+            ),
+          ),
+          child: Row(
+            children: [
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  child: TextField(
+                    controller: _personController,
+                    readOnly: true,
+                    style: TextStyle(
+                      color: isDark ? Colors.white : const Color(0xFF1F2937),
+                      fontSize: 16,
+                      height: 1.2,
+                    ),
+                    decoration: InputDecoration(
+                      hintText: 'Buscar persona...',
+                      hintStyle: TextStyle(
+                        color:
+                            isDark ? Colors.white60 : const Color(0xFF9CA3AF),
+                        fontSize: 16,
+                        height: 1.2,
+                      ),
+                      border: InputBorder.none,
+                      contentPadding: const EdgeInsets.symmetric(vertical: 16),
+                      prefixIcon: Padding(
+                        padding: const EdgeInsets.only(left: 12, right: 8),
+                        child: Icon(
+                          Iconsax.user,
+                          size: 20,
+                          color: const Color(0xFF6B7280),
+                        ),
+                      ),
+                      suffixIcon:
+                          _personController.text.isNotEmpty
+                              ? IconButton(
+                                icon: const Icon(
+                                  Iconsax.close_circle,
+                                  size: 18,
+                                ),
+                                color: const Color(0xFF6B7280),
+                                onPressed: () {
+                                  _personController.clear();
+                                  setState(() {
+                                    _selectedUser = null;
+                                  });
+                                },
+                              )
+                              : null,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        // Mostrar información del usuario seleccionado
+        if (_selectedUser != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 8, left: 4),
+            child: Row(
+              children: [
+                Container(
+                  width: 24,
+                  height: 24,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient:
+                        _selectedUser!.profilePictureUrl.isNotEmpty
+                            ? null
+                            : const LinearGradient(
+                              colors: [Color(0xFF2D5BFF), Color(0xFF00C896)],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                  ),
+                  child:
+                      _selectedUser!.profilePictureUrl.isNotEmpty
+                          ? ClipOval(
+                            child: Image.network(
+                              _selectedUser!.profilePictureUrl,
+                              fit: BoxFit.cover,
+                            ),
+                          )
+                          : Center(
+                            child: Text(
+                              _selectedUser!.name.substring(0, 1).toUpperCase(),
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                ),
+                const SizedBox(width: 8),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '@${_selectedUser!.username}',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color:
+                            isDark ? Colors.white70 : const Color(0xFF6B7280),
+                      ),
+                    ),
+                    // Text(
+                    //   _selectedUser!.email,
+                    //   style: TextStyle(
+                    //     fontSize: 11,
+                    //     color:
+                    //         isDark ? Colors.white60 : const Color(0xFF9CA3AF),
+                    //   ),
+                    // ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+      ],
+    );
+  }
+
+  bool _validateForm() {
+    if (_selectedUser == null || _personController.text.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Por favor, selecciona una persona'),
+          backgroundColor: const Color(0xFFFF6B6B),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        ),
+      );
+      return false;
+    }
+
+    if (_amountController.text.isEmpty ||
+        double.tryParse(_amountController.text) == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Por favor, ingresa un monto válido'),
+          backgroundColor: const Color(0xFFFF6B6B),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        ),
+      );
+      return false;
+    }
+
+    if (_selectedDate == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Por favor, selecciona una fecha límite'),
+          backgroundColor: const Color(0xFFFF6B6B),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        ),
+      );
+      return false;
+    }
+
+    return true;
+  }
+
+  void _saveLoan() {
+    // Aquí iría la lógica para guardar el préstamo en tu backend
+    final newLoan = LoanData(
+      name: _selectedUser!.name,
+      description:
+          _descriptionController.text.isNotEmpty
+              ? _descriptionController.text
+              : 'Préstamo',
+      amount: double.parse(_amountController.text),
+      date:
+          '${_selectedDate!.day} ${_getMonthName(_selectedDate!.month)} ${_selectedDate!.year}',
+      status: 'Pendiente',
+      progress: 0.0,
+      color:
+          _selectedType == 'Yo debo'
+              ? const Color(0xFFFF6B6B)
+              : const Color(0xFF00C896),
+    );
+
+    if (_selectedType == 'Yo debo') {
+      _iOwe.add(newLoan);
+    } else {
+      _owedToMe.add(newLoan);
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Préstamo agregado a $_selectedType'),
+        backgroundColor: const Color(0xFF00C896),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
     );
+  }
+
+  String _getMonthName(int month) {
+    const months = [
+      'Ene',
+      'Feb',
+      'Mar',
+      'Abr',
+      'May',
+      'Jun',
+      'Jul',
+      'Ago',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dic',
+    ];
+    return months[month - 1];
   }
 
   void _showFilterDialog(bool isDark) {
@@ -957,12 +1399,12 @@ class _LoansState extends State<Loans> {
               'Filtrar',
               style: TextStyle(
                 color: isDark ? Colors.white : const Color(0xFF1F2937),
+                fontWeight: FontWeight.w600,
               ),
             ),
             content: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Opciones de filtro
                 _buildFilterOption('Todos', isDark),
                 _buildFilterOption('Pendientes', isDark),
                 _buildFilterOption('Parciales', isDark),
@@ -979,14 +1421,17 @@ class _LoansState extends State<Loans> {
                   ),
                 ),
               ),
-              TextButton(
+              ElevatedButton(
                 onPressed: () => Navigator.pop(context),
-                child: Text(
-                  'Aplicar',
-                  style: TextStyle(
-                    color: const Color(0xFF2D5BFF),
-                    fontWeight: FontWeight.w600,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF2D5BFF),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
                   ),
+                ),
+                child: const Text(
+                  'Aplicar',
+                  style: TextStyle(fontWeight: FontWeight.w600),
                 ),
               ),
             ],
@@ -995,29 +1440,58 @@ class _LoansState extends State<Loans> {
   }
 
   Widget _buildFilterOption(String option, bool isDark) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
-        children: [
-          Container(
-            width: 24,
-            height: 24,
-            decoration: BoxDecoration(
-              border: Border.all(
-                color: isDark ? Colors.white30 : const Color(0xFFE5E7EB),
-                width: 2,
+    bool isSelected = false;
+
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          isSelected = !isSelected;
+        });
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        decoration: BoxDecoration(
+          border: Border(
+            bottom: BorderSide(
+              color: isDark ? const Color(0xFF334155) : const Color(0xFFE5E7EB),
+              width: 0.5,
+            ),
+          ),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 20,
+              height: 20,
+              decoration: BoxDecoration(
+                border: Border.all(
+                  color:
+                      isSelected
+                          ? const Color(0xFF2D5BFF)
+                          : (isDark ? Colors.white30 : const Color(0xFFE5E7EB)),
+                  width: isSelected ? 6 : 2,
+                ),
+                borderRadius: BorderRadius.circular(6),
               ),
-              borderRadius: BorderRadius.circular(6),
             ),
-          ),
-          const SizedBox(width: 12),
-          Text(
-            option,
-            style: TextStyle(
-              color: isDark ? Colors.white : const Color(0xFF1F2937),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                option,
+                style: TextStyle(
+                  color: isDark ? Colors.white : const Color(0xFF1F2937),
+                  fontSize: 14,
+                ),
+              ),
             ),
-          ),
-        ],
+            if (isSelected)
+              Icon(
+                Iconsax.tick_circle,
+                size: 20,
+                color: const Color(0xFF2D5BFF),
+              ),
+          ],
+        ),
       ),
     );
   }
@@ -1084,8 +1558,8 @@ class _LoansState extends State<Loans> {
           Row(
             children: [
               Container(
-                width: 48,
-                height: 48,
+                width: 56,
+                height: 56,
                 decoration: BoxDecoration(
                   color: loan.color.withOpacity(0.1),
                   shape: BoxShape.circle,
@@ -1094,7 +1568,7 @@ class _LoansState extends State<Loans> {
                   child: Text(
                     loan.name.substring(0, 1).toUpperCase(),
                     style: TextStyle(
-                      fontSize: 18,
+                      fontSize: 22,
                       fontWeight: FontWeight.w600,
                       color: loan.color,
                     ),
@@ -1109,7 +1583,7 @@ class _LoansState extends State<Loans> {
                     Text(
                       loan.name,
                       style: TextStyle(
-                        fontSize: 20,
+                        fontSize: 22,
                         fontWeight: FontWeight.w700,
                         color: isDark ? Colors.white : const Color(0xFF1F2937),
                       ),
@@ -1128,15 +1602,60 @@ class _LoansState extends State<Loans> {
             ],
           ),
           const SizedBox(height: 24),
-          // Más detalles del préstamo
-          _buildDetailItem('Monto total', '₡${loan.amount.toInt()}', isDark),
-          _buildDetailItem('Fecha límite', loan.date, isDark),
-          _buildDetailItem('Estado', loan.status, isDark),
-          _buildDetailItem(
-            'Progreso',
-            '${(loan.progress * 100).toInt()}%',
-            isDark,
+
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF3F4F6),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Column(
+              children: [
+                _buildDetailRow(
+                  'Monto total',
+                  '₡${loan.amount.toInt()}',
+                  isDark,
+                ),
+                const SizedBox(height: 12),
+                _buildDetailRow('Fecha límite', loan.date, isDark),
+                const SizedBox(height: 12),
+                _buildDetailRow('Estado', loan.status, isDark),
+                const SizedBox(height: 12),
+                _buildDetailRow(
+                  'Progreso',
+                  '${(loan.progress * 100).toInt()}%',
+                  isDark,
+                ),
+              ],
+            ),
           ),
+
+          const SizedBox(height: 24),
+          Container(
+            height: 10,
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF334155) : const Color(0xFFF3F4F6),
+              borderRadius: BorderRadius.circular(5),
+            ),
+            child: Stack(
+              children: [
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 800),
+                  curve: Curves.easeOutCubic,
+                  width: double.infinity * loan.progress,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [loan.color, loan.color.withOpacity(0.8)],
+                      begin: Alignment.centerLeft,
+                      end: Alignment.centerRight,
+                    ),
+                    borderRadius: BorderRadius.circular(5),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
           const SizedBox(height: 32),
           Row(
             children: [
@@ -1148,13 +1667,14 @@ class _LoansState extends State<Loans> {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
                   ),
                   child: Text(
                     'Editar',
                     style: TextStyle(
                       color: loan.color,
                       fontWeight: FontWeight.w600,
+                      fontSize: 16,
                     ),
                   ),
                 ),
@@ -1171,44 +1691,42 @@ class _LoansState extends State<Loans> {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    padding: const EdgeInsets.symmetric(vertical: 16),
                   ),
                   child: const Text(
                     'Registrar pago',
-                    style: TextStyle(fontWeight: FontWeight.w600),
+                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
                   ),
                 ),
               ),
             ],
           ),
+          const SizedBox(height: 20),
         ],
       ),
     );
   }
 
-  Widget _buildDetailItem(String label, String value, bool isDark) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 14,
-              color: isDark ? Colors.white70 : const Color(0xFF6B7280),
-            ),
+  Widget _buildDetailRow(String label, String value, bool isDark) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 14,
+            color: isDark ? Colors.white70 : const Color(0xFF6B7280),
           ),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              color: isDark ? Colors.white : const Color(0xFF1F2937),
-            ),
+        ),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: isDark ? Colors.white : const Color(0xFF1F2937),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -1224,9 +1742,9 @@ class _LoansState extends State<Loans> {
           child: Container(
             color: Colors.black.withOpacity(0.5),
             child: DraggableScrollableSheet(
-              initialChildSize: 0.6,
+              initialChildSize: 0.5,
               minChildSize: 0.4,
-              maxChildSize: 0.8,
+              maxChildSize: 0.7,
               builder: (context, scrollController) {
                 return Container(
                   decoration: BoxDecoration(
@@ -1276,13 +1794,76 @@ class _LoansState extends State<Loans> {
                           ),
                         ),
                         const SizedBox(height: 24),
-                        _buildFormField(
-                          label: 'Monto del pago',
-                          icon: Iconsax.money,
-                          isDark: isDark,
-                          keyboardType: TextInputType.number,
+                        Text(
+                          'Saldo pendiente: ₡${(loan.amount * (1 - loan.progress)).toInt()}',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color:
+                                isDark
+                                    ? Colors.white70
+                                    : const Color(0xFF6B7280),
+                          ),
                         ),
                         const SizedBox(height: 16),
+                        Container(
+                          decoration: BoxDecoration(
+                            color:
+                                isDark
+                                    ? const Color(0xFF0F172A)
+                                    : const Color(0xFFF3F4F6),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color:
+                                  isDark
+                                      ? const Color(0xFF334155).withOpacity(0.3)
+                                      : const Color(0xFFE5E7EB),
+                              width: 0.5,
+                            ),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 12),
+                            child: TextField(
+                              keyboardType: TextInputType.number,
+                              style: TextStyle(
+                                color:
+                                    isDark
+                                        ? Colors.white
+                                        : const Color(0xFF1F2937),
+                                fontSize: 16,
+                                height: 1.2, // ← Añade esta línea
+                              ),
+                              decoration: InputDecoration(
+                                hintText: 'Monto del pago',
+                                hintStyle: TextStyle(
+                                  color:
+                                      isDark
+                                          ? Colors.white60
+                                          : const Color(0xFF9CA3AF),
+                                  fontSize: 16,
+                                  height: 1.2, // ← Añade esta línea
+                                ),
+                                border: InputBorder.none,
+                                contentPadding: const EdgeInsets.symmetric(
+                                  vertical: 16,
+                                ), // ← Añade esta línea
+                                prefixIcon: Padding(
+                                  padding: const EdgeInsets.only(
+                                    left: 0,
+                                    right: 8,
+                                  ), // ← Ajusta el padding del icono
+                                  child: Icon(
+                                    Iconsax.money,
+                                    size: 20,
+                                    color: const Color(0xFF6B7280),
+                                  ),
+                                ),
+                                isDense:
+                                    true, // ← Opcional: hace el campo menos alto
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 24),
                         SizedBox(
                           width: double.infinity,
                           height: 50,
@@ -1336,6 +1917,12 @@ class _LoansState extends State<Loans> {
         );
       },
     );
+
+    if (date != null) {
+      setState(() {
+        _selectedDate = date;
+      });
+    }
   }
 }
 
