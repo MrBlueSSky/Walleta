@@ -20,6 +20,8 @@ class _LoansState extends State<Loans> {
   String _selectedType = 'Yo debo';
   DateTime? _selectedDate;
 
+  final ScrollController _scrollController = ScrollController();
+
   final List<LoanData> _owedToMe = [
     LoanData(
       name: 'Ana López',
@@ -84,6 +86,7 @@ class _LoansState extends State<Loans> {
     _personController.dispose();
     _amountController.dispose();
     _descriptionController.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -101,52 +104,56 @@ class _LoansState extends State<Loans> {
       backgroundColor:
           isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFD),
       body: SafeArea(
-        child: CustomScrollView(
-          slivers: [
-            SliverAppBar(
-              floating: true,
-              pinned: true,
-              backgroundColor: backgroundColor,
-              elevation: 0,
-              title: Text(
-                'Deudas y Préstamos',
-                style: TextStyle(
-                  color: isDark ? Colors.white : const Color(0xFF1F2937),
-                  fontWeight: FontWeight.w700,
-                  fontSize: 22,
+        child: NestedScrollView(
+          controller: _scrollController,
+          headerSliverBuilder: (context, innerBoxIsScrolled) {
+            return [
+              SliverAppBar(
+                floating: true,
+                pinned: true,
+                backgroundColor: backgroundColor,
+                elevation: 0,
+                title: Text(
+                  'Deudas y Préstamos',
+                  style: TextStyle(
+                    color: isDark ? Colors.white : const Color(0xFF1F2937),
+                    fontWeight: FontWeight.w700,
+                    fontSize: 22,
+                  ),
                 ),
-              ),
-              actions: [
-                IconButton(
-                  icon: Icon(Iconsax.add, color: iconsColor, size: 24),
-                  onPressed: () {
-                    _showAddLoanDialog(isDark);
-                  },
-                ),
-                IconButton(
-                  icon: Icon(Iconsax.filter, color: iconsColor, size: 24),
-                  onPressed: () => _showFilterDialog(isDark),
-                ),
-              ],
-              // bottom: PreferredSize(
-              //   preferredSize: const Size.fromHeight(60),
-              //   child: _buildHeaderStats(isDark),
-              // ),
-            ),
-            SliverToBoxAdapter(child: _buildTabDrawer(isDark, screenWidth)),
-            SliverFillRemaining(
-              child: PageView(
-                controller: _pageController,
-                onPageChanged: (index) {
-                  setState(() => _selectedTab = index);
-                },
-                children: [
-                  _buildLoansList(_owedToMe, 'Te deben', isDark),
-                  _buildLoansList(_iOwe, 'Debes', isDark),
+                actions: [
+                  IconButton(
+                    icon: Icon(Iconsax.add, color: iconsColor, size: 24),
+                    onPressed: () {
+                      _showAddLoanDialog(isDark);
+                    },
+                  ),
+                  IconButton(
+                    icon: Icon(Iconsax.filter, color: iconsColor, size: 24),
+                    onPressed: () => _showFilterDialog(isDark),
+                  ),
                 ],
               ),
-            ),
-          ],
+              SliverToBoxAdapter(
+                child: Column(
+                  children: [
+                    // _buildHeaderStats(isDark),
+                    _buildTabDrawer(isDark, screenWidth),
+                  ],
+                ),
+              ),
+            ];
+          },
+          body: PageView(
+            controller: _pageController,
+            onPageChanged: (index) {
+              setState(() => _selectedTab = index);
+            },
+            children: [
+              _buildLoansList(_owedToMe, 'Te deben', isDark),
+              _buildLoansList(_iOwe, 'Debes', isDark),
+            ],
+          ),
         ),
       ),
     );
@@ -945,84 +952,6 @@ class _LoansState extends State<Loans> {
             ),
           ),
           const SizedBox(height: 20),
-
-          //! Campo de tipo
-
-          // Text(
-          //   'Tipo',
-          //   style: TextStyle(
-          //     fontSize: 14,
-          //     fontWeight: FontWeight.w600,
-          //     color: isDark ? Colors.white : const Color(0xFF1F2937),
-          //   ),
-          // ),
-          // const SizedBox(height: 8),
-          // Container(
-          //   decoration: BoxDecoration(
-          //     color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF3F4F6),
-          //     borderRadius: BorderRadius.circular(12),
-          //     border: Border.all(
-          //       color:
-          //           isDark
-          //               ? const Color(0xFF334155).withOpacity(0.3)
-          //               : const Color(0xFFE5E7EB),
-          //       width: 0.5,
-          //     ),
-          //   ),
-          //   child: DropdownButtonFormField<String>(
-          //     value: _selectedType,
-          //     decoration: InputDecoration(
-          //       border: InputBorder.none,
-          //       contentPadding: const EdgeInsets.symmetric(
-          //         vertical: 16,
-          //         horizontal: 12,
-          //       ), // Ajuste
-          //       hintText: 'Seleccionar tipo',
-          //       hintStyle: TextStyle(
-          //         color: isDark ? Colors.white60 : const Color(0xFF9CA3AF),
-          //         fontSize: 16,
-          //       ),
-          //       prefixIcon: Padding(
-          //         padding: const EdgeInsets.only(left: 12, right: 8),
-          //         child: Icon(
-          //           Iconsax.category,
-          //           size: 20,
-          //           color: const Color(0xFF6B7280),
-          //         ),
-          //       ),
-          //     ),
-          //     items:
-          //         ['Yo debo', 'Me deben'].map((String value) {
-          //           return DropdownMenuItem<String>(
-          //             value: value,
-          //             child: Text(
-          //               value,
-          //               style: TextStyle(
-          //                 color:
-          //                     isDark ? Colors.white : const Color(0xFF1F2937),
-          //                 fontSize: 16,
-          //               ),
-          //             ),
-          //           );
-          //         }).toList(),
-          //     onChanged: (value) {
-          //       setState(() {
-          //         _selectedType = value!;
-          //       });
-          //     },
-          //     style: TextStyle(
-          //       color: isDark ? Colors.white : const Color(0xFF1F2937),
-          //       fontSize: 16,
-          //     ),
-          //     isExpanded: true,
-          //     icon: Icon(
-          //       Iconsax.arrow_down_2,
-          //       size: 20,
-          //       color: const Color(0xFF6B7280),
-          //     ),
-          //   ),
-          // ),
-          // const SizedBox(height: 20),
 
           // Campo de descripción
           Text(
