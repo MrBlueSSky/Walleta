@@ -216,7 +216,7 @@ class _FinancialDashboardState extends State<FinancialDashboard> {
 
                 // Sección 3: Gastos Compartidos
                 Text(
-                  'Gastos Compartidos',
+                  'Prestamos',
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w600,

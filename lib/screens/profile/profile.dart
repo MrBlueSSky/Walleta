@@ -68,20 +68,20 @@ class _ProfileState extends State<Profile> {
     Navigator.of(context).pop();
 
     switch (item) {
-      case 'saved':
-        _showPlaceholderDialog('Saved');
-        break;
-      case 'activity':
-        _showPlaceholderDialog('Your Activity');
-        break;
       case 'notifications':
-        _showPlaceholderDialog('Notifications');
+        _showPlaceholderDialog('Notificaciones');
         break;
-      case 'insights':
-        _showPlaceholderDialog('Insights');
+      case 'verify':
+        _showPlaceholderDialog('Verificar identidad');
         break;
-      case 'verified':
-        _showPlaceholderDialog('Verified');
+      case 'reports':
+        _showPlaceholderDialog('Reportes');
+        break;
+      case 'help':
+        _showPlaceholderDialog('Invitar Amigos');
+        break;
+      case 'invite':
+        _showPlaceholderDialog('invite');
         break;
       case 'logout':
         context.read<AuthenticationBloc>().add(AuthenticationLogoutRequested());
@@ -92,26 +92,135 @@ class _ProfileState extends State<Profile> {
   void _showPlaceholderDialog(String feature) {
     showDialog(
       context: context,
+      barrierDismissible: true,
       builder:
-          (context) => AlertDialog(
-            backgroundColor: AppColors.cardBackground,
-            title: Text(
-              feature,
-              style: TextStyle(color: AppColors.textPrimary),
-            ),
-            content: Text(
-              'Esta función estará disponible próximamente.',
-              style: TextStyle(color: AppColors.textSecondary),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: Text(
-                  'OK',
-                  style: TextStyle(color: Theme.of(context).primaryColor),
-                ),
+          (context) => Dialog(
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            child: Container(
+              decoration: BoxDecoration(
+                color: AppColors.cardBackground,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.15),
+                    blurRadius: 20,
+                    offset: const Offset(0, 10),
+                  ),
+                ],
               ),
-            ],
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Header con icono
+                  Container(
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).primaryColor.withOpacity(0.08),
+                      borderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(20),
+                        topRight: Radius.circular(20),
+                      ),
+                    ),
+                    child: Center(
+                      child: Column(
+                        children: [
+                          Container(
+                            decoration: BoxDecoration(
+                              color: Theme.of(
+                                context,
+                              ).primaryColor.withOpacity(0.1),
+                              shape: BoxShape.circle,
+                            ),
+                            padding: const EdgeInsets.all(16),
+                            child: Icon(
+                              Iconsax.clock,
+                              size: 32,
+                              color: Theme.of(context).primaryColor,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            feature,
+                            style: TextStyle(
+                              color: AppColors.textPrimary,
+                              fontSize: 18,
+                              fontWeight: FontWeight.w700,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  // Contenido
+                  Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
+                      children: [
+                        Text(
+                          'Próximamente',
+                          style: TextStyle(
+                            color: Theme.of(context).primaryColor,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          'Esta función está en desarrollo y estará disponible en una futura actualización.',
+                          style: TextStyle(
+                            color: AppColors.textSecondary,
+                            fontSize: 14,
+                            height: 1.5,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          '¡Mantente atento!',
+                          style: TextStyle(
+                            color: AppColors.textSecondary.withOpacity(0.8),
+                            fontSize: 12,
+                            fontStyle: FontStyle.italic,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // Botón
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Theme.of(context).primaryColor,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          elevation: 0,
+                        ),
+                        child: Text(
+                          'Entendido',
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
     );
   }

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:walleta/screens/dashboard/dashbard.dart';
 import 'package:walleta/screens/loans/loans.dart';
 import 'package:walleta/screens/profile/profile.dart';
-import 'package:walleta/screens/savings/savings_account.dart';
 import 'package:walleta/screens/sharedExpenses/shared_expenses.dart';
 import 'package:walleta/widgets/layaout/navbar/navBar.dart';
 

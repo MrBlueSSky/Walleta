@@ -42,7 +42,7 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
       'icon': Icons.videogame_asset,
       'color': const Color(0xFF9C27B0),
     },
-    {'name': 'Hogar', 'icon': Iconsax.home, 'color': const Color(0xFFFFA726)},
+    {'name': 'Hogar', 'icon': Icons.home, 'color': const Color(0xFFFFA726)},
     {
       'name': 'Transporte',
       'icon': Icons.directions_car,
