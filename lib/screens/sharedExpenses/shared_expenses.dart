@@ -63,10 +63,6 @@ class _SharedExpensesScreenState extends State<SharedExpensesScreen> {
               return const Center(child: Text('Error al cargar los gastos'));
             }
 
-            if (state.expenses.isEmpty) {
-              return _buildEmptyState();
-            }
-
             // SOLUCIÓN: Usar CustomScrollView correctamente
             return CustomScrollView(
               physics: const BouncingScrollPhysics(),
@@ -98,22 +94,25 @@ class _SharedExpensesScreenState extends State<SharedExpensesScreen> {
                   ],
                 ),
 
-                // Padding general para todas las cards
-                SliverPadding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 8,
+                if (state.expenses.isEmpty)
+                  SliverToBoxAdapter(child: _buildEmptyState())
+                else
+                  // Padding general para todas las cards
+                  SliverPadding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
+                    sliver: SliverList(
+                      delegate: SliverChildBuilderDelegate((context, index) {
+                        return Padding(
+                          // Padding entre cada card
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: ExpenseCard(expense: state.expenses[index]),
+                        );
+                      }, childCount: state.expenses.length),
+                    ),
                   ),
-                  sliver: SliverList(
-                    delegate: SliverChildBuilderDelegate((context, index) {
-                      return Padding(
-                        // Padding entre cada card
-                        padding: const EdgeInsets.only(bottom: 12),
-                        child: ExpenseCard(expense: state.expenses[index]),
-                      );
-                    }, childCount: state.expenses.length),
-                  ),
-                ),
 
                 // Espacio adicional al final para evitar que el FAB tape contenido
                 // const SliverToBoxAdapter(child: SizedBox(height: 10)),

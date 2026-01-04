@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:iconsax/iconsax.dart';
 import 'package:walleta/screens/auth/screens/sign_in_form.dart';
 import 'package:walleta/screens/auth/screens/sign_up_form.dart';
-import 'package:walleta/themes/app_colors.dart';
 
 class AuthScreen extends StatefulWidget {
   const AuthScreen({Key? key}) : super(key: key);
@@ -17,25 +16,25 @@ class _AuthScreenState extends State<AuthScreen>
   bool _isSignIn = true;
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
-  late Animation<Offset> _slideAnimation;
+  late Animation<double> _scaleAnimation;
 
   @override
   void initState() {
     super.initState();
     _animationController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 400),
+      duration: const Duration(milliseconds: 500),
     );
 
     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _animationController, curve: Curves.easeIn),
+      CurvedAnimation(
+        parent: _animationController,
+        curve: Curves.easeInOutCubic,
+      ),
     );
 
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(0.0, 0.2),
-      end: Offset.zero,
-    ).animate(
-      CurvedAnimation(parent: _animationController, curve: Curves.easeOut),
+    _scaleAnimation = Tween<double>(begin: 0.95, end: 1.0).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeOutBack),
     );
 
     _animationController.forward();
@@ -57,106 +56,64 @@ class _AuthScreenState extends State<AuthScreen>
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final screenSize = MediaQuery.of(context).size;
-    final isSmallScreen = screenSize.width < 360;
+    final isSmallScreen = screenSize.width < 400;
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: SystemUiOverlayStyle.light,
+      value:
+          isDark
+              ? SystemUiOverlayStyle.light
+              : SystemUiOverlayStyle.dark.copyWith(
+                statusBarColor: Colors.transparent,
+              ),
       child: Scaffold(
-        backgroundColor: AppColors.scaffoldBackground,
+        backgroundColor:
+            isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFD),
         body: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                AppColors.scaffoldBackground,
-                AppColors.primaryDark,
-                AppColors.scaffoldBackground,
-              ],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors:
+                  isDark
+                      ? [
+                        const Color(0xFF0F172A),
+                        const Color(0xFF1E293B),
+                        const Color(0xFF0F172A),
+                      ]
+                      : [
+                        const Color(0xFFF8FAFD),
+                        Colors.white,
+                        const Color(0xFFF8FAFD),
+                      ],
             ),
           ),
           child: SafeArea(
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                return Center(
-                  child: SingleChildScrollView(
-                    child: Container(
-                      constraints: BoxConstraints(maxWidth: 480),
-                      padding: EdgeInsets.symmetric(
-                        horizontal: constraints.maxWidth > 600 ? 40 : 24,
-                      ),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          SizedBox(height: constraints.maxHeight * 0.05),
+            child: Center(
+              child: SingleChildScrollView(
+                padding: EdgeInsets.symmetric(
+                  horizontal: isSmallScreen ? 20 : 32,
+                  vertical: 20,
+                ),
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(maxWidth: 480),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Logo y nombre de la app
+                      _buildLogo(isDark, isSmallScreen),
+                      SizedBox(height: isSmallScreen ? 16 : 20),
 
-                          TweenAnimationBuilder<double>(
-                            tween: Tween(begin: 0.0, end: 1.0),
-                            duration: const Duration(milliseconds: 800),
-                            curve: Curves.easeOutBack,
-                            builder: (context, value, child) {
-                              return Transform.scale(
-                                scale: value,
-                                child: child,
-                              );
-                            },
-                            child: _buildLogo(isSmallScreen),
-                          ),
-                          SizedBox(height: constraints.maxHeight * 0.06),
+                      // Card principal con tabs y formulario
+                      _buildAuthCard(isDark, isSmallScreen),
 
-                          TweenAnimationBuilder<double>(
-                            tween: Tween(begin: 0.0, end: 1.0),
-                            duration: const Duration(milliseconds: 600),
-                            curve: Curves.easeOut,
-                            builder: (context, value, child) {
-                              return Opacity(opacity: value, child: child);
-                            },
-                            child: _buildAuthToggle(isSmallScreen),
-                          ),
-                          SizedBox(height: constraints.maxHeight * 0.04),
-
-                          FadeTransition(
-                            opacity: _fadeAnimation,
-                            child: SlideTransition(
-                              position: _slideAnimation,
-                              child: AnimatedSwitcher(
-                                duration: const Duration(milliseconds: 400),
-                                switchInCurve: Curves.easeIn,
-                                switchOutCurve: Curves.easeOut,
-                                transitionBuilder: (
-                                  Widget child,
-                                  Animation<double> animation,
-                                ) {
-                                  return FadeTransition(
-                                    opacity: animation,
-                                    child: SlideTransition(
-                                      position: Tween<Offset>(
-                                        begin: const Offset(0.0, 0.2),
-                                        end: Offset.zero,
-                                      ).animate(animation),
-                                      child: child,
-                                    ),
-                                  );
-                                },
-                                child:
-                                    _isSignIn
-                                        ? SignInForm(
-                                          key: const ValueKey('signin'),
-                                        )
-                                        : SignUpForm(
-                                          key: const ValueKey('signup'),
-                                        ),
-                              ),
-                            ),
-                          ),
-                          SizedBox(height: constraints.maxHeight * 0.02),
-                        ],
-                      ),
-                    ),
+                      // Footer
+                      _buildFooter(isDark),
+                    ],
                   ),
-                );
-              },
+                ),
+              ),
             ),
           ),
         ),
@@ -164,105 +121,340 @@ class _AuthScreenState extends State<AuthScreen>
     );
   }
 
-  Widget _buildLogo(bool isSmallScreen) {
-    return Hero(
-      tag: 'app_logo',
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            height: isSmallScreen ? 36 : 44,
-            width: isSmallScreen ? 36 : 44,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.primary.withOpacity(0.4),
-                  blurRadius: 12,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-              gradient: LinearGradient(
-                colors: [AppColors.primary, AppColors.accentPink],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
+  Widget _buildLogo(bool isDark, bool isSmallScreen) {
+    return Column(
+      children: [
+        // Logo con gradiente
+        Container(
+          width: isSmallScreen ? 72 : 88,
+          height: isSmallScreen ? 72 : 88,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            gradient: const LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [Color(0xFF2D5BFF), Color(0xFF00C896)],
             ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                FaIcon(
-                  FontAwesomeIcons.moneyCheckDollar,
-                  color: AppColors.textPrimary,
-                  size: isSmallScreen ? 20 : 24,
-                ),
-              ],
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF2D5BFF).withOpacity(0.3),
+                blurRadius: 20,
+                offset: const Offset(0, 8),
+              ),
+            ],
+          ),
+          child: Center(
+            child: Icon(
+              Iconsax.wallet_3,
+              size: isSmallScreen ? 36 : 44,
+              color: Colors.white,
             ),
           ),
-          const SizedBox(width: 12),
-          Text(
-            'Walleta',
-            style: TextStyle(
-              color: AppColors.textPrimary,
-              fontSize: isSmallScreen ? 22 : 26,
-              fontWeight: FontWeight.bold,
-              letterSpacing: 0.5,
+        ),
+        SizedBox(height: isSmallScreen ? 16 : 20),
+
+        // Nombre de la app
+        Text(
+          'Walleta',
+          style: TextStyle(
+            fontSize: isSmallScreen ? 32 : 40,
+            fontWeight: FontWeight.w800,
+            color: isDark ? Colors.white : const Color(0xFF1F2937),
+            letterSpacing: -0.5,
+          ),
+        ),
+        SizedBox(height: isSmallScreen ? 4 : 8),
+
+        // Subtítulo
+        Text(
+          'Tu billetera digital inteligente',
+          style: TextStyle(
+            fontSize: isSmallScreen ? 14 : 16,
+            color: isDark ? Colors.white70 : const Color(0xFF6B7280),
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAuthCard(bool isDark, bool isSmallScreen) {
+    return ScaleTransition(
+      scale: _scaleAnimation,
+      child: FadeTransition(
+        opacity: _fadeAnimation,
+        child: Container(
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF1E293B) : Colors.white,
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 32,
+                offset: const Offset(0, 16),
+              ),
+            ],
+            border: Border.all(
+              color:
+                  isDark
+                      ? const Color(0xFF334155).withOpacity(0.3)
+                      : const Color(0xFFE5E7EB).withOpacity(0.8),
+              width: 0.5,
             ),
+          ),
+          child: Column(
+            children: [
+              // Tabs de Iniciar Sesión / Registrarse
+              _buildTabSelector(isDark, isSmallScreen),
+
+              // Contenido del formulario
+              Padding(
+                padding: EdgeInsets.all(isSmallScreen ? 20 : 24),
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 400),
+                  switchInCurve: Curves.easeInOutCubic,
+                  switchOutCurve: Curves.easeInOutCubic,
+                  transitionBuilder: (
+                    Widget child,
+                    Animation<double> animation,
+                  ) {
+                    return FadeTransition(
+                      opacity: animation,
+                      child: SizeTransition(
+                        sizeFactor: animation,
+                        axis: Axis.vertical,
+                        axisAlignment: -1,
+                        child: child,
+                      ),
+                    );
+                  },
+                  child:
+                      _isSignIn
+                          ? SignInForm(key: const ValueKey('signin'))
+                          : SignUpForm(key: const ValueKey('signup')),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTabSelector(bool isDark, bool isSmallScreen) {
+    return Container(
+      padding: const EdgeInsets.all(8),
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF3F4F6),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(
+        children: [
+          _buildTabButton(
+            label: 'Iniciar Sesión',
+            isSignInTab: true,
+            isDark: isDark,
+            isSmallScreen: isSmallScreen,
+          ),
+          _buildTabButton(
+            label: 'Registrarse',
+            isSignInTab: false,
+            isDark: isDark,
+            isSmallScreen: isSmallScreen,
           ),
         ],
       ),
     );
   }
 
-  Widget _buildAuthToggle(bool isSmallScreen) {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.cardBackground,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: AppColors.secondaryBackground.withOpacity(0.3),
-          width: 1,
+  Widget _buildTabButton({
+    required String label,
+    required bool isSignInTab,
+    required bool isDark,
+    required bool isSmallScreen,
+  }) {
+    final isSelected =
+        (isSignInTab && _isSignIn) || (!isSignInTab && !_isSignIn);
+
+    return Expanded(
+      child: GestureDetector(
+        onTap: () {
+          // Solo cambiar si es diferente al estado actual
+          if ((isSignInTab && !_isSignIn) || (!isSignInTab && _isSignIn)) {
+            _toggleAuthMode();
+          }
+        },
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeInOut,
+          decoration: BoxDecoration(
+            color:
+                isSelected
+                    ? (isDark
+                        ? const Color(0xFF2D5BFF)
+                        : const Color(0xFF2D5BFF))
+                    : Colors.transparent,
+            borderRadius: BorderRadius.circular(12),
+            boxShadow:
+                isSelected
+                    ? [
+                      BoxShadow(
+                        color: const Color(0xFF2D5BFF).withOpacity(0.3),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ]
+                    : null,
+          ),
+          padding: EdgeInsets.symmetric(
+            horizontal: isSmallScreen ? 12 : 16,
+            vertical: isSmallScreen ? 14 : 16,
+          ),
+          child: Center(
+            child: Text(
+              label,
+              style: TextStyle(
+                fontSize: isSmallScreen ? 14 : 15,
+                fontWeight: FontWeight.w600,
+                color:
+                    isSelected
+                        ? Colors.white
+                        : (isDark ? Colors.white70 : const Color(0xFF6B7280)),
+              ),
+            ),
+          ),
         ),
       ),
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+    );
+  }
+
+  Widget _buildFooter(bool isDark) {
+    return Column(
+      children: [
+        // Línea divisoria
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          child: Row(
+            children: [
+              Expanded(
+                child: Divider(
+                  color:
+                      isDark
+                          ? const Color(0xFF334155).withOpacity(0.5)
+                          : const Color(0xFFE5E7EB),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                child: Text(
+                  'o continúa con',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: isDark ? Colors.white70 : const Color(0xFF6B7280),
+                  ),
+                ),
+              ),
+              Expanded(
+                child: Divider(
+                  color:
+                      isDark
+                          ? const Color(0xFF334155).withOpacity(0.5)
+                          : const Color(0xFFE5E7EB),
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        // Botones de login social
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            _buildSocialButton(
+              icon: Icons.g_mobiledata,
+              label: 'Google',
+              color: isDark ? const Color(0xFF334155) : const Color(0xFFF3F4F6),
+              iconColor: isDark ? Colors.white70 : const Color(0xFF6B7280),
+              isDark: isDark,
+            ),
+            const SizedBox(width: 12),
+            _buildSocialButton(
+              icon: Icons.apple,
+              label: 'Apple',
+              color: isDark ? const Color(0xFF334155) : const Color(0xFFF3F4F6),
+              iconColor: isDark ? Colors.white70 : const Color(0xFF6B7280),
+              isDark: isDark,
+            ),
+            const SizedBox(width: 12),
+            _buildSocialButton(
+              icon: Icons.facebook,
+              label: 'Facebook',
+              color: isDark ? const Color(0xFF334155) : const Color(0xFFF3F4F6),
+              iconColor: isDark ? Colors.white70 : const Color(0xFF6B7280),
+              isDark: isDark,
+            ),
+          ],
+        ),
+
+        // Términos y condiciones
+        Padding(
+          padding: const EdgeInsets.only(top: 24),
+          child: Text(
+            'Al continuar, aceptas nuestros Términos de Servicio\n y Política de Privacidad',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 11,
+              color: isDark ? Colors.white60 : const Color(0xFF9CA3AF),
+              height: 1.4,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSocialButton({
+    required IconData icon,
+    required String label,
+    required Color color,
+    required Color iconColor,
+    required bool isDark,
+  }) {
+    return Container(
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color:
+              isDark
+                  ? const Color(0xFF334155).withOpacity(0.5)
+                  : const Color(0xFFE5E7EB),
+          width: 0.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          _buildTabButton('Iniciar sesión', true, isSmallScreen),
-          _buildTabButton('Registrarse', false, isSmallScreen),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTabButton(String title, bool isSignIn, bool isSmallScreen) {
-    final isSelected = isSignIn == _isSignIn;
-
-    return GestureDetector(
-      onTap: () {
-        if (isSignIn != _isSignIn) {
-          _toggleAuthMode();
-        }
-      },
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 500),
-        curve: Curves.easeInOut,
-        padding: EdgeInsets.symmetric(
-          horizontal: isSmallScreen ? 20 : 28,
-          vertical: 12,
-        ),
-        decoration: BoxDecoration(
-          color: isSelected ? AppColors.primary : Colors.transparent,
-          borderRadius: BorderRadius.circular(8),
-        ),
-        child: Text(
-          title,
-          style: TextStyle(
-            color: isSelected ? AppColors.textPrimary : AppColors.textSecondary,
-            fontSize: isSmallScreen ? 14 : 16,
-            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+          Icon(icon, size: 18, color: iconColor),
+          const SizedBox(width: 8),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              color: isDark ? Colors.white70 : const Color(0xFF6B7280),
+            ),
           ),
-        ),
+        ],
       ),
     );
   }
