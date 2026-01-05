@@ -15,20 +15,34 @@ class FinancialDashboard extends StatefulWidget {
 class _FinancialDashboardState extends State<FinancialDashboard> {
   // Datos de ejemplo
   final double currentBalance = 125430.50;
-  final double monthlyExpenses = 65430.75;
+  final double monthlyExpenses = 0;
   final double monthlyIncome = 150000.00;
-  final double changeVsPrevious = 12.5; // porcentaje
+  final double changeVsPrevious = 0; // porcentaje
 
   final List<CategoryData> categoryData = [
     CategoryData('Comida', 25000, const Color(0xFF2D5BFF), Icons.restaurant),
+    CategoryData(
+      'Viajes',
+      25000,
+      const Color(0xFF9C27B0),
+      Icons.airplanemode_active,
+    ),
+    CategoryData(
+      'Entretenimiento',
+      8000,
+      const Color(0xFFFFA726),
+      Icons.sports_esports,
+    ),
+
+    CategoryData('Hogar', 12000, const Color(0xFFFF6B6B), Icons.home),
     CategoryData(
       'Transporte',
       18000,
       const Color(0xFF00C896),
       Icons.directions_car,
     ),
-    CategoryData('Hogar', 12000, const Color(0xFFFF6B6B), Icons.home),
-    CategoryData('Ocio', 8000, const Color(0xFFFFA726), Icons.sports_esports),
+
+    CategoryData('Otros', 3000, const Color(0xFF9CA3AF), Icons.more_horiz),
   ];
 
   final List<SharedExpense> sharedExpenses = [

@@ -30,7 +30,7 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
     {
       'name': 'Comida',
       'icon': Icons.restaurant,
-      'color': const Color(0xFF00C896),
+      'color': const Color(0xFF2D5BFF),
     },
     {
       'name': 'Viajes',
@@ -39,14 +39,14 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
     },
     {
       'name': 'Entretenimiento',
-      'icon': Icons.videogame_asset,
-      'color': const Color(0xFF9C27B0),
+      'icon': Icons.sports_esports,
+      'color': const Color(0xFFFFA726),
     },
-    {'name': 'Hogar', 'icon': Icons.home, 'color': const Color(0xFFFFA726)},
+    {'name': 'Hogar', 'icon': Icons.home, 'color': const Color(0xFFFF6B6B)},
     {
       'name': 'Transporte',
       'icon': Icons.directions_car,
-      'color': const Color(0xFFFF6B6B),
+      'color': const Color(0xFF00C896),
     },
     {
       'name': 'Otros',
