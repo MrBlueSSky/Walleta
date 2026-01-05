@@ -6,7 +6,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:walleta/models/appUser.dart';
 import 'package:walleta/models/loan.dart';
 import 'package:walleta/widgets/buttons/search_button.dart';
-import 'package:walleta/widgets/toggle/loan_toggle_button.dart';
+import 'package:walleta/widgets/toggle/loan_tab_button.dart';
 
 class Loans extends StatefulWidget {
   const Loans({super.key});
@@ -285,7 +285,7 @@ class _LoansState extends State<Loans> {
       ),
       child: Row(
         children: [
-          LoanToggleButton(
+          LoanTabButton(
             label: 'Me deben',
             isSelected: _selectedTab == 0,
             isDark: isDark,
@@ -298,7 +298,7 @@ class _LoansState extends State<Loans> {
               );
             },
           ),
-          LoanToggleButton(
+          LoanTabButton(
             label: 'Yo debo',
             isSelected: _selectedTab == 1,
             isDark: isDark,
