@@ -17,7 +17,6 @@ class _LoansState extends State<Loans> {
   TextEditingController _personController = TextEditingController();
   TextEditingController _amountController = TextEditingController();
   TextEditingController _descriptionController = TextEditingController();
-  String _selectedType = 'Yo debo';
   DateTime? _selectedDate;
 
   final ScrollController _scrollController = ScrollController();
@@ -159,104 +158,104 @@ class _LoansState extends State<Loans> {
     );
   }
 
-  Widget _buildHeaderStats(bool isDark) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFD),
-        border: Border(
-          bottom: BorderSide(
-            color: isDark ? const Color(0xFF334155) : const Color(0xFFE5E7EB),
-            width: 0.5,
-          ),
-        ),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Balance Neto',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: isDark ? Colors.white70 : const Color(0xFF6B7280),
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                '₡${netBalance.toInt()}',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.w700,
-                  color:
-                      netBalance >= 0
-                          ? const Color(0xFF00C896)
-                          : const Color(0xFFFF6B6B),
-                ),
-              ),
-            ],
-          ),
-          Row(
-            children: [
-              _buildStatChip(
-                label: 'Te deben',
-                amount: totalOwedToMe,
-                color: const Color(0xFF00C896),
-                isDark: isDark,
-              ),
-              const SizedBox(width: 12),
-              _buildStatChip(
-                label: 'Debes',
-                amount: totalIOwe,
-                color: const Color(0xFFFF6B6B),
-                isDark: isDark,
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
+  // Widget _buildHeaderStats(bool isDark) {
+  //   return Container(
+  //     padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+  //     decoration: BoxDecoration(
+  //       color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFD),
+  //       border: Border(
+  //         bottom: BorderSide(
+  //           color: isDark ? const Color(0xFF334155) : const Color(0xFFE5E7EB),
+  //           width: 0.5,
+  //         ),
+  //       ),
+  //     ),
+  //     child: Row(
+  //       mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  //       children: [
+  //         Column(
+  //           crossAxisAlignment: CrossAxisAlignment.start,
+  //           children: [
+  //             Text(
+  //               'Balance Neto',
+  //               style: TextStyle(
+  //                 fontSize: 12,
+  //                 color: isDark ? Colors.white70 : const Color(0xFF6B7280),
+  //               ),
+  //             ),
+  //             const SizedBox(height: 4),
+  //             Text(
+  //               '₡${netBalance.toInt()}',
+  //               style: TextStyle(
+  //                 fontSize: 24,
+  //                 fontWeight: FontWeight.w700,
+  //                 color:
+  //                     netBalance >= 0
+  //                         ? const Color(0xFF00C896)
+  //                         : const Color(0xFFFF6B6B),
+  //               ),
+  //             ),
+  //           ],
+  //         ),
+  //         Row(
+  //           children: [
+  //             _buildStatChip(
+  //               label: 'Te deben',
+  //               amount: totalOwedToMe,
+  //               color: const Color(0xFF00C896),
+  //               isDark: isDark,
+  //             ),
+  //             const SizedBox(width: 12),
+  //             _buildStatChip(
+  //               label: 'Debes',
+  //               amount: totalIOwe,
+  //               color: const Color(0xFFFF6B6B),
+  //               isDark: isDark,
+  //             ),
+  //           ],
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
 
-  Widget _buildStatChip({
-    required String label,
-    required double amount,
-    required Color color,
-    required bool isDark,
-  }) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.3), width: 0.5),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 11,
-              color: color,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            '₡${amount.toInt()}',
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w700,
-              color: isDark ? Colors.white : const Color(0xFF1F2937),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  // Widget _buildStatChip({
+  //   required String label,
+  //   required double amount,
+  //   required Color color,
+  //   required bool isDark,
+  // }) {
+  //   return Container(
+  //     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+  //     decoration: BoxDecoration(
+  //       color: color.withOpacity(0.1),
+  //       borderRadius: BorderRadius.circular(12),
+  //       border: Border.all(color: color.withOpacity(0.3), width: 0.5),
+  //     ),
+  //     child: Column(
+  //       crossAxisAlignment: CrossAxisAlignment.start,
+  //       children: [
+  //         Text(
+  //           label,
+  //           style: TextStyle(
+  //             fontSize: 11,
+  //             color: color,
+  //             fontWeight: FontWeight.w600,
+  //           ),
+  //         ),
+  //         const SizedBox(height: 2),
+  //         Text(
+  //           '₡${amount.toInt()}',
+  //           style: TextStyle(
+  //             fontSize: 14,
+  //             fontWeight: FontWeight.w700,
+  //             color: isDark ? Colors.white : const Color(0xFF1F2937),
+  //           ),
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
 
   Widget _buildTabDrawer(bool isDark, double screenWidth) {
     return Container(
@@ -573,7 +572,7 @@ class _LoansState extends State<Loans> {
                     ),
                   ],
                 ),
-                const SizedBox(height: 16), // Aumentado de 12 a 16
+                const SizedBox(height: 16),
                 // BARRA DE PROGRESO ANIMADA
                 TweenAnimationBuilder<double>(
                   duration: const Duration(milliseconds: 1500),
@@ -581,7 +580,7 @@ class _LoansState extends State<Loans> {
                   tween: Tween<double>(begin: 0.0, end: loan.progress),
                   builder: (context, value, child) {
                     return Container(
-                      height: 8, // Aumentado de 6 a 8
+                      height: 8,
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(4),
                         color:
@@ -809,7 +808,6 @@ class _LoansState extends State<Loans> {
     _personController.clear();
     _amountController.clear();
     _descriptionController.clear();
-    _selectedType = 'Yo debo';
     _selectedDate = null;
 
     showModalBottomSheet(
@@ -827,14 +825,22 @@ class _LoansState extends State<Loans> {
               minChildSize: 0.5,
               maxChildSize: 0.95,
               builder: (context, scrollController) {
-                return Container(
-                  decoration: BoxDecoration(
-                    color: isDark ? const Color(0xFF1E293B) : Colors.white,
-                    borderRadius: const BorderRadius.vertical(
-                      top: Radius.circular(24),
-                    ),
-                  ),
-                  child: _buildAddLoanForm(isDark, scrollController),
+                return StatefulBuilder(
+                  builder: (context, setDialogState) {
+                    return Container(
+                      decoration: BoxDecoration(
+                        color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                        borderRadius: const BorderRadius.vertical(
+                          top: Radius.circular(24),
+                        ),
+                      ),
+                      child: _buildAddLoanForm(
+                        isDark,
+                        scrollController,
+                        setDialogState,
+                      ),
+                    );
+                  },
                 );
               },
             ),
@@ -844,7 +850,17 @@ class _LoansState extends State<Loans> {
     );
   }
 
-  Widget _buildAddLoanForm(bool isDark, ScrollController scrollController) {
+  Widget _buildAddLoanForm(
+    bool isDark,
+    ScrollController scrollController,
+    StateSetter setDialogState,
+  ) {
+    DateTime? tempSelectedDate = _selectedDate;
+    TextEditingController tempPersonController = TextEditingController(
+      text: _personController.text,
+    );
+    AppUser? tempSelectedUser = _selectedUser;
+
     return SingleChildScrollView(
       controller: scrollController,
       padding: const EdgeInsets.all(20),
@@ -874,7 +890,12 @@ class _LoansState extends State<Loans> {
           const SizedBox(height: 24),
 
           // Campo de persona con buscador
-          _buildPersonSearchField(isDark),
+          _buildPersonSearchFieldInDialog(
+            isDark,
+            tempSelectedUser,
+            tempPersonController,
+            setDialogState,
+          ),
           const SizedBox(height: 20),
 
           // Campo de monto
@@ -910,7 +931,7 @@ class _LoansState extends State<Loans> {
                       style: TextStyle(
                         color: isDark ? Colors.white : const Color(0xFF1F2937),
                         fontSize: 16,
-                        height: 1.2, // Ajusta la altura del texto
+                        height: 1.2,
                       ),
                       decoration: InputDecoration(
                         hintText: '0.00',
@@ -923,7 +944,7 @@ class _LoansState extends State<Loans> {
                         border: InputBorder.none,
                         contentPadding: const EdgeInsets.symmetric(
                           vertical: 16,
-                        ), // Ajuste importante
+                        ),
                         prefixIcon: Padding(
                           padding: const EdgeInsets.only(left: 12, right: 8),
                           child: Icon(
@@ -932,7 +953,7 @@ class _LoansState extends State<Loans> {
                             color: const Color(0xFF6B7280),
                           ),
                         ),
-                        isDense: true, // Hace que el campo sea menos alto
+                        isDense: true,
                       ),
                     ),
                   ),
@@ -992,9 +1013,7 @@ class _LoansState extends State<Loans> {
                     height: 1.2,
                   ),
                   border: InputBorder.none,
-                  contentPadding: const EdgeInsets.symmetric(
-                    vertical: 16,
-                  ), // Ajuste
+                  contentPadding: const EdgeInsets.symmetric(vertical: 16),
                   prefixIcon: Padding(
                     padding: const EdgeInsets.only(left: 0, right: 8),
                     child: Icon(
@@ -1021,7 +1040,46 @@ class _LoansState extends State<Loans> {
           ),
           const SizedBox(height: 8),
           GestureDetector(
-            onTap: () => _pickDate(isDark),
+            onTap: () async {
+              final DateTime? picked = await showDatePicker(
+                context: context,
+                initialDate: tempSelectedDate ?? DateTime.now(),
+                firstDate: DateTime(2020),
+                lastDate: DateTime(2030),
+                builder: (context, child) {
+                  return Theme(
+                    data: Theme.of(context).copyWith(
+                      colorScheme: ColorScheme.light(
+                        primary: const Color(0xFF2D5BFF),
+                        onPrimary: Colors.white,
+                        onSurface:
+                            isDark ? Colors.white : const Color(0xFF1F2937),
+                        surface:
+                            isDark ? const Color(0xFF1E293B) : Colors.white,
+                        background:
+                            isDark ? const Color(0xFF1E293B) : Colors.white,
+                      ),
+                      dialogBackgroundColor:
+                          isDark ? const Color(0xFF1E293B) : Colors.white,
+                      textTheme: TextTheme(
+                        bodyMedium: TextStyle(
+                          color:
+                              isDark ? Colors.white : const Color(0xFF1F2937),
+                        ),
+                      ),
+                    ),
+                    child: child!,
+                  );
+                },
+              );
+
+              if (picked != null) {
+                setDialogState(() {
+                  tempSelectedDate = picked;
+                  _selectedDate = picked;
+                });
+              }
+            },
             child: Container(
               decoration: BoxDecoration(
                 color:
@@ -1048,12 +1106,12 @@ class _LoansState extends State<Loans> {
                   ),
                   Expanded(
                     child: Text(
-                      _selectedDate != null
-                          ? '${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}'
+                      tempSelectedDate != null
+                          ? '${tempSelectedDate!.day.toString().padLeft(2, '0')}/${tempSelectedDate!.month.toString().padLeft(2, '0')}/${tempSelectedDate!.year}'
                           : 'Seleccionar fecha límite',
                       style: TextStyle(
                         color:
-                            _selectedDate != null
+                            tempSelectedDate != null
                                 ? (isDark
                                     ? Colors.white
                                     : const Color(0xFF1F2937))
@@ -1064,12 +1122,13 @@ class _LoansState extends State<Loans> {
                       ),
                     ),
                   ),
-                  if (_selectedDate != null)
+                  if (tempSelectedDate != null)
                     IconButton(
                       icon: const Icon(Iconsax.close_circle, size: 18),
                       color: const Color(0xFF6B7280),
                       onPressed: () {
-                        setState(() {
+                        setDialogState(() {
+                          tempSelectedDate = null;
                           _selectedDate = null;
                         });
                       },
@@ -1080,14 +1139,123 @@ class _LoansState extends State<Loans> {
           ),
           const SizedBox(height: 32),
 
+          // // Tipo de préstamo
+          // Text(
+          //   'Tipo',
+          //   style: TextStyle(
+          //     fontSize: 14,
+          //     fontWeight: FontWeight.w600,
+          //     color: isDark ? Colors.white : const Color(0xFF1F2937),
+          //   ),
+          // ),
+          // const SizedBox(height: 8),
+          // Container(
+          //   decoration: BoxDecoration(
+          //     color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF3F4F6),
+          //     borderRadius: BorderRadius.circular(12),
+          //     border: Border.all(
+          //       color:
+          //           isDark
+          //               ? const Color(0xFF334155).withOpacity(0.3)
+          //               : const Color(0xFFE5E7EB),
+          //       width: 0.5,
+          //     ),
+          //   ),
+          //   child: StatefulBuilder(
+          //     builder: (context, setState) {
+          //       return Row(
+          //         children: [
+          //           Expanded(
+          //             child: GestureDetector(
+          //               onTap: () {
+          //                 setState(() {});
+          //                 setDialogState(() {
+          //                   _selectedTab = 0;
+          //                 });
+          //               },
+          //               child: Container(
+          //                 decoration: BoxDecoration(
+          //                   color:
+          //                       _selectedTab == 0
+          //                           ? const Color(0xFF2D5BFF)
+          //                           : Colors.transparent,
+          //                   borderRadius: const BorderRadius.only(
+          //                     topLeft: Radius.circular(12),
+          //                     bottomLeft: Radius.circular(12),
+          //                   ),
+          //                 ),
+          //                 padding: const EdgeInsets.symmetric(vertical: 12),
+          //                 child: Center(
+          //                   child: Text(
+          //                     'Me deben',
+          //                     style: TextStyle(
+          //                       fontSize: 14,
+          //                       fontWeight: FontWeight.w600,
+          //                       color:
+          //                           _selectedTab == 0
+          //                               ? Colors.white
+          //                               : isDark
+          //                               ? Colors.white70
+          //                               : const Color(0xFF6B7280),
+          //                     ),
+          //                   ),
+          //                 ),
+          //               ),
+          //             ),
+          //           ),
+          //           Expanded(
+          //             child: GestureDetector(
+          //               onTap: () {
+          //                 setState(() {});
+          //                 setDialogState(() {
+          //                   _selectedTab = 1;
+          //                 });
+          //               },
+          //               child: Container(
+          //                 decoration: BoxDecoration(
+          //                   color:
+          //                       _selectedTab == 1
+          //                           ? const Color(0xFF2D5BFF)
+          //                           : Colors.transparent,
+          //                   borderRadius: const BorderRadius.only(
+          //                     topRight: Radius.circular(12),
+          //                     bottomRight: Radius.circular(12),
+          //                   ),
+          //                 ),
+          //                 padding: const EdgeInsets.symmetric(vertical: 12),
+          //                 child: Center(
+          //                   child: Text(
+          //                     'Yo debo',
+          //                     style: TextStyle(
+          //                       fontSize: 14,
+          //                       fontWeight: FontWeight.w600,
+          //                       color:
+          //                           _selectedTab == 1
+          //                               ? Colors.white
+          //                               : isDark
+          //                               ? Colors.white70
+          //                               : const Color(0xFF6B7280),
+          //                     ),
+          //                   ),
+          //                 ),
+          //               ),
+          //             ),
+          //           ),
+          //         ],
+          //       );
+          //     },
+          //   ),
+          // ),
+          const SizedBox(height: 16),
+
           // Botón de guardar
           SizedBox(
             width: double.infinity,
             height: 56,
             child: ElevatedButton(
               onPressed: () {
-                if (_validateForm()) {
-                  _saveLoan();
+                if (_validateForm(tempSelectedUser, tempPersonController)) {
+                  _saveLoan(tempSelectedUser, tempSelectedDate!);
                   Navigator.pop(context);
                 }
               },
@@ -1110,7 +1278,13 @@ class _LoansState extends State<Loans> {
     );
   }
 
-  Widget _buildPersonSearchField(bool isDark) {
+  // Método separado para el campo de búsqueda en el diálogo
+  Widget _buildPersonSearchFieldInDialog(
+    bool isDark,
+    AppUser? tempSelectedUser,
+    TextEditingController tempPersonController,
+    StateSetter setDialogState,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -1130,8 +1304,8 @@ class _LoansState extends State<Loans> {
               child: SearchButton(
                 size: 22,
                 onUserSelected: (user) {
-                  setState(() {
-                    _selectedUser = AppUser(
+                  setDialogState(() {
+                    tempSelectedUser = AppUser(
                       name: user['name'] ?? '',
                       surname: user['surname'] ?? '',
                       email: user['email'] ?? '',
@@ -1140,8 +1314,10 @@ class _LoansState extends State<Loans> {
                       uid: user['uid'] ?? '',
                       phoneNumber: user['phoneNumber'] ?? '',
                     );
-                    _personController.text =
+                    tempPersonController.text =
                         '${user['name']} ${user['surname']}';
+                    _selectedUser = tempSelectedUser;
+                    _personController.text = tempPersonController.text;
                   });
                 },
               ),
@@ -1167,7 +1343,7 @@ class _LoansState extends State<Loans> {
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 12),
                   child: TextField(
-                    controller: _personController,
+                    controller: tempPersonController,
                     readOnly: true,
                     style: TextStyle(
                       color: isDark ? Colors.white : const Color(0xFF1F2937),
@@ -1193,7 +1369,7 @@ class _LoansState extends State<Loans> {
                         ),
                       ),
                       suffixIcon:
-                          _personController.text.isNotEmpty
+                          tempPersonController.text.isNotEmpty
                               ? IconButton(
                                 icon: const Icon(
                                   Iconsax.close_circle,
@@ -1201,9 +1377,11 @@ class _LoansState extends State<Loans> {
                                 ),
                                 color: const Color(0xFF6B7280),
                                 onPressed: () {
-                                  _personController.clear();
-                                  setState(() {
+                                  setDialogState(() {
+                                    tempPersonController.clear();
+                                    tempSelectedUser = null;
                                     _selectedUser = null;
+                                    _personController.clear();
                                   });
                                 },
                               )
@@ -1215,9 +1393,8 @@ class _LoansState extends State<Loans> {
             ],
           ),
         ),
-
         // Mostrar información del usuario seleccionado
-        if (_selectedUser != null)
+        if (tempSelectedUser != null)
           Padding(
             padding: const EdgeInsets.only(top: 8, left: 4),
             child: Row(
@@ -1228,7 +1405,7 @@ class _LoansState extends State<Loans> {
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     gradient:
-                        _selectedUser!.profilePictureUrl.isNotEmpty
+                        tempSelectedUser!.profilePictureUrl.isNotEmpty
                             ? null
                             : const LinearGradient(
                               colors: [Color(0xFF2D5BFF), Color(0xFF00C896)],
@@ -1237,16 +1414,18 @@ class _LoansState extends State<Loans> {
                             ),
                   ),
                   child:
-                      _selectedUser!.profilePictureUrl.isNotEmpty
+                      tempSelectedUser!.profilePictureUrl.isNotEmpty
                           ? ClipOval(
                             child: Image.network(
-                              _selectedUser!.profilePictureUrl,
+                              tempSelectedUser!.profilePictureUrl,
                               fit: BoxFit.cover,
                             ),
                           )
                           : Center(
                             child: Text(
-                              _selectedUser!.name.substring(0, 1).toUpperCase(),
+                              tempSelectedUser!.name
+                                  .substring(0, 1)
+                                  .toUpperCase(),
                               style: const TextStyle(
                                 color: Colors.white,
                                 fontSize: 12,
@@ -1260,21 +1439,13 @@ class _LoansState extends State<Loans> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      '@${_selectedUser!.username}',
+                      '@${tempSelectedUser!.username}',
                       style: TextStyle(
                         fontSize: 12,
                         color:
                             isDark ? Colors.white70 : const Color(0xFF6B7280),
                       ),
                     ),
-                    // Text(
-                    //   _selectedUser!.email,
-                    //   style: TextStyle(
-                    //     fontSize: 11,
-                    //     color:
-                    //         isDark ? Colors.white60 : const Color(0xFF9CA3AF),
-                    //   ),
-                    // ),
                   ],
                 ),
               ],
@@ -1284,8 +1455,8 @@ class _LoansState extends State<Loans> {
     );
   }
 
-  bool _validateForm() {
-    if (_selectedUser == null || _personController.text.isEmpty) {
+  bool _validateForm(AppUser? user, TextEditingController personController) {
+    if (user == null || personController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Text('Por favor, selecciona una persona'),
@@ -1325,26 +1496,23 @@ class _LoansState extends State<Loans> {
     return true;
   }
 
-  void _saveLoan() {
-    // Aquí iría la lógica para guardar el préstamo en tu backend
+  void _saveLoan(AppUser? user, DateTime selectedDate) {
     final newLoan = LoanData(
-      name: _selectedUser!.name,
+      name: user?.name ?? _personController.text,
       description:
           _descriptionController.text.isNotEmpty
               ? _descriptionController.text
               : 'Préstamo',
       amount: double.parse(_amountController.text),
       date:
-          '${_selectedDate!.day} ${_getMonthName(_selectedDate!.month)} ${_selectedDate!.year}',
+          '${selectedDate.day} ${_getMonthName(selectedDate.month)} ${selectedDate.year}',
       status: 'Pendiente',
       progress: 0.0,
       color:
-          _selectedType == 'Yo debo'
-              ? const Color(0xFFFF6B6B)
-              : const Color(0xFF00C896),
+          _selectedTab == 1 ? const Color(0xFFFF6B6B) : const Color(0xFF00C896),
     );
 
-    if (_selectedType == 'Yo debo') {
+    if (_selectedTab == 1) {
       _iOwe.add(newLoan);
     } else {
       _owedToMe.add(newLoan);
@@ -1352,12 +1520,21 @@ class _LoansState extends State<Loans> {
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Préstamo agregado a $_selectedType'),
+        content: Text(
+          'Préstamo agregado a ${_selectedTab == 1 ? 'Yo debo' : 'Me deben'}',
+        ),
         backgroundColor: const Color(0xFF00C896),
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
     );
+
+    // Limpiar controles después de guardar
+    _amountController.clear();
+    _descriptionController.clear();
+    _personController.clear();
+    _selectedUser = null;
+    _selectedDate = null;
   }
 
   String _getMonthName(int month) {
@@ -1379,67 +1556,108 @@ class _LoansState extends State<Loans> {
   }
 
   void _showFilterDialog(bool isDark) {
+    bool allSelected = true;
+    bool pendingSelected = false;
+    bool partialSelected = false;
+    bool overdueSelected = false;
+
     showDialog(
       context: context,
       builder:
-          (context) => AlertDialog(
-            backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-            title: Text(
-              'Filtrar',
-              style: TextStyle(
-                color: isDark ? Colors.white : const Color(0xFF1F2937),
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _buildFilterOption('Todos', isDark),
-                _buildFilterOption('Pendientes', isDark),
-                _buildFilterOption('Parciales', isDark),
-                _buildFilterOption('Atrasados', isDark),
-              ],
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: Text(
-                  'Cancelar',
+          (context) => StatefulBuilder(
+            builder: (context, setState) {
+              return AlertDialog(
+                backgroundColor:
+                    isDark ? const Color(0xFF1E293B) : Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                title: Text(
+                  'Filtrar',
                   style: TextStyle(
-                    color: isDark ? Colors.white70 : const Color(0xFF6B7280),
+                    color: isDark ? Colors.white : const Color(0xFF1F2937),
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
-              ),
-              ElevatedButton(
-                onPressed: () => Navigator.pop(context),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF2D5BFF),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+                content: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _buildFilterOption('Todos', allSelected, isDark, () {
+                      setState(() {
+                        allSelected = !allSelected;
+                      });
+                    }),
+                    _buildFilterOption(
+                      'Pendientes',
+                      pendingSelected,
+                      isDark,
+                      () {
+                        setState(() {
+                          pendingSelected = !pendingSelected;
+                        });
+                      },
+                    ),
+                    _buildFilterOption(
+                      'Parciales',
+                      partialSelected,
+                      isDark,
+                      () {
+                        setState(() {
+                          partialSelected = !partialSelected;
+                        });
+                      },
+                    ),
+                    _buildFilterOption(
+                      'Atrasados',
+                      overdueSelected,
+                      isDark,
+                      () {
+                        setState(() {
+                          overdueSelected = !overdueSelected;
+                        });
+                      },
+                    ),
+                  ],
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: Text(
+                      'Cancelar',
+                      style: TextStyle(
+                        color:
+                            isDark ? Colors.white70 : const Color(0xFF6B7280),
+                      ),
+                    ),
                   ),
-                ),
-                child: const Text(
-                  'Aplicar',
-                  style: TextStyle(fontWeight: FontWeight.w600),
-                ),
-              ),
-            ],
+                  ElevatedButton(
+                    onPressed: () => Navigator.pop(context),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF2D5BFF),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: const Text(
+                      'Aplicar',
+                      style: TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                ],
+              );
+            },
           ),
     );
   }
 
-  Widget _buildFilterOption(String option, bool isDark) {
-    bool isSelected = false;
-
+  Widget _buildFilterOption(
+    String option,
+    bool isSelected,
+    bool isDark,
+    VoidCallback onTap,
+  ) {
     return GestureDetector(
-      onTap: () {
-        setState(() {
-          isSelected = !isSelected;
-        });
-      },
+      onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
@@ -1723,6 +1941,8 @@ class _LoansState extends State<Loans> {
   }
 
   void _showRegisterPaymentDialog(LoanData loan, bool isDark) {
+    TextEditingController paymentAmountController = TextEditingController();
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -1815,6 +2035,7 @@ class _LoansState extends State<Loans> {
                           child: Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 12),
                             child: TextField(
+                              controller: paymentAmountController,
                               keyboardType: TextInputType.number,
                               style: TextStyle(
                                 color:
@@ -1822,7 +2043,7 @@ class _LoansState extends State<Loans> {
                                         ? Colors.white
                                         : const Color(0xFF1F2937),
                                 fontSize: 16,
-                                height: 1.2, // ← Añade esta línea
+                                height: 1.2,
                               ),
                               decoration: InputDecoration(
                                 hintText: 'Monto del pago',
@@ -1832,25 +2053,24 @@ class _LoansState extends State<Loans> {
                                           ? Colors.white60
                                           : const Color(0xFF9CA3AF),
                                   fontSize: 16,
-                                  height: 1.2, // ← Añade esta línea
+                                  height: 1.2,
                                 ),
                                 border: InputBorder.none,
                                 contentPadding: const EdgeInsets.symmetric(
                                   vertical: 16,
-                                ), // ← Añade esta línea
+                                ),
                                 prefixIcon: Padding(
                                   padding: const EdgeInsets.only(
                                     left: 0,
                                     right: 8,
-                                  ), // ← Ajusta el padding del icono
+                                  ),
                                   child: Icon(
                                     Iconsax.money,
                                     size: 20,
                                     color: const Color(0xFF6B7280),
                                   ),
                                 ),
-                                isDense:
-                                    true, // ← Opcional: hace el campo menos alto
+                                isDense: true,
                               ),
                             ),
                           ),
@@ -1860,7 +2080,10 @@ class _LoansState extends State<Loans> {
                           width: double.infinity,
                           height: 50,
                           child: ElevatedButton(
-                            onPressed: () => Navigator.pop(context),
+                            onPressed: () {
+                              // Aquí iría la lógica para registrar el pago
+                              Navigator.pop(context);
+                            },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Theme.of(context).primaryColor,
                               shape: RoundedRectangleBorder(
@@ -1886,35 +2109,6 @@ class _LoansState extends State<Loans> {
         );
       },
     );
-  }
-
-  void _pickDate(bool isDark) async {
-    final date = await showDatePicker(
-      context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime(2023),
-      lastDate: DateTime(2030),
-      builder: (context, child) {
-        return Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: ColorScheme.light(
-              primary: const Color(0xFF2D5BFF),
-              onPrimary: Colors.white,
-              onSurface: isDark ? Colors.white : const Color(0xFF1F2937),
-            ),
-            dialogBackgroundColor:
-                isDark ? const Color(0xFF1E293B) : Colors.white,
-          ),
-          child: child!,
-        );
-      },
-    );
-
-    if (date != null) {
-      setState(() {
-        _selectedDate = date;
-      });
-    }
   }
 }
 
