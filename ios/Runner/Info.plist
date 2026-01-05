@@ -2,6 +2,21 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+
+ <!-- Permisos para la galería de fotos -->
+    <key>NSPhotoLibraryUsageDescription</key>
+    <string>Esta app necesita acceso a la galería para seleccionar comprobantes de pago</string>
+    
+
+    <!-- Para iOS 14+: Permiso para selección limitada de fotos -->
+    <key>NSPhotoLibraryAddUsageDescription</key>
+    <string>Esta app necesita acceso para guardar imágenes en la galería</string>
+    
+    <!-- Para iOS 11+: Evita el formato HEIC y usa JPEG -->
+    <key>NSPhotoLibraryPreventAutomaticLimitedAccessAlert</key>
+    <true/>
+
+
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleDisplayName</key>

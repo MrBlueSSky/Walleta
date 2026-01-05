@@ -53,6 +53,7 @@ dependencies:
   rxdart: ^0.28.0
   syncfusion_flutter_charts: ^31.1.19
   iconsax: ^0.0.8
+  image_picker: ^1.2.1
 
 dev_dependencies:
   flutter_test:
