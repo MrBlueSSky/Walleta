@@ -47,6 +47,21 @@ class _LoansState extends State<Loans> {
     }
   }
 
+  // Función para recargar datos
+  Future<void> _refreshLoans() async {
+    final authBloc = context.read<AuthenticationBloc>();
+    final authState = authBloc.state;
+
+    if (authState.status == AuthenticationStatus.authenticated) {
+      final userId = authState.user!.uid;
+      print('🔄 Recargando préstamos para usuario: $userId');
+      context.read<LoanBloc>().add(LoadLoans(userId));
+
+      // Esperar un momento para que se complete la carga
+      await Future.delayed(const Duration(milliseconds: 500));
+    }
+  }
+
   @override
   void dispose() {
     _pageController.dispose();
@@ -246,71 +261,71 @@ class _LoansState extends State<Loans> {
     );
   }
 
-  Widget _buildHeaderStats(
-    bool isDark,
-    double netBalance,
-    double totalOwedToMe,
-    double totalIOwe,
-  ) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFD),
-        border: Border(
-          bottom: BorderSide(
-            color: isDark ? const Color(0xFF334155) : const Color(0xFFE5E7EB),
-            width: 0.5,
-          ),
-        ),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Balance Neto',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: isDark ? Colors.white70 : const Color(0xFF6B7280),
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                '₡${netBalance.toInt()}',
-                style: TextStyle(
-                  fontSize: 24,
-                  fontWeight: FontWeight.w700,
-                  color:
-                      netBalance >= 0
-                          ? const Color(0xFF00C896)
-                          : const Color(0xFFFF6B6B),
-                ),
-              ),
-            ],
-          ),
-          Row(
-            children: [
-              _buildStatChip(
-                label: 'Te deben',
-                amount: totalOwedToMe,
-                color: const Color(0xFF00C896),
-                isDark: isDark,
-              ),
-              const SizedBox(width: 12),
-              _buildStatChip(
-                label: 'Debes',
-                amount: totalIOwe,
-                color: const Color(0xFFFF6B6B),
-                isDark: isDark,
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
+  // Widget _buildHeaderStats(
+  //   bool isDark,
+  //   double netBalance,
+  //   double totalOwedToMe,
+  //   double totalIOwe,
+  // ) {
+  //   return Container(
+  //     padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+  //     decoration: BoxDecoration(
+  //       color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFD),
+  //       border: Border(
+  //         bottom: BorderSide(
+  //           color: isDark ? const Color(0xFF334155) : const Color(0xFFE5E7EB),
+  //           width: 0.5,
+  //         ),
+  //       ),
+  //     ),
+  //     child: Row(
+  //       mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  //       children: [
+  //         Column(
+  //           crossAxisAlignment: CrossAxisAlignment.start,
+  //           children: [
+  //             Text(
+  //               'Balance Neto',
+  //               style: TextStyle(
+  //                 fontSize: 12,
+  //                 color: isDark ? Colors.white70 : const Color(0xFF6B7280),
+  //               ),
+  //             ),
+  //             const SizedBox(height: 4),
+  //             Text(
+  //               '₡${netBalance.toInt()}',
+  //               style: TextStyle(
+  //                 fontSize: 24,
+  //                 fontWeight: FontWeight.w700,
+  //                 color:
+  //                     netBalance >= 0
+  //                         ? const Color(0xFF00C896)
+  //                         : const Color(0xFFFF6B6B),
+  //               ),
+  //             ),
+  //           ],
+  //         ),
+  //         Row(
+  //           children: [
+  //             _buildStatChip(
+  //               label: 'Te deben',
+  //               amount: totalOwedToMe,
+  //               color: const Color(0xFF00C896),
+  //               isDark: isDark,
+  //             ),
+  //             const SizedBox(width: 12),
+  //             _buildStatChip(
+  //               label: 'Debes',
+  //               amount: totalIOwe,
+  //               color: const Color(0xFFFF6B6B),
+  //               isDark: isDark,
+  //             ),
+  //           ],
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
 
   Widget _buildStatChip({
     required String label,
@@ -416,14 +431,14 @@ class _LoansState extends State<Loans> {
         setState(() => _selectedTab = index);
       },
       children: [
-        _buildLoansList(
+        _buildLoansListWithRefresh(
           filteredLoans,
           'Te deben',
           isDark,
           allLoans,
           currentUserId,
         ),
-        _buildLoansList(
+        _buildLoansListWithRefresh(
           filteredLoans,
           'Debes',
           isDark,
@@ -434,7 +449,7 @@ class _LoansState extends State<Loans> {
     );
   }
 
-  Widget _buildLoansList(
+  Widget _buildLoansListWithRefresh(
     List<Loan> loans,
     String title,
     bool isDark,
@@ -442,77 +457,85 @@ class _LoansState extends State<Loans> {
     String currentUserId,
   ) {
     if (loans.isEmpty) {
-      return EmptyLoanState(
-        onAddLoanPressed:
-            () => _showAddLoanDialog(
-              isDark,
-              null,
-            ), // Necesitaríamos el usuario aquí
-        title: title,
-        isDark: isDark,
-        selectedTab: _selectedTab,
+      return RefreshIndicator(
+        onRefresh: _refreshLoans,
+        color: isDark ? Colors.white : const Color(0xFF2D5BFF),
+        backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+        child: EmptyLoanState(
+          onAddLoanPressed: () => _showAddLoanDialog(isDark, null),
+          title: title,
+          isDark: isDark,
+          selectedTab: _selectedTab,
+        ),
       );
     }
 
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 6,
-                ),
-                decoration: BoxDecoration(
-                  color:
-                      isDark
-                          ? const Color(0xFF1E293B)
-                          : const Color(0xFFF3F4F6),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  '${loans.length} ${title.toLowerCase()}',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: isDark ? Colors.white70 : const Color(0xFF6B7280),
+    return RefreshIndicator(
+      onRefresh: _refreshLoans,
+      color: isDark ? Colors.white : const Color(0xFF2D5BFF),
+      backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color:
+                        isDark
+                            ? const Color(0xFF1E293B)
+                            : const Color(0xFFF3F4F6),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    '${loans.length} ${title.toLowerCase()}',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: isDark ? Colors.white70 : const Color(0xFF6B7280),
+                    ),
                   ),
                 ),
-              ),
-              const Spacer(),
-              Text(
-                '₡${loans.fold(0.0, (sum, item) => sum + item.amount).toInt()}',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  color: isDark ? Colors.white : const Color(0xFF1F2937),
+                const Spacer(),
+                Text(
+                  '₡${loans.fold(0.0, (sum, item) => sum + item.amount).toInt()}',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: isDark ? Colors.white : const Color(0xFF1F2937),
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
-        Expanded(
-          child: ListView.builder(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            itemCount: loans.length,
-            itemBuilder: (context, index) {
-              return LoanCard(
-                loan: loans[index],
-                isDark: isDark,
-                selectedTab: _selectedTab,
-                iOwe:
-                    allLoans
-                        .where(
-                          (loan) => loan.borrowerUserId.uid == currentUserId,
-                        )
-                        .toList(),
-              );
-            },
+          Expanded(
+            child: ListView.builder(
+              physics:
+                  const AlwaysScrollableScrollPhysics(), // Necesario para RefreshIndicator
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              itemCount: loans.length,
+              itemBuilder: (context, index) {
+                return LoanCard(
+                  loan: loans[index],
+                  isDark: isDark,
+                  selectedTab: _selectedTab,
+                  iOwe:
+                      allLoans
+                          .where(
+                            (loan) => loan.borrowerUserId.uid == currentUserId,
+                          )
+                          .toList(),
+                );
+              },
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -537,45 +560,64 @@ class _LoansState extends State<Loans> {
   }
 
   Widget _buildErrorState(bool isDark, String currentUserId) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Iconsax.warning_2,
-            size: 48,
-            color: isDark ? Colors.white70 : const Color(0xFF6B7280),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'Error al cargar préstamos',
-            style: TextStyle(
-              color: isDark ? Colors.white : const Color(0xFF1F2937),
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
+    return RefreshIndicator(
+      onRefresh: _refreshLoans,
+      color: isDark ? Colors.white : const Color(0xFF2D5BFF),
+      backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+      child: SingleChildScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        child: SizedBox(
+          height: MediaQuery.of(context).size.height,
+          child: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Iconsax.warning_2,
+                  size: 48,
+                  color: isDark ? Colors.white70 : const Color(0xFF6B7280),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'Error al cargar préstamos',
+                  style: TextStyle(
+                    color: isDark ? Colors.white : const Color(0xFF1F2937),
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Intenta de nuevo más tarde',
+                  style: TextStyle(
+                    color: isDark ? Colors.white70 : const Color(0xFF6B7280),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: () {
+                    context.read<LoanBloc>().add(LoadLoans(currentUserId));
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF2D5BFF),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  child: const Text('Reintentar'),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'o desliza hacia abajo para recargar',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: isDark ? Colors.white60 : const Color(0xFF9CA3AF),
+                  ),
+                ),
+              ],
             ),
           ),
-          const SizedBox(height: 8),
-          Text(
-            'Intenta de nuevo más tarde',
-            style: TextStyle(
-              color: isDark ? Colors.white70 : const Color(0xFF6B7280),
-            ),
-          ),
-          const SizedBox(height: 16),
-          ElevatedButton(
-            onPressed: () {
-              context.read<LoanBloc>().add(LoadLoans(currentUserId));
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF2D5BFF),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-            ),
-            child: const Text('Reintentar'),
-          ),
-        ],
+        ),
       ),
     );
   }

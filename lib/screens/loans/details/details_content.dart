@@ -174,51 +174,51 @@ class LoanDetailsContent extends StatelessWidget {
           ),
 
           const SizedBox(height: 32),
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: () => Navigator.pop(context),
-                  style: OutlinedButton.styleFrom(
-                    side: BorderSide(color: loan.color),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                  ),
-                  child: Text(
-                    'Editar',
-                    style: TextStyle(
-                      color: loan.color,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 16,
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                    _showRegisterPaymentDialog();
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: loan.color,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                  ),
-                  child: const Text(
-                    'Registrar pago',
-                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
+          // Row(
+          //   children: [
+          //     Expanded(
+          //       child: OutlinedButton(
+          //         onPressed: () => Navigator.pop(context),
+          //         style: OutlinedButton.styleFrom(
+          //           side: BorderSide(color: loan.color),
+          //           shape: RoundedRectangleBorder(
+          //             borderRadius: BorderRadius.circular(12),
+          //           ),
+          //           padding: const EdgeInsets.symmetric(vertical: 16),
+          //         ),
+          //         child: Text(
+          //           'Editar',
+          //           style: TextStyle(
+          //             color: loan.color,
+          //             fontWeight: FontWeight.w600,
+          //             fontSize: 16,
+          //           ),
+          //         ),
+          //       ),
+          //     ),
+          //     const SizedBox(width: 12),
+          //     Expanded(
+          //       child: ElevatedButton(
+          //         onPressed: () {
+          //           Navigator.pop(context);
+          //           _showRegisterPaymentDialog();
+          //         },
+          //         style: ElevatedButton.styleFrom(
+          //           backgroundColor: loan.color,
+          //           shape: RoundedRectangleBorder(
+          //             borderRadius: BorderRadius.circular(12),
+          //           ),
+          //           padding: const EdgeInsets.symmetric(vertical: 16),
+          //         ),
+          //         child: const Text(
+          //           'Registrar pago',
+          //           style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+          //         ),
+          //       ),
+          //     ),
+          //   ],
+          // ),
+          // const SizedBox(height: 20),
         ],
       ),
     );

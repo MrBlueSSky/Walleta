@@ -29,6 +29,7 @@ class LoanRepository {
   Future<void> addLoan(Loan loan) async {
     try {
       await FirebaseFirestore.instance.collection('loans').add({
+        'id': loan.id,
         'lenderUserId': loan.lenderUserId.uid,
         'lenderName': loan.lenderUserId.name,
         'lenderSurname': loan.lenderUserId.surname,
@@ -40,6 +41,7 @@ class LoanRepository {
         'borrowerSurname': loan.borrowerUserId.surname,
         'borrowerEmail': loan.borrowerUserId.email,
         'borrowerUsername': loan.borrowerUserId.username,
+
         'description': loan.description,
         'amount': loan.amount,
         'paidAmount': loan.paidAmount,
