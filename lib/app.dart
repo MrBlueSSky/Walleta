@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:provider/provider.dart';
+import 'package:walleta/blocs/loan/bloc/loan_bloc.dart';
 import 'package:walleta/providers/auth_provider.dart';
 import 'package:walleta/providers/theme_provider.dart';
+import 'package:walleta/repository/loan/loan_repository.dart';
 import 'package:walleta/repository/repository.dart';
 import 'package:walleta/routes/routes.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -35,6 +37,9 @@ class App extends StatelessWidget {
                 (context) => SharedExpenseBloc(
                   sharedExpenseRepository: SharedExpenseRepository(),
                 ),
+          ),
+          BlocProvider(
+            create: (context) => LoanBloc(loanRepository: LoanRepository()),
           ),
           // ChangeNotifierProvider(create: (_) => UserProvider()),
           // BlocProvider(create: (_) => RoleCubit()),

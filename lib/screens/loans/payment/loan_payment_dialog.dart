@@ -5,11 +5,11 @@ import 'package:image_picker/image_picker.dart';
 import 'package:walleta/models/loan.dart';
 
 class PaymentDialog extends StatefulWidget {
-  final LoanData loan;
+  final Loan loan;
   final bool isDark;
   final int selectedTab;
   final Function(
-    LoanData updatedLoan,
+    Loan updatedLoan,
     double paymentAmount,
     File? receiptImage,
     String? note,
@@ -117,20 +117,24 @@ class _PaymentDialogState extends State<PaymentDialog> {
         widget.loan.progress + (paymentAmount / widget.loan.amount);
 
     // Crear el préstamo actualizado
-    final updatedLoan = LoanData(
-      name: widget.loan.name,
-      description: widget.loan.description,
-      amount: widget.loan.amount,
-      date: widget.loan.date,
-      status: newProgress >= 1.0 ? 'Pagado' : 'Parcial',
-      progress: newProgress.clamp(0.0, 1.0),
-      color: widget.loan.color,
-    );
+    // final updatedLoan = Loan(
+    //   id: widget.loan.id,
+
+    //   borrowerUserId: widget.loan.borrowerUserId,
+    //   description: widget.loan.description,
+    //   amount: widget.loan.amount,
+    //   dueDate: widget.loan.dueDate,
+    //   status: newProgress >= 1.0 ? LoanStatus.paid : LoanStatus.partial,
+    //   // progress: newProgress.clamp(0.0, 1.0),
+    //   color: widget.loan.color,
+    //   type: LoanType.iOwe,
+    //   paidAmount: widget.loan.paidAmount + paymentAmount, lenderUserId: ,
+    // );
 
     // Llamar al callback si existe
     if (widget.onPaymentConfirmed != null) {
       await widget.onPaymentConfirmed!(
-        updatedLoan,
+        widget.loan,
         paymentAmount,
         _selectedImage,
         _noteController.text.isNotEmpty ? _noteController.text : null,
@@ -194,7 +198,7 @@ class _PaymentDialogState extends State<PaymentDialog> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      widget.loan.name,
+                      widget.loan.borrowerUserId.name,
                       style: TextStyle(
                         fontSize: 16,
                         color:

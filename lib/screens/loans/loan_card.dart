@@ -13,10 +13,10 @@ class LoanCard extends StatefulWidget {
     required this.iOwe,
   });
 
-  final LoanData loan;
+  final Loan loan;
   final bool isDark;
   final int selectedTab;
-  final List<LoanData> iOwe;
+  final List<Loan> iOwe;
 
   @override
   State<LoanCard> createState() => _LoanCardState();
@@ -69,7 +69,9 @@ class _LoanCardState extends State<LoanCard> {
                           ),
                           child: Center(
                             child: Text(
-                              widget.loan.name.substring(0, 1).toUpperCase(),
+                              _getInitial(
+                                widget.loan.borrowerUserId.name,
+                              ), // ← CORREGIDO
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600,
@@ -83,7 +85,9 @@ class _LoanCardState extends State<LoanCard> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              widget.loan.name,
+                              widget.loan.borrowerUserId.name.isNotEmpty
+                                  ? widget.loan.borrowerUserId.name
+                                  : 'Sin nombre', // ← Añadir fallback
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600,
@@ -121,7 +125,7 @@ class _LoanCardState extends State<LoanCard> {
                         ),
                       ),
                       child: Text(
-                        widget.loan.status,
+                        widget.loan.status.name,
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w600,
@@ -132,7 +136,6 @@ class _LoanCardState extends State<LoanCard> {
                   ],
                 ),
                 const SizedBox(height: 16),
-
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -166,7 +169,7 @@ class _LoanCardState extends State<LoanCard> {
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
                         Text(
-                          widget.loan.date,
+                          '${widget.loan.dueDate.day.toString().padLeft(2, '0')} ${_monthString(widget.loan.dueDate.month)} ${widget.loan.dueDate.year}',
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
@@ -276,7 +279,6 @@ class _LoanCardState extends State<LoanCard> {
                   },
                 ),
                 const SizedBox(height: 12),
-
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -355,6 +357,33 @@ class _LoanCardState extends State<LoanCard> {
     );
   }
 
+  // NUEVO MÉTODO PARA OBTENER LA INICIAL SEGURA
+  String _getInitial(String name) {
+    if (name.isEmpty) return '?';
+    return name.substring(0, 1).toUpperCase();
+  }
+
+  String _monthString(int month) {
+    const months = [
+      'Ene',
+      'Feb',
+      'Mar',
+      'Abr',
+      'May',
+      'Jun',
+      'Jul',
+      'Ago',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dic',
+    ];
+
+    // Asegurarse de que el mes esté en rango
+    if (month < 1 || month > 12) return 'Ene';
+    return months[month - 1];
+  }
+
   void _showLoanDetails() {
     showModalBottomSheet(
       context: context,
@@ -384,21 +413,8 @@ class _LoanCardState extends State<LoanCard> {
                     loan: widget.loan,
                     isDark: widget.isDark,
                     scrollController: scrollController,
-                    selectedTab: widget.selectedTab, // Usar widget.selectedTab
+                    selectedTab: widget.selectedTab,
                     onPaymentConfirmed: (updatedLoan, tabIndex, paymentAmount) {
-                      // Buscar y actualizar el préstamo en la lista
-                      int index = widget.iOwe.indexWhere(
-                        (item) =>
-                            item.name == widget.loan.name &&
-                            item.amount == widget.loan.amount,
-                      );
-
-                      if (index != -1) {
-                        // Necesitamos notificar al padre, no podemos usar setState aquí
-                        // porque solo actualizaría este widget, no la lista en el padre
-                        // En su lugar, podríamos usar un callback
-                      }
-
                       // Mostrar confirmación
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
@@ -430,21 +446,8 @@ class _LoanCardState extends State<LoanCard> {
         return RegisterPaymentDialog(
           loan: widget.loan,
           isDark: widget.isDark,
-          selectedTab: widget.selectedTab, // Usar widget.selectedTab
+          selectedTab: widget.selectedTab,
           onPaymentConfirmed: (updatedLoan, tabIndex, paymentAmount) {
-            // Buscar y actualizar el préstamo en la lista
-            int index = widget.iOwe.indexWhere(
-              (item) =>
-                  item.name == widget.loan.name &&
-                  item.amount == widget.loan.amount,
-            );
-
-            if (index != -1) {
-              // Deberías notificar al widget padre aquí
-              // Ya que widget.iOwe es final, no puedes modificarlo directamente
-              // Considera usar un callback para notificar al padre
-            }
-
             // Mostrar confirmación
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(

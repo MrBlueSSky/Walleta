@@ -6,10 +6,10 @@ import 'package:image_picker/image_picker.dart';
 import 'package:walleta/models/loan.dart';
 
 class RegisterPaymentDialog extends StatefulWidget {
-  final LoanData loan;
+  final Loan loan;
   final bool isDark;
   final int selectedTab;
-  final Function(LoanData, int, double) onPaymentConfirmed;
+  final Function(Loan, int, double) onPaymentConfirmed;
   final Function()? onCancel;
 
   const RegisterPaymentDialog({
@@ -107,19 +107,19 @@ class _RegisterPaymentDialogState extends State<RegisterPaymentDialog> {
     final double newProgress =
         widget.loan.progress + (paymentAmount / widget.loan.amount);
 
-    // Actualizar el préstamo
-    final updatedLoan = LoanData(
-      name: widget.loan.name,
-      description: widget.loan.description,
-      amount: widget.loan.amount,
-      date: widget.loan.date,
-      status: newProgress >= 1.0 ? 'Pagado' : 'Parcial',
-      progress: newProgress.clamp(0.0, 1.0),
-      color: widget.loan.color,
-    );
+    // // Actualizar el préstamo
+    // final updatedLoan = Loan(
+    //   name: widget.loan.name,
+    //   description: widget.loan.description,
+    //   amount: widget.loan.amount,
+    //   date: widget.loan.date,
+    //   status: newProgress >= 1.0 ? 'Pagado' : 'Parcial',
+    //   progress: newProgress.clamp(0.0, 1.0),
+    //   color: widget.loan.color,
+    // );
 
     // Notificar al widget padre
-    widget.onPaymentConfirmed(updatedLoan, widget.selectedTab, paymentAmount);
+    widget.onPaymentConfirmed(widget.loan, widget.selectedTab, paymentAmount);
 
     // Cerrar el diálogo
     if (context.mounted) {
@@ -179,7 +179,7 @@ class _RegisterPaymentDialogState extends State<RegisterPaymentDialog> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      widget.loan.name,
+                      widget.loan.lenderUserId.name,
                       style: TextStyle(
                         fontSize: 16,
                         color:

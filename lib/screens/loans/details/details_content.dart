@@ -10,16 +10,22 @@ class LoanDetailsContent extends StatelessWidget {
     required this.loan,
     required this.isDark,
     required this.scrollController,
-    required this.selectedTab, // Añadir este parámetro
-    required this.onPaymentConfirmed, // Añadir callback
+    required this.selectedTab,
+    required this.onPaymentConfirmed,
   });
 
   final BuildContext context;
-  final LoanData loan;
+  final Loan loan;
   final bool isDark;
   final ScrollController scrollController;
-  final int selectedTab; // Nueva propiedad
-  final Function(LoanData, int, double) onPaymentConfirmed; // Nueva propiedad
+  final int selectedTab;
+  final Function(Loan, int, double) onPaymentConfirmed;
+
+  // Método seguro para obtener la inicial
+  String _getInitial(String name) {
+    if (name.isEmpty) return '?';
+    return name.substring(0, 1).toUpperCase();
+  }
 
   void _showRegisterPaymentDialog() {
     showModalBottomSheet(
@@ -67,7 +73,7 @@ class LoanDetailsContent extends StatelessWidget {
                 ),
                 child: Center(
                   child: Text(
-                    loan.name.substring(0, 1).toUpperCase(),
+                    _getInitial(loan.lenderUserId.name), // ← CORREGIDO
                     style: TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.w600,
@@ -82,7 +88,9 @@ class LoanDetailsContent extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      loan.name,
+                      loan.lenderUserId.name.isNotEmpty
+                          ? loan.lenderUserId.name
+                          : 'Sin nombre', // ← Fallback
                       style: TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.w700,
@@ -120,11 +128,15 @@ class LoanDetailsContent extends StatelessWidget {
                 const SizedBox(height: 12),
                 DetailRow(
                   label: 'Fecha límite',
-                  value: loan.date,
+                  value: loan.dueDate.toLocal().toString().split(' ')[0],
                   isDark: isDark,
                 ),
                 const SizedBox(height: 12),
-                DetailRow(label: 'Estado', value: loan.status, isDark: isDark),
+                DetailRow(
+                  label: 'Estado',
+                  value: loan.status.name,
+                  isDark: isDark,
+                ),
                 const SizedBox(height: 12),
                 DetailRow(
                   label: 'Progreso',
@@ -147,7 +159,7 @@ class LoanDetailsContent extends StatelessWidget {
                 AnimatedContainer(
                   duration: const Duration(milliseconds: 800),
                   curve: Curves.easeOutCubic,
-                  width: double.infinity * loan.progress,
+                  width: MediaQuery.of(context).size.width * loan.progress,
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       colors: [loan.color, loan.color.withOpacity(0.8)],
@@ -188,8 +200,8 @@ class LoanDetailsContent extends StatelessWidget {
               Expanded(
                 child: ElevatedButton(
                   onPressed: () {
-                    Navigator.pop(context); // Cerrar detalles
-                    _showRegisterPaymentDialog(); // Mostrar diálogo de pago
+                    Navigator.pop(context);
+                    _showRegisterPaymentDialog();
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: loan.color,
