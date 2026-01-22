@@ -1,45 +1,48 @@
+// dialogs/register_payment_dialog.dart
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:provider/provider.dart';
+import 'package:walleta/blocs/authentication/bloc/authentication_bloc.dart';
+import 'package:walleta/blocs/loan/bloc/loan_bloc.dart';
+import 'package:walleta/blocs/loan/bloc/loan_event.dart';
+import 'package:walleta/blocs/payment/bloc/payment_bloc.dart';
+import 'package:walleta/blocs/payment/bloc/payment_event.dart';
 import 'package:walleta/models/loan.dart';
+import 'package:walleta/models/payment.dart';
 
-class PaymentDialog extends StatefulWidget {
+class LoanRegisterPaymentDialog extends StatefulWidget {
   final Loan loan;
   final bool isDark;
   final int selectedTab;
-  final Function(
-    Loan updatedLoan,
-    double paymentAmount,
-    File? receiptImage,
-    String? note,
-  )?
-  onPaymentConfirmed;
+  final Function(Loan, int, double) onPaymentConfirmed;
+  final Function()? onCancel;
 
-  const PaymentDialog({
-    super.key,
+  const LoanRegisterPaymentDialog({
+    Key? key,
     required this.loan,
     required this.isDark,
     required this.selectedTab,
-    this.onPaymentConfirmed,
-  });
+    required this.onPaymentConfirmed,
+    this.onCancel,
+  }) : super(key: key);
 
   @override
-  State<PaymentDialog> createState() => _PaymentDialogState();
+  State<LoanRegisterPaymentDialog> createState() =>
+      _RegisterPaymentDialogState();
 }
 
-class _PaymentDialogState extends State<PaymentDialog> {
+class _RegisterPaymentDialogState extends State<LoanRegisterPaymentDialog> {
   late TextEditingController _paymentAmountController;
-  late TextEditingController _noteController;
   File? _selectedImage;
   bool _isUploading = false;
-  final ImagePicker _picker = ImagePicker();
+  final TextEditingController _noteController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     _paymentAmountController = TextEditingController();
-    _noteController = TextEditingController();
   }
 
   @override
@@ -50,27 +53,21 @@ class _PaymentDialogState extends State<PaymentDialog> {
   }
 
   Future<void> _pickImage() async {
-    final XFile? image = await _picker.pickImage(
+    final ImagePicker picker = ImagePicker();
+    final XFile? image = await picker.pickImage(
       source: ImageSource.gallery,
       imageQuality: 85,
     );
 
-    if (image != null && mounted) {
+    if (image != null) {
       setState(() {
         _selectedImage = File(image.path);
       });
     }
   }
 
-  void _removeImage() {
-    if (mounted) {
-      setState(() {
-        _selectedImage = null;
-      });
-    }
-  }
-
-  bool _validateForm() {
+  void _handlePayment() async {
+    // Validar monto
     if (_paymentAmountController.text.isEmpty ||
         double.tryParse(_paymentAmountController.text) == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -81,12 +78,12 @@ class _PaymentDialogState extends State<PaymentDialog> {
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         ),
       );
-      return false;
+      return;
     }
 
     final double paymentAmount = double.parse(_paymentAmountController.text);
-    final double remainingBalance =
-        widget.loan.amount * (1 - widget.loan.progress);
+
+    final double remainingBalance = widget.loan.amount - widget.loan.paidAmount;
 
     if (paymentAmount > remainingBalance) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -99,50 +96,86 @@ class _PaymentDialogState extends State<PaymentDialog> {
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         ),
       );
-      return false;
+      return;
     }
 
-    return true;
-  }
+    // Obtener el estado de autenticación
+    final authState = context.read<AuthenticationBloc>().state;
 
-  Future<void> _confirmPayment() async {
-    if (!_validateForm()) return;
+    setState(() {
+      _isUploading = true;
+    });
 
-    if (mounted) {
-      setState(() => _isUploading = true);
-    }
-
-    final double paymentAmount = double.parse(_paymentAmountController.text);
-    final double newProgress =
-        widget.loan.progress + (paymentAmount / widget.loan.amount);
-
-    // Crear el préstamo actualizado
-    // final updatedLoan = Loan(
-    //   id: widget.loan.id,
-
-    //   borrowerUserId: widget.loan.borrowerUserId,
-    //   description: widget.loan.description,
-    //   amount: widget.loan.amount,
-    //   dueDate: widget.loan.dueDate,
-    //   status: newProgress >= 1.0 ? LoanStatus.paid : LoanStatus.partial,
-    //   // progress: newProgress.clamp(0.0, 1.0),
-    //   color: widget.loan.color,
-    //   type: LoanType.iOwe,
-    //   paidAmount: widget.loan.paidAmount + paymentAmount, lenderUserId: ,
-    // );
-
-    // Llamar al callback si existe
-    if (widget.onPaymentConfirmed != null) {
-      await widget.onPaymentConfirmed!(
-        widget.loan,
-        paymentAmount,
-        _selectedImage,
-        _noteController.text.isNotEmpty ? _noteController.text : null,
+    try {
+      // 1. Primero registrar el pago
+      context.read<PaymentBloc>().add(
+        AddPayment(
+          payment: Payment(
+            id: '', // Generar ID en el backend
+            loanId: widget.loan.id,
+            userId: authState.user.uid,
+            amount: paymentAmount,
+            date: DateTime.now(),
+            receiptImageUrl: _selectedImage?.path,
+            note: _noteController.text.isEmpty ? null : _noteController.text,
+          ),
+        ),
       );
-    }
 
-    if (mounted) {
-      Navigator.pop(context);
+      final double newPaidAmount = widget.loan.paidAmount + paymentAmount;
+
+      // Determinar nuevo estado
+      LoanStatus newStatus = widget.loan.status;
+      if (newPaidAmount >= widget.loan.amount) {
+        newStatus = LoanStatus.pagado; // Préstamo completamente pagado
+        // } else if (newPaidAmount > 0 && widget.loan.paidAmount == 0) {
+        //   newStatus = 'Parcial' as LoanStatus; // Primer pago
+      } else if (newPaidAmount > 0) {
+        newStatus = LoanStatus.pendiente; // Pago adicional pero no completo
+      }
+
+      final updatedLoan = Loan(
+        id: widget.loan.id,
+        lenderUserId: widget.loan.lenderUserId,
+        borrowerUserId: widget.loan.borrowerUserId,
+        description: widget.loan.description,
+        amount: widget.loan.amount,
+        paidAmount: newPaidAmount, // ¡IMPORTANTE: Actualizar paidAmount!
+        dueDate: widget.loan.dueDate,
+        status: newStatus, // ¡IMPORTANTE: Actualizar status!
+        color: widget.loan.color,
+      );
+
+      context.read<LoanBloc>().add(UpdateLoan(loan: updatedLoan));
+
+      await Future.delayed(const Duration(milliseconds: 500));
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Pago de ₡${paymentAmount.toInt()} registrado exitosamente',
+          ),
+          backgroundColor: Colors.green,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        ),
+      );
+      widget.onPaymentConfirmed(updatedLoan, widget.selectedTab, paymentAmount);
+    } catch (e) {
+      // Manejar error
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error al registrar pago: $e'),
+          backgroundColor: const Color(0xFFFF6B6B),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        ),
+      );
+    } finally {
+      // 8. Cerrar el diálogo
+      if (context.mounted) {
+        Navigator.pop(context);
+      }
     }
   }
 
@@ -198,7 +231,7 @@ class _PaymentDialogState extends State<PaymentDialog> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      widget.loan.borrowerUserId.name,
+                      widget.loan.lenderUserId.name,
                       style: TextStyle(
                         fontSize: 16,
                         color:
@@ -210,334 +243,68 @@ class _PaymentDialogState extends State<PaymentDialog> {
                     const SizedBox(height: 24),
 
                     // Información del saldo
-                    _buildBalanceInfo(),
-                    const SizedBox(height: 20),
-
-                    // Campo de monto del pago
-                    _buildPaymentAmountField(),
-                    const SizedBox(height: 20),
-
-                    // Campo de comprobante de pago (imagen)
-                    _buildReceiptImageField(),
-                    const SizedBox(height: 24),
-
-                    // Campo de descripción opcional
-                    _buildNoteField(),
-                    const SizedBox(height: 32),
-
-                    // Botones de acción
-                    _buildActionButtons(),
-                  ],
-                ),
-              ),
-            );
-          },
-        ),
-      ),
-    );
-  }
-
-  Widget _buildBalanceInfo() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color:
-            widget.isDark ? const Color(0xFF0F172A) : const Color(0xFFF3F4F6),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Saldo pendiente',
-                style: TextStyle(
-                  fontSize: 12,
-                  color:
-                      widget.isDark ? Colors.white70 : const Color(0xFF6B7280),
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                '₡${(widget.loan.amount * (1 - widget.loan.progress)).toInt()}',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                  color: widget.isDark ? Colors.white : const Color(0xFF1F2937),
-                ),
-              ),
-            ],
-          ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                'Monto total',
-                style: TextStyle(
-                  fontSize: 12,
-                  color:
-                      widget.isDark ? Colors.white70 : const Color(0xFF6B7280),
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                '₡${widget.loan.amount.toInt()}',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color:
-                      widget.isDark ? Colors.white70 : const Color(0xFF6B7280),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPaymentAmountField() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Monto del pago',
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: widget.isDark ? Colors.white : const Color(0xFF1F2937),
-          ),
-        ),
-        const SizedBox(height: 8),
-        Container(
-          decoration: BoxDecoration(
-            color:
-                widget.isDark
-                    ? const Color(0xFF0F172A)
-                    : const Color(0xFFF3F4F6),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color:
-                  widget.isDark
-                      ? const Color(0xFF334155).withOpacity(0.3)
-                      : const Color(0xFFE5E7EB),
-              width: 0.5,
-            ),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            child: TextField(
-              controller: _paymentAmountController,
-              keyboardType: TextInputType.number,
-              style: TextStyle(
-                color: widget.isDark ? Colors.white : const Color(0xFF1F2937),
-                fontSize: 16,
-                height: 1.2,
-              ),
-              decoration: InputDecoration(
-                hintText: '0.00',
-                hintStyle: TextStyle(
-                  color:
-                      widget.isDark ? Colors.white60 : const Color(0xFF9CA3AF),
-                  fontSize: 16,
-                  height: 1.2,
-                ),
-                border: InputBorder.none,
-                contentPadding: const EdgeInsets.symmetric(vertical: 16),
-                prefixIcon: Padding(
-                  padding: const EdgeInsets.only(left: 0, right: 8),
-                  child: Icon(
-                    Iconsax.money,
-                    size: 20,
-                    color: const Color(0xFF6B7280),
-                  ),
-                ),
-                suffixText: '₡',
-                suffixStyle: TextStyle(
-                  color:
-                      widget.isDark ? Colors.white70 : const Color(0xFF6B7280),
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                ),
-                isDense: true,
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildReceiptImageField() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              'Comprobante de pago',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: widget.isDark ? Colors.white : const Color(0xFF1F2937),
-              ),
-            ),
-            Text(
-              '(Opcional)',
-              style: TextStyle(
-                fontSize: 12,
-                color: widget.isDark ? Colors.white60 : const Color(0xFF9CA3AF),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 8),
-        GestureDetector(
-          onTap: _pickImage,
-          child: Container(
-            width: double.infinity,
-            decoration: BoxDecoration(
-              color:
-                  widget.isDark
-                      ? const Color(0xFF0F172A)
-                      : const Color(0xFFF3F4F6),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color:
-                    widget.isDark
-                        ? const Color(0xFF334155).withOpacity(0.3)
-                        : const Color(0xFFE5E7EB),
-                width: 1.5,
-                style: BorderStyle.solid,
-              ),
-            ),
-            child:
-                _selectedImage == null
-                    ? Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 24),
-                      child: Column(
-                        children: [
-                          Icon(
-                            Iconsax.gallery_add,
-                            size: 40,
-                            color:
-                                widget.isDark
-                                    ? Colors.white70
-                                    : const Color(0xFF6B7280),
-                          ),
-                          const SizedBox(height: 12),
-                          Text(
-                            'Agregar imagen',
-                            style: TextStyle(
-                              fontSize: 14,
-                              color:
-                                  widget.isDark
-                                      ? Colors.white70
-                                      : const Color(0xFF6B7280),
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            'Toca para seleccionar de la galería',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color:
-                                  widget.isDark
-                                      ? Colors.white60
-                                      : const Color(0xFF9CA3AF),
-                            ),
-                          ),
-                        ],
-                      ),
-                    )
-                    : Padding(
+                    Container(
                       padding: const EdgeInsets.all(16),
-                      child: Column(
+                      decoration: BoxDecoration(
+                        color:
+                            widget.isDark
+                                ? const Color(0xFF0F172A)
+                                : const Color(0xFFF3F4F6),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Container(
-                            height: 150,
-                            width: double.infinity,
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(8),
-                              image: DecorationImage(
-                                image: FileImage(_selectedImage!),
-                                fit: BoxFit.cover,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              ElevatedButton(
-                                onPressed: _pickImage,
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: const Color(0xFF2D5BFF),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 16,
-                                    vertical: 8,
-                                  ),
-                                ),
-                                child: const Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(
-                                      Iconsax.gallery,
-                                      size: 16,
-                                      color: Colors.white,
-                                    ),
-                                    SizedBox(width: 6),
-                                    Text(
-                                      'Cambiar imagen',
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                  ],
+                              Text(
+                                'Saldo pendiente',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color:
+                                      widget.isDark
+                                          ? Colors.white70
+                                          : const Color(0xFF6B7280),
                                 ),
                               ),
-                              const SizedBox(width: 12),
-                              OutlinedButton(
-                                onPressed: _removeImage,
-                                style: OutlinedButton.styleFrom(
-                                  side: const BorderSide(
-                                    color: Color(0xFFFF6B6B),
-                                  ),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 16,
-                                    vertical: 8,
-                                  ),
+                              const SizedBox(height: 4),
+                              Text(
+                                '₡${(widget.loan.amount * (1 - widget.loan.progress)).toInt()}',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w700,
+                                  color:
+                                      widget.isDark
+                                          ? Colors.white
+                                          : const Color(0xFF1F2937),
                                 ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    const Icon(
-                                      Iconsax.trash,
-                                      size: 16,
-                                      color: Color(0xFFFF6B6B),
-                                    ),
-                                    const SizedBox(width: 6),
-                                    Text(
-                                      'Eliminar',
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: const Color(0xFFFF6B6B),
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                  ],
+                              ),
+                            ],
+                          ),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            children: [
+                              Text(
+                                'Monto total',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color:
+                                      widget.isDark
+                                          ? Colors.white70
+                                          : const Color(0xFF6B7280),
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                '₡${widget.loan.amount.toInt()}',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                  color:
+                                      widget.isDark
+                                          ? Colors.white70
+                                          : const Color(0xFF6B7280),
                                 ),
                               ),
                             ],
@@ -545,132 +312,462 @@ class _PaymentDialogState extends State<PaymentDialog> {
                         ],
                       ),
                     ),
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          'Sube una foto del comprobante de pago (transferencia, recibo, etc.)',
-          style: TextStyle(
-            fontSize: 11,
-            color: widget.isDark ? Colors.white60 : const Color(0xFF9CA3AF),
-          ),
-        ),
-      ],
-    );
-  }
+                    const SizedBox(height: 20),
 
-  Widget _buildNoteField() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              'Nota adicional',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-                color: widget.isDark ? Colors.white : const Color(0xFF1F2937),
-              ),
-            ),
-            Text(
-              '(Opcional)',
-              style: TextStyle(
-                fontSize: 12,
-                color: widget.isDark ? Colors.white60 : const Color(0xFF9CA3AF),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 8),
-        Container(
-          decoration: BoxDecoration(
-            color:
-                widget.isDark
-                    ? const Color(0xFF0F172A)
-                    : const Color(0xFFF3F4F6),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color:
-                  widget.isDark
-                      ? const Color(0xFF334155).withOpacity(0.3)
-                      : const Color(0xFFE5E7EB),
-              width: 0.5,
-            ),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            child: TextField(
-              controller: _noteController,
-              maxLines: 3,
-              style: TextStyle(
-                color: widget.isDark ? Colors.white : const Color(0xFF1F2937),
-                fontSize: 14,
-              ),
-              decoration: InputDecoration(
-                hintText: 'Ej: Pago parcial, referencia bancaria, etc.',
-                hintStyle: TextStyle(
-                  color:
-                      widget.isDark ? Colors.white60 : const Color(0xFF9CA3AF),
-                  fontSize: 14,
-                ),
-                border: InputBorder.none,
-                contentPadding: const EdgeInsets.symmetric(vertical: 12),
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
+                    // Campo de monto del pago
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Monto del pago',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color:
+                                widget.isDark
+                                    ? Colors.white
+                                    : const Color(0xFF1F2937),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Container(
+                          decoration: BoxDecoration(
+                            color:
+                                widget.isDark
+                                    ? const Color(0xFF0F172A)
+                                    : const Color(0xFFF3F4F6),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color:
+                                  widget.isDark
+                                      ? const Color(0xFF334155).withOpacity(0.3)
+                                      : const Color(0xFFE5E7EB),
+                              width: 0.5,
+                            ),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 12),
+                            child: TextField(
+                              controller: _paymentAmountController,
+                              keyboardType: TextInputType.number,
+                              style: TextStyle(
+                                color:
+                                    widget.isDark
+                                        ? Colors.white
+                                        : const Color(0xFF1F2937),
+                                fontSize: 16,
+                                height: 1.2,
+                              ),
+                              decoration: InputDecoration(
+                                hintText: '0.00',
+                                hintStyle: TextStyle(
+                                  color:
+                                      widget.isDark
+                                          ? Colors.white60
+                                          : const Color(0xFF9CA3AF),
+                                  fontSize: 16,
+                                  height: 1.2,
+                                ),
+                                border: InputBorder.none,
+                                contentPadding: const EdgeInsets.symmetric(
+                                  vertical: 16,
+                                ),
+                                prefixIcon: Padding(
+                                  padding: const EdgeInsets.only(
+                                    left: 0,
+                                    right: 8,
+                                  ),
+                                  child: Icon(
+                                    Iconsax.money,
+                                    size: 20,
+                                    color: const Color(0xFF6B7280),
+                                  ),
+                                ),
+                                suffixText: '₡',
+                                suffixStyle: TextStyle(
+                                  color:
+                                      widget.isDark
+                                          ? Colors.white70
+                                          : const Color(0xFF6B7280),
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                                isDense: true,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
 
-  Widget _buildActionButtons() {
-    return Column(
-      children: [
-        SizedBox(
-          width: double.infinity,
-          height: 50,
-          child: ElevatedButton(
-            onPressed: _isUploading ? null : _confirmPayment,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Theme.of(context).primaryColor,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-            child:
-                _isUploading
-                    ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                      ),
-                    )
-                    : const Text(
-                      'Confirmar pago',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
+                    // Campo de comprobante de pago (imagen)
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'Comprobante de pago',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color:
+                                    widget.isDark
+                                        ? Colors.white
+                                        : const Color(0xFF1F2937),
+                              ),
+                            ),
+                            Text(
+                              '(Opcional)',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color:
+                                    widget.isDark
+                                        ? Colors.white60
+                                        : const Color(0xFF9CA3AF),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+
+                        GestureDetector(
+                          onTap: _pickImage,
+                          child: Container(
+                            width: double.infinity,
+                            decoration: BoxDecoration(
+                              color:
+                                  widget.isDark
+                                      ? const Color(0xFF0F172A)
+                                      : const Color(0xFFF3F4F6),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color:
+                                    widget.isDark
+                                        ? const Color(
+                                          0xFF334155,
+                                        ).withOpacity(0.3)
+                                        : const Color(0xFFE5E7EB),
+                                width: 1.5,
+                                style: BorderStyle.solid,
+                              ),
+                            ),
+                            child:
+                                _selectedImage == null
+                                    ? Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 24,
+                                      ),
+                                      child: Column(
+                                        children: [
+                                          Icon(
+                                            Iconsax.gallery_add,
+                                            size: 40,
+                                            color:
+                                                widget.isDark
+                                                    ? Colors.white70
+                                                    : const Color(0xFF6B7280),
+                                          ),
+                                          const SizedBox(height: 12),
+                                          Text(
+                                            'Agregar imagen',
+                                            style: TextStyle(
+                                              fontSize: 14,
+                                              color:
+                                                  widget.isDark
+                                                      ? Colors.white70
+                                                      : const Color(0xFF6B7280),
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            'Toca para seleccionar de la galería',
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              color:
+                                                  widget.isDark
+                                                      ? Colors.white60
+                                                      : const Color(0xFF9CA3AF),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    )
+                                    : Padding(
+                                      padding: const EdgeInsets.all(16),
+                                      child: Column(
+                                        children: [
+                                          Container(
+                                            height: 150,
+                                            width: double.infinity,
+                                            decoration: BoxDecoration(
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
+                                              image: DecorationImage(
+                                                image: FileImage(
+                                                  _selectedImage!,
+                                                ),
+                                                fit: BoxFit.cover,
+                                              ),
+                                            ),
+                                          ),
+                                          const SizedBox(height: 12),
+                                          Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.center,
+                                            children: [
+                                              ElevatedButton(
+                                                onPressed: _pickImage,
+                                                style: ElevatedButton.styleFrom(
+                                                  backgroundColor: const Color(
+                                                    0xFF2D5BFF,
+                                                  ),
+                                                  shape: RoundedRectangleBorder(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                          8,
+                                                        ),
+                                                  ),
+                                                  padding:
+                                                      const EdgeInsets.symmetric(
+                                                        horizontal: 16,
+                                                        vertical: 8,
+                                                      ),
+                                                ),
+                                                child: const Row(
+                                                  mainAxisSize:
+                                                      MainAxisSize.min,
+                                                  children: [
+                                                    Icon(
+                                                      Iconsax.gallery,
+                                                      size: 16,
+                                                      color: Colors.white,
+                                                    ),
+                                                    SizedBox(width: 6),
+                                                    Text(
+                                                      'Cambiar imagen',
+                                                      style: TextStyle(
+                                                        fontSize: 12,
+                                                        color: Colors.white,
+                                                        fontWeight:
+                                                            FontWeight.w600,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                              const SizedBox(width: 12),
+                                              OutlinedButton(
+                                                onPressed: () {
+                                                  setState(() {
+                                                    _selectedImage = null;
+                                                  });
+                                                },
+                                                style: OutlinedButton.styleFrom(
+                                                  side: BorderSide(
+                                                    color: const Color(
+                                                      0xFFFF6B6B,
+                                                    ),
+                                                  ),
+                                                  shape: RoundedRectangleBorder(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                          8,
+                                                        ),
+                                                  ),
+                                                  padding:
+                                                      const EdgeInsets.symmetric(
+                                                        horizontal: 16,
+                                                        vertical: 8,
+                                                      ),
+                                                ),
+                                                child: Row(
+                                                  mainAxisSize:
+                                                      MainAxisSize.min,
+                                                  children: [
+                                                    Icon(
+                                                      Iconsax.trash,
+                                                      size: 16,
+                                                      color: const Color(
+                                                        0xFFFF6B6B,
+                                                      ),
+                                                    ),
+                                                    const SizedBox(width: 6),
+                                                    Text(
+                                                      'Eliminar',
+                                                      style: TextStyle(
+                                                        fontSize: 12,
+                                                        color: const Color(
+                                                          0xFFFF6B6B,
+                                                        ),
+                                                        fontWeight:
+                                                            FontWeight.w600,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Sube una foto del comprobante de pago (transferencia, recibo, etc.)',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color:
+                                widget.isDark
+                                    ? Colors.white60
+                                    : const Color(0xFF9CA3AF),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Campo de descripción opcional
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'Nota adicional',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color:
+                                    widget.isDark
+                                        ? Colors.white
+                                        : const Color(0xFF1F2937),
+                              ),
+                            ),
+                            Text(
+                              '(Opcional)',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color:
+                                    widget.isDark
+                                        ? Colors.white60
+                                        : const Color(0xFF9CA3AF),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        Container(
+                          decoration: BoxDecoration(
+                            color:
+                                widget.isDark
+                                    ? const Color(0xFF0F172A)
+                                    : const Color(0xFFF3F4F6),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color:
+                                  widget.isDark
+                                      ? const Color(0xFF334155).withOpacity(0.3)
+                                      : const Color(0xFFE5E7EB),
+                              width: 0.5,
+                            ),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 12),
+                            child: TextField(
+                              controller: _noteController,
+                              maxLines: 3,
+                              style: TextStyle(
+                                color:
+                                    widget.isDark
+                                        ? Colors.white
+                                        : const Color(0xFF1F2937),
+                                fontSize: 14,
+                              ),
+                              decoration: InputDecoration(
+                                hintText:
+                                    'Ej: Pago parcial, referencia bancaria, etc.',
+                                hintStyle: TextStyle(
+                                  color:
+                                      widget.isDark
+                                          ? Colors.white60
+                                          : const Color(0xFF9CA3AF),
+                                  fontSize: 14,
+                                ),
+                                border: InputBorder.none,
+                                contentPadding: const EdgeInsets.symmetric(
+                                  vertical: 12,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 32),
+
+                    // Botones de acción
+                    SizedBox(
+                      width: double.infinity,
+                      height: 50,
+                      child: ElevatedButton(
+                        onPressed: _isUploading ? null : _handlePayment,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Theme.of(context).primaryColor,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child:
+                            _isUploading
+                                ? const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                      Colors.white,
+                                    ),
+                                  ),
+                                )
+                                : const Text(
+                                  'Confirmar pago',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
                       ),
                     ),
-          ),
+                    const SizedBox(height: 12),
+                    TextButton(
+                      onPressed:
+                          widget.onCancel ?? () => Navigator.pop(context),
+                      child: Text(
+                        'Cancelar',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color:
+                              widget.isDark
+                                  ? Colors.white70
+                                  : const Color(0xFF6B7280),
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
         ),
-        const SizedBox(height: 12),
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: Text(
-            'Cancelar',
-            style: TextStyle(
-              fontSize: 14,
-              color: widget.isDark ? Colors.white70 : const Color(0xFF6B7280),
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ),
-      ],
+      ),
     );
   }
 }

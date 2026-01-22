@@ -88,7 +88,7 @@ class _AddLoanFormState extends State<AddLoanForm> {
                 ),
               ),
               Text(
-                'Nuevo Préstamo/Deuda',
+                'Nuevo Préstamo',
                 style: TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.w700,

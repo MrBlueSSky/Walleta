@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:walleta/models/loan.dart';
 import 'package:walleta/screens/loans/details/details_content.dart';
-import 'package:walleta/screens/loans/details/register_payment.dart';
+import 'package:walleta/screens/loans/payment/loan_payment_dialog.dart';
 
 class LoanCard extends StatefulWidget {
   const LoanCard({
@@ -443,7 +443,7 @@ class _LoanCardState extends State<LoanCard> {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) {
-        return RegisterPaymentDialog(
+        return LoanRegisterPaymentDialog(
           loan: widget.loan,
           isDark: widget.isDark,
           selectedTab: widget.selectedTab,

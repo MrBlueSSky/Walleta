@@ -1,9 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:walleta/blocs/payment/bloc/payment_bloc.dart';
+import 'package:walleta/blocs/payment/bloc/payment_event.dart';
+import 'package:walleta/blocs/payment/bloc/payment_state.dart';
 import 'package:walleta/models/loan.dart';
-import 'package:walleta/screens/loans/details/register_payment.dart';
+import 'package:walleta/models/payment.dart';
 import 'package:walleta/screens/loans/details/detail_row.dart';
+import 'package:intl/intl.dart';
+import 'package:walleta/screens/loans/details/receipt_image_dialog%20.dart';
 
-class LoanDetailsContent extends StatelessWidget {
+class LoanDetailsContent extends StatefulWidget {
   const LoanDetailsContent({
     super.key,
     required this.context,
@@ -14,39 +20,46 @@ class LoanDetailsContent extends StatelessWidget {
     required this.onPaymentConfirmed,
   });
 
-  final BuildContext context;
   final Loan loan;
   final bool isDark;
   final ScrollController scrollController;
   final int selectedTab;
   final Function(Loan, int, double) onPaymentConfirmed;
 
-  // Método seguro para obtener la inicial
+  final dynamic context;
+
+  @override
+  State<LoanDetailsContent> createState() => _LoanDetailsContentState();
+}
+
+class _LoanDetailsContentState extends State<LoanDetailsContent> {
+  bool _paymentsLoaded = false;
+
   String _getInitial(String name) {
     if (name.isEmpty) return '?';
     return name.substring(0, 1).toUpperCase();
   }
 
-  void _showRegisterPaymentDialog() {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) {
-        return RegisterPaymentDialog(
-          loan: loan,
-          isDark: isDark,
-          selectedTab: selectedTab,
-          onPaymentConfirmed: onPaymentConfirmed,
-        );
-      },
-    );
+  @override
+  void initState() {
+    super.initState();
+    // Cargar pagos cuando se inicializa el widget
+    _loadPayments();
+  }
+
+  void _loadPayments() {
+    if (!_paymentsLoaded) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        context.read<PaymentBloc>().add(LoadPayments(widget.loan.id));
+        _paymentsLoaded = true;
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
-      controller: scrollController,
+      controller: widget.scrollController,
       padding: const EdgeInsets.all(20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -57,27 +70,28 @@ class LoanDetailsContent extends StatelessWidget {
               height: 4,
               margin: const EdgeInsets.only(bottom: 20),
               decoration: BoxDecoration(
-                color: isDark ? Colors.white30 : const Color(0xFFE5E7EB),
+                color: widget.isDark ? Colors.white30 : const Color(0xFFE5E7EB),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
           ),
+
           Row(
             children: [
               Container(
                 width: 56,
                 height: 56,
                 decoration: BoxDecoration(
-                  color: loan.color.withOpacity(0.1),
+                  color: widget.loan.color.withOpacity(0.1),
                   shape: BoxShape.circle,
                 ),
                 child: Center(
                   child: Text(
-                    _getInitial(loan.lenderUserId.name), // ← CORREGIDO
+                    _getInitial(widget.loan.lenderUserId.name),
                     style: TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.w600,
-                      color: loan.color,
+                      color: widget.loan.color,
                     ),
                   ),
                 ),
@@ -88,21 +102,26 @@ class LoanDetailsContent extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      loan.lenderUserId.name.isNotEmpty
-                          ? loan.lenderUserId.name
-                          : 'Sin nombre', // ← Fallback
+                      widget.loan.borrowerUserId.name.isNotEmpty
+                          ? widget.loan.borrowerUserId.name
+                          : 'Sin nombre',
                       style: TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.w700,
-                        color: isDark ? Colors.white : const Color(0xFF1F2937),
+                        color:
+                            widget.isDark
+                                ? Colors.white
+                                : const Color(0xFF1F2937),
                       ),
                     ),
                     Text(
-                      loan.description,
+                      widget.loan.description,
                       style: TextStyle(
                         fontSize: 14,
                         color:
-                            isDark ? Colors.white70 : const Color(0xFF6B7280),
+                            widget.isDark
+                                ? Colors.white70
+                                : const Color(0xFF6B7280),
                       ),
                     ),
                   ],
@@ -115,33 +134,36 @@ class LoanDetailsContent extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF3F4F6),
+              color:
+                  widget.isDark
+                      ? const Color(0xFF0F172A)
+                      : const Color(0xFFF3F4F6),
               borderRadius: BorderRadius.circular(16),
             ),
             child: Column(
               children: [
                 DetailRow(
                   label: 'Monto total',
-                  value: '₡${loan.amount.toInt()}',
-                  isDark: isDark,
+                  value: '₡${widget.loan.amount.toInt()}',
+                  isDark: widget.isDark,
                 ),
                 const SizedBox(height: 12),
                 DetailRow(
                   label: 'Fecha límite',
-                  value: loan.dueDate.toLocal().toString().split(' ')[0],
-                  isDark: isDark,
+                  value: _formatDate(widget.loan.dueDate),
+                  isDark: widget.isDark,
                 ),
                 const SizedBox(height: 12),
                 DetailRow(
                   label: 'Estado',
-                  value: loan.status.name,
-                  isDark: isDark,
+                  value: widget.loan.status.name,
+                  isDark: widget.isDark,
                 ),
                 const SizedBox(height: 12),
                 DetailRow(
                   label: 'Progreso',
-                  value: '${(loan.progress * 100).toInt()}%',
-                  isDark: isDark,
+                  value: '${(widget.loan.progress * 100).toInt()}%',
+                  isDark: widget.isDark,
                 ),
               ],
             ),
@@ -151,7 +173,10 @@ class LoanDetailsContent extends StatelessWidget {
           Container(
             height: 10,
             decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF334155) : const Color(0xFFF3F4F6),
+              color:
+                  widget.isDark
+                      ? const Color(0xFF334155)
+                      : const Color(0xFFF3F4F6),
               borderRadius: BorderRadius.circular(5),
             ),
             child: Stack(
@@ -159,10 +184,14 @@ class LoanDetailsContent extends StatelessWidget {
                 AnimatedContainer(
                   duration: const Duration(milliseconds: 800),
                   curve: Curves.easeOutCubic,
-                  width: MediaQuery.of(context).size.width * loan.progress,
+                  width:
+                      MediaQuery.of(context).size.width * widget.loan.progress,
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
-                      colors: [loan.color, loan.color.withOpacity(0.8)],
+                      colors: [
+                        widget.loan.color,
+                        widget.loan.color.withOpacity(0.8),
+                      ],
                       begin: Alignment.centerLeft,
                       end: Alignment.centerRight,
                     ),
@@ -173,53 +202,400 @@ class LoanDetailsContent extends StatelessWidget {
             ),
           ),
 
+          const SizedBox(height: 24),
+
+          // HISTORIAL DE PAGOS
+          _buildPaymentHistory(),
+
           const SizedBox(height: 32),
-          // Row(
-          //   children: [
-          //     Expanded(
-          //       child: OutlinedButton(
-          //         onPressed: () => Navigator.pop(context),
-          //         style: OutlinedButton.styleFrom(
-          //           side: BorderSide(color: loan.color),
-          //           shape: RoundedRectangleBorder(
-          //             borderRadius: BorderRadius.circular(12),
-          //           ),
-          //           padding: const EdgeInsets.symmetric(vertical: 16),
-          //         ),
-          //         child: Text(
-          //           'Editar',
-          //           style: TextStyle(
-          //             color: loan.color,
-          //             fontWeight: FontWeight.w600,
-          //             fontSize: 16,
-          //           ),
-          //         ),
-          //       ),
-          //     ),
-          //     const SizedBox(width: 12),
-          //     Expanded(
-          //       child: ElevatedButton(
-          //         onPressed: () {
-          //           Navigator.pop(context);
-          //           _showRegisterPaymentDialog();
-          //         },
-          //         style: ElevatedButton.styleFrom(
-          //           backgroundColor: loan.color,
-          //           shape: RoundedRectangleBorder(
-          //             borderRadius: BorderRadius.circular(12),
-          //           ),
-          //           padding: const EdgeInsets.symmetric(vertical: 16),
-          //         ),
-          //         child: const Text(
-          //           'Registrar pago',
-          //           style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
-          //         ),
-          //       ),
-          //     ),
-          //   ],
-          // ),
-          // const SizedBox(height: 20),
         ],
+      ),
+    );
+  }
+
+  String _formatDate(DateTime date) {
+    return DateFormat('dd/MM/yyyy').format(date);
+  }
+
+  Widget _buildPaymentHistory() {
+    return BlocBuilder<PaymentBloc, PaymentState>(
+      builder: (context, state) {
+        // Si es el estado inicial y aún no se han cargado los pagos, cargarlos
+        if (state.status == PaymentStateStatus.initial && !_paymentsLoaded) {
+          _loadPayments();
+        }
+
+        final loanPayments =
+            state.payments.where((p) => p.loanId == widget.loan.id).toList();
+        final paymentCount = loanPayments.length;
+
+        // Determinar qué widget mostrar
+        Widget content;
+
+        if (state.status == PaymentStateStatus.loading) {
+          content = const Center(
+            child: Padding(
+              padding: EdgeInsets.symmetric(vertical: 20),
+              child: CircularProgressIndicator(),
+            ),
+          );
+        } else if (state.status == PaymentStateStatus.error) {
+          content = _buildErrorWidget();
+        } else if (loanPayments.isEmpty) {
+          content = _buildEmptyWidget();
+        } else {
+          content = _buildPaymentsList(loanPayments);
+        }
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Historial de Pagos',
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    color:
+                        widget.isDark ? Colors.white : const Color(0xFF1F2937),
+                  ),
+                ),
+                Text(
+                  '$paymentCount pago${paymentCount != 1 ? 's' : ''}',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color:
+                        widget.isDark
+                            ? Colors.white70
+                            : const Color(0xFF6B7280),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            content,
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildErrorWidget() {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 20),
+      decoration: BoxDecoration(
+        color:
+            widget.isDark ? const Color(0xFF0F172A) : const Color(0xFFF3F4F6),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Center(
+        child: Column(
+          children: [
+            Icon(
+              Icons.error_outline,
+              color: widget.isDark ? Colors.white70 : const Color(0xFF6B7280),
+              size: 40,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Error al cargar pagos',
+              style: TextStyle(
+                color: widget.isDark ? Colors.white70 : const Color(0xFF6B7280),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmptyWidget() {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 16),
+      decoration: BoxDecoration(
+        color:
+            widget.isDark ? const Color(0xFF0F172A) : const Color(0xFFF3F4F6),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        children: [
+          Icon(
+            Icons.payments_outlined,
+            size: 48,
+            color: widget.isDark ? Colors.white60 : const Color(0xFF9CA3AF),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'No hay pagos registrados',
+            style: TextStyle(
+              fontSize: 16,
+              color: widget.isDark ? Colors.white70 : const Color(0xFF6B7280),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Realiza el primer pago para verlo aquí',
+            style: TextStyle(
+              fontSize: 14,
+              color: widget.isDark ? Colors.white60 : const Color(0xFF9CA3AF),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPaymentsList(List<Payment> loanPayments) {
+    return Container(
+      decoration: BoxDecoration(
+        color:
+            widget.isDark ? const Color(0xFF0F172A) : const Color(0xFFF3F4F6),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: ListView.separated(
+        physics: const NeverScrollableScrollPhysics(),
+        shrinkWrap: true,
+        itemCount: loanPayments.length,
+        separatorBuilder:
+            (context, index) => Divider(
+              height: 1,
+              thickness: 0.5,
+              color:
+                  widget.isDark
+                      ? const Color(0xFF334155)
+                      : const Color(0xFFE5E7EB),
+              indent: 16,
+              endIndent: 16,
+            ),
+        itemBuilder: (context, index) {
+          final payment = loanPayments[index];
+          return _PaymentItem(
+            payment: payment,
+            isDark: widget.isDark,
+            loanColor: widget.loan.color,
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _PaymentItem extends StatelessWidget {
+  final Payment payment;
+  final bool isDark;
+  final Color loanColor;
+
+  const _PaymentItem({
+    required this.payment,
+    required this.isDark,
+    required this.loanColor,
+  });
+
+  String _formatDate(DateTime date) {
+    return DateFormat('dd/MM/yyyy').format(date);
+  }
+
+  String _formatTime(DateTime date) {
+    return DateFormat('HH:mm').format(date);
+  }
+
+  void _showReceiptImage(BuildContext context) {
+    if (payment.receiptImageUrl == null || payment.receiptImageUrl!.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('No hay comprobante disponible'),
+          backgroundColor: Colors.orange,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        ),
+      );
+      return;
+    }
+
+    // Mostrar diálogo con la imagen
+    showDialog(
+      context: context,
+      builder:
+          (context) => ReceiptImageDialog(
+            imageUrl: payment.receiptImageUrl!,
+            payment: payment,
+            isDark: isDark,
+          ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () => _showReceiptImage(context),
+      child: Container(
+        color: Colors.transparent,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Icono con indicador de imagen
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: loanColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Center(
+                  child: Stack(
+                    children: [
+                      Icon(Icons.credit_card, size: 20, color: loanColor),
+                      if (payment.receiptImageUrl != null &&
+                          payment.receiptImageUrl!.isNotEmpty)
+                        Positioned(
+                          right: 0,
+                          top: 0,
+                          child: Container(
+                            width: 12,
+                            height: 12,
+                            decoration: BoxDecoration(
+                              color: Colors.green,
+                              borderRadius: BorderRadius.circular(6),
+                              border: Border.all(
+                                color:
+                                    isDark
+                                        ? const Color(0xFF1E293B)
+                                        : Colors.white,
+                                width: 1.5,
+                              ),
+                            ),
+                            child: const Icon(
+                              Icons.photo,
+                              size: 6,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Pago registrado',
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color:
+                                isDark ? Colors.white : const Color(0xFF1F2937),
+                          ),
+                        ),
+                        Text(
+                          '₡${payment.amount.toInt()}',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                            color: loanColor,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.calendar_today,
+                          size: 12,
+                          color:
+                              isDark ? Colors.white60 : const Color(0xFF9CA3AF),
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          _formatDate(payment.date),
+                          style: TextStyle(
+                            fontSize: 12,
+                            color:
+                                isDark
+                                    ? Colors.white60
+                                    : const Color(0xFF9CA3AF),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Icon(
+                          Icons.access_time,
+                          size: 12,
+                          color:
+                              isDark ? Colors.white60 : const Color(0xFF9CA3AF),
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          _formatTime(payment.date),
+                          style: TextStyle(
+                            fontSize: 12,
+                            color:
+                                isDark
+                                    ? Colors.white60
+                                    : const Color(0xFF9CA3AF),
+                          ),
+                        ),
+                        // Indicador de imagen
+                        if (payment.receiptImageUrl != null &&
+                            payment.receiptImageUrl!.isNotEmpty)
+                          Row(
+                            children: [
+                              const SizedBox(width: 12),
+                              Icon(Icons.image, size: 12, color: Colors.green),
+                              const SizedBox(width: 4),
+                              Text(
+                                'Comprobante',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: Colors.green,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                      ],
+                    ),
+
+                    if (payment.note != null && payment.note!.isNotEmpty) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        payment.note!,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color:
+                              isDark ? Colors.white70 : const Color(0xFF6B7280),
+                          fontStyle: FontStyle.italic,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+
+              // Indicador de que es tappable
+              if (payment.receiptImageUrl != null &&
+                  payment.receiptImageUrl!.isNotEmpty)
+                Icon(
+                  Icons.chevron_right,
+                  size: 20,
+                  color: isDark ? Colors.white60 : const Color(0xFF9CA3AF),
+                ),
+            ],
+          ),
+        ),
       ),
     );
   }
