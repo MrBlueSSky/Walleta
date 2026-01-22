@@ -78,13 +78,68 @@ class PaymentRepository {
     }
   }
 
-  // Obtener pagos por usuario
+  // Obtener TODOS los pagos del usuario (no solo por préstamo)
   Future<List<Payment>> fetchPaymentsByUser(String userId) async {
     try {
       final snapshot =
           await _firestore
               .collection('payments')
               .where('userId', isEqualTo: userId)
+              .orderBy('date', descending: true)
+              .get();
+
+      return snapshot.docs.map((doc) {
+        return Payment.fromMap(doc.id, doc.data());
+      }).toList();
+    } catch (e) {
+      print('❌ Error obteniendo pagos del usuario: $e');
+      rethrow;
+    }
+  }
+
+  // En repository/payment/payment.dart
+  Future<List<Payment>> fetchPaymentsByLoanIds(List<String> loanIds) async {
+    try {
+      print('🔍 Buscando pagos por IDs de préstamos: ${loanIds.length}');
+
+      if (loanIds.isEmpty) {
+        return [];
+      }
+
+      // Limitar a 30 IDs (límite de Firestore para whereIn)
+      final limitedLoanIds =
+          loanIds.length > 30 ? loanIds.sublist(0, 30) : loanIds;
+
+      final snapshot =
+          await _firestore
+              .collection('payments')
+              .where('loanId', whereIn: limitedLoanIds)
+              .orderBy('date', descending: true)
+              .get();
+
+      print('📊 Pagos encontrados: ${snapshot.docs.length}');
+
+      return snapshot.docs.map((doc) {
+        return Payment.fromMap(doc.id, doc.data());
+      }).toList();
+    } catch (e) {
+      print('❌ Error obteniendo pagos por loanIds: $e');
+      rethrow;
+    }
+  }
+
+  // Obtener pagos donde el usuario está involucrado (como prestamista o prestatario)
+  Future<List<Payment>> fetchPaymentsInvolvingUser(
+    String userId,
+    List<String> loanIds,
+  ) async {
+    try {
+      if (loanIds.isEmpty) return [];
+
+      final snapshot =
+          await _firestore
+              .collection('payments')
+              .where('loanId', whereIn: loanIds)
               .orderBy('date', descending: true)
               .get();
 

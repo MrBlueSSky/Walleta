@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:syncfusion_flutter_charts/charts.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:walleta/models/category_data.dart';
 import 'package:walleta/providers/auth_provider.dart';
+import 'package:walleta/screens/dashboard/loans_section.dart';
 import 'package:walleta/widgets/buttons/search_button.dart';
 
 class FinancialDashboard extends StatefulWidget {
@@ -52,14 +54,14 @@ class _FinancialDashboardState extends State<FinancialDashboard> {
     SharedExpense('Gasolina', 3000, false, 'Pedro', Icons.person),
   ];
 
-  double get totalSharedExpenses =>
-      sharedExpenses.fold(0, (sum, item) => sum + item.amount);
-  double get totalOwe => sharedExpenses
-      .where((e) => e.isOwed)
-      .fold(0, (sum, item) => sum + item.amount);
-  double get totalOwed => sharedExpenses
-      .where((e) => !e.isOwed)
-      .fold(0, (sum, item) => sum + item.amount);
+  // double get totalSharedExpenses =>
+  //     sharedExpenses.fold(0, (sum, item) => sum + item.amount);
+  // double get totalOwe => sharedExpenses
+  //     .where((e) => e.isOwed)
+  //     .fold(0, (sum, item) => sum + item.amount);
+  // double get totalOwed => sharedExpenses
+  //     .where((e) => !e.isOwed)
+  //     .fold(0, (sum, item) => sum + item.amount);
 
   // @override
   // void initState() {
@@ -83,6 +85,10 @@ class _FinancialDashboardState extends State<FinancialDashboard> {
     setState(() {
       _isSearchActive = isActive;
     });
+  }
+
+  String _formatCurrency(double amount) {
+    return '₡${amount.toStringAsFixed(2).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}';
   }
 
   @override
@@ -238,7 +244,7 @@ class _FinancialDashboardState extends State<FinancialDashboard> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                _buildSharedExpensesSection(cardColor, textColor),
+                LoansSection(cardColor: cardColor, textColor: textColor),
               ],
             ),
           ),
@@ -511,211 +517,4 @@ class _FinancialDashboardState extends State<FinancialDashboard> {
       ),
     );
   }
-
-  Widget _buildSharedExpensesSection(Color cardColor, Color textColor) {
-    return Container(
-      decoration: BoxDecoration(
-        color: cardColor,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        children: [
-          // Resumen de gastos compartidos
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              _buildSharedSummaryCard(
-                title: 'Total',
-                amount: totalSharedExpenses,
-                color: const Color(0xFF2D5BFF),
-                cardColor: cardColor,
-              ),
-              _buildSharedSummaryCard(
-                title: 'Debes',
-                amount: totalOwe,
-                color: const Color(0xFFFF6B6B),
-                cardColor: cardColor,
-              ),
-              _buildSharedSummaryCard(
-                title: 'Te deben',
-                amount: totalOwed,
-                color: const Color(0xFF00C896),
-                cardColor: cardColor,
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          // Lista de gastos compartidos
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Movimientos Recientes',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: textColor,
-                ),
-              ),
-              const SizedBox(height: 12),
-              ...sharedExpenses.map((expense) {
-                return Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: cardColor,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.grey.withOpacity(0.1)),
-                    ),
-                    padding: const EdgeInsets.all(12),
-                    child: Row(
-                      children: [
-                        Container(
-                          decoration: BoxDecoration(
-                            color:
-                                expense.isOwed
-                                    ? const Color(0xFFFF6B6B).withOpacity(0.1)
-                                    : const Color(0xFF00C896).withOpacity(0.1),
-                            shape: BoxShape.circle,
-                          ),
-                          padding: const EdgeInsets.all(8),
-                          child: Icon(
-                            expense.isOwed
-                                ? Iconsax.arrow_up_2
-                                : Iconsax.arrow_down_2,
-                            color:
-                                expense.isOwed
-                                    ? const Color(0xFFFF6B6B)
-                                    : const Color(0xFF00C896),
-                            size: 16,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                expense.description,
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w500,
-                                  color: textColor,
-                                ),
-                              ),
-                              Text(
-                                'Con ${expense.person}',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: textColor.withOpacity(0.6),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Text(
-                          expense.isOwed
-                              ? '-${_formatCurrency(expense.amount)}'
-                              : '+${_formatCurrency(expense.amount)}',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            color:
-                                expense.isOwed
-                                    ? const Color(0xFFFF6B6B)
-                                    : const Color(0xFF00C896),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              }).toList(),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSharedSummaryCard({
-    required String title,
-    required double amount,
-    required Color color,
-    required Color cardColor,
-  }) {
-    return Expanded(
-      child: Container(
-        decoration: BoxDecoration(
-          color: cardColor,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: color.withOpacity(0.2)),
-        ),
-        padding: const EdgeInsets.all(12),
-        margin: const EdgeInsets.symmetric(horizontal: 4),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Text(
-              title,
-              style: TextStyle(
-                fontSize: 12,
-                color: color,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              _formatCurrency(amount),
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-                color: color,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  String _formatCurrency(double amount) {
-    return '₡${amount.toStringAsFixed(2).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}';
-  }
-}
-
-// Modelos de datos
-class CategoryData {
-  final String name;
-  final double amount;
-  final Color color;
-  final IconData icon;
-
-  CategoryData(this.name, this.amount, this.color, this.icon);
-}
-
-class SharedExpense {
-  final String description;
-  final double amount;
-  final bool isOwed; // true = debes, false = te deben
-  final String person;
-  final IconData icon;
-
-  SharedExpense(
-    this.description,
-    this.amount,
-    this.isOwed,
-    this.person,
-    this.icon,
-  );
 }

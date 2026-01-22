@@ -465,6 +465,7 @@ class _AddLoanFormState extends State<AddLoanForm> {
       dueDate: _selectedDate!,
       status: LoanStatus.pendiente,
       color: const Color(0xFF2D5BFF),
+      createdAt: DateTime.now(),
     );
 
     // Usar el BLoC para agregar el préstamo

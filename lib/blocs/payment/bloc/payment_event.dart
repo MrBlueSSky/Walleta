@@ -8,11 +8,23 @@ abstract class PaymentEvent extends Equatable {
   List<Object?> get props => [];
 }
 
+// ✅ Nuevo evento para cargar todos los pagos del usuario
+class LoadAllPaymentsForUser extends PaymentEvent {
+  final String userId;
+  const LoadAllPaymentsForUser(this.userId);
+}
+
 class LoadPayments extends PaymentEvent {
   final String loanId;
   const LoadPayments(this.loanId);
   @override
   List<Object?> get props => [loanId];
+}
+
+class LoadPaymentsByLoanIds extends PaymentEvent {
+  final String userId;
+  final List<String> loanIds;
+  const LoadPaymentsByLoanIds(this.userId, this.loanIds);
 }
 
 class AddPayment extends PaymentEvent {

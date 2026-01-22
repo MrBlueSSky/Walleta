@@ -40,6 +40,21 @@ class _LoanDetailsContentState extends State<LoanDetailsContent> {
     return name.substring(0, 1).toUpperCase();
   }
 
+  // NUEVA FUNCIÓN: Obtener el nombre a mostrar según la pestaña
+  String _getDisplayName() {
+    if (widget.selectedTab == 0) {
+      // "Me deben" → Mostrar el nombre del deudor (borrower)
+      return widget.loan.borrowerUserId.name.isNotEmpty
+          ? widget.loan.borrowerUserId.name
+          : 'Sin nombre';
+    } else {
+      // "Yo debo" → Mostrar el nombre del prestamista (lender)
+      return widget.loan.lenderUserId.name.isNotEmpty
+          ? widget.loan.lenderUserId.name
+          : 'Sin nombre';
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -76,6 +91,7 @@ class _LoanDetailsContentState extends State<LoanDetailsContent> {
             ),
           ),
 
+          // SECCIÓN CORREGIDA: Avatar y nombre
           Row(
             children: [
               Container(
@@ -87,7 +103,7 @@ class _LoanDetailsContentState extends State<LoanDetailsContent> {
                 ),
                 child: Center(
                   child: Text(
-                    _getInitial(widget.loan.lenderUserId.name),
+                    _getInitial(_getDisplayName()), // ← USAR FUNCIÓN CORRECTA
                     style: TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.w600,
@@ -102,9 +118,7 @@ class _LoanDetailsContentState extends State<LoanDetailsContent> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      widget.loan.borrowerUserId.name.isNotEmpty
-                          ? widget.loan.borrowerUserId.name
-                          : 'Sin nombre',
+                      _getDisplayName(), // ← USAR FUNCIÓN NUEVA
                       style: TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.w700,
@@ -312,37 +326,32 @@ class _LoanDetailsContentState extends State<LoanDetailsContent> {
   }
 
   Widget _buildEmptyWidget() {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 16),
-      decoration: BoxDecoration(
-        color:
-            widget.isDark ? const Color(0xFF0F172A) : const Color(0xFFF3F4F6),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        children: [
-          Icon(
-            Icons.payments_outlined,
-            size: 48,
-            color: widget.isDark ? Colors.white60 : const Color(0xFF9CA3AF),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            'No hay pagos registrados',
-            style: TextStyle(
-              fontSize: 16,
-              color: widget.isDark ? Colors.white70 : const Color(0xFF6B7280),
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Realiza el primer pago para verlo aquí',
-            style: TextStyle(
-              fontSize: 14,
+    return Center(
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 16),
+        decoration: BoxDecoration(
+          color:
+              widget.isDark ? const Color(0xFF0F172A) : const Color(0xFFF3F4F6),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Column(
+          children: [
+            Icon(
+              Icons.payments_outlined,
+              size: 48,
               color: widget.isDark ? Colors.white60 : const Color(0xFF9CA3AF),
             ),
-          ),
-        ],
+            const SizedBox(height: 12),
+            Text(
+              'No hay pagos registrados',
+              style: TextStyle(
+                fontSize: 16,
+                color: widget.isDark ? Colors.white70 : const Color(0xFF6B7280),
+              ),
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
       ),
     );
   }

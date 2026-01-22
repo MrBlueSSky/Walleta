@@ -15,7 +15,7 @@ class LoanCard extends StatefulWidget {
 
   final Loan loan;
   final bool isDark;
-  final int selectedTab;
+  final int selectedTab; // 0 = "Me deben", 1 = "Yo debo"
   final List<Loan> iOwe;
 
   @override
@@ -69,9 +69,7 @@ class _LoanCardState extends State<LoanCard> {
                           ),
                           child: Center(
                             child: Text(
-                              _getInitial(
-                                widget.loan.borrowerUserId.name,
-                              ), // ← CORREGIDO
+                              _getInitial(_getDisplayName()), // ← CORREGIDO
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600,
@@ -85,9 +83,7 @@ class _LoanCardState extends State<LoanCard> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              widget.loan.borrowerUserId.name.isNotEmpty
-                                  ? widget.loan.borrowerUserId.name
-                                  : 'Sin nombre', // ← Añadir fallback
+                              _getDisplayName(), // ← FUNCIÓN NUEVA
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600,
@@ -355,6 +351,21 @@ class _LoanCardState extends State<LoanCard> {
         ),
       ),
     );
+  }
+
+  // NUEVA FUNCIÓN: Obtener el nombre a mostrar según la pestaña
+  String _getDisplayName() {
+    if (widget.selectedTab == 0) {
+      // "Me deben" → Mostrar el nombre del deudor (borrower)
+      return widget.loan.borrowerUserId.name.isNotEmpty
+          ? widget.loan.borrowerUserId.name
+          : 'Sin nombre';
+    } else {
+      // "Yo debo" → Mostrar el nombre del prestamista (lender)
+      return widget.loan.lenderUserId.name.isNotEmpty
+          ? widget.loan.lenderUserId.name
+          : 'Sin nombre';
+    }
   }
 
   // NUEVO MÉTODO PARA OBTENER LA INICIAL SEGURA

@@ -144,6 +144,7 @@ class _RegisterPaymentDialogState extends State<LoanRegisterPaymentDialog> {
         dueDate: widget.loan.dueDate,
         status: newStatus, // ¡IMPORTANTE: Actualizar status!
         color: widget.loan.color,
+        createdAt: widget.loan.createdAt,
       );
 
       context.read<LoanBloc>().add(UpdateLoan(loan: updatedLoan));

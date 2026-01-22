@@ -23,6 +23,7 @@ class Loan extends Equatable {
   final double amount;
   final double paidAmount;
   final DateTime dueDate;
+  final DateTime createdAt; // ✅ Agregar este campo
 
   final LoanStatus status;
 
@@ -39,6 +40,7 @@ class Loan extends Equatable {
     required this.dueDate,
     required this.status,
     required this.color,
+    required this.createdAt, // ✅ Agregar al constructor
   }) : assert(amount >= 0, 'Amount cannot be negative'),
        assert(paidAmount >= 0, 'Paid amount cannot be negative'),
        assert(paidAmount <= amount, 'Paid amount cannot exceed total amount');
@@ -48,22 +50,22 @@ class Loan extends Equatable {
     return Loan(
       id: id,
       lenderUserId: AppUser(
-        uid: map['lenderUserId'] ?? '',
-        name: map['lenderName'] ?? '', // ¿Estás guardando el nombre?
+        uid: map['lenderUserId'],
+        name: map['lenderName'] ?? '',
         surname: map['lenderSurname'] ?? '',
         email: map['lenderEmail'] ?? '',
         username: map['lenderUsername'] ?? '',
-        phoneNumber: map['lenderPhone'] ?? '',
-        profilePictureUrl: map['lenderProfilePictureUrl'] ?? '',
+        phoneNumber: '',
+        profilePictureUrl: '',
       ),
       borrowerUserId: AppUser(
-        uid: map['borrowerUserId'] ?? '',
-        name: map['borrowerName'] ?? '', // ¿Estás guardando el nombre?
+        uid: map['borrowerUserId'],
+        name: map['borrowerName'] ?? '',
         surname: map['borrowerSurname'] ?? '',
         email: map['borrowerEmail'] ?? '',
         username: map['borrowerUsername'] ?? '',
-        phoneNumber: map['borrowerPhone'] ?? '',
-        profilePictureUrl: map['borrowerProfilePictureUrl'] ?? '',
+        phoneNumber: '',
+        profilePictureUrl: '',
       ),
       description: map['description'] ?? '',
       amount: (map['amount'] as num).toDouble(),
@@ -73,7 +75,8 @@ class Loan extends Equatable {
         (e) => e.name == map['status'],
         orElse: () => LoanStatus.pendiente,
       ),
-      color: Color(map['color']),
+      color: Color(map['color'] ?? 0xFF000000),
+      createdAt: (map['createdAt'] as Timestamp).toDate(),
     );
   }
 

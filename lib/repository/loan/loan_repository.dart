@@ -15,7 +15,7 @@ class LoanRepository {
                 Filter('borrowerUserId', isEqualTo: userId),
               ),
             )
-            .orderBy('createdAt', descending: true)
+            .orderBy('createdAt', descending: true) // ✅ Ordenar por createdAt
             .get();
 
     print('💸 Fetched ${snapshot.docs.length} loans from Firestore ✅');
@@ -48,7 +48,7 @@ class LoanRepository {
         'dueDate': Timestamp.fromDate(loan.dueDate),
         'status': loan.status.name,
         'color': loan.color.value,
-        'createdAt': FieldValue.serverTimestamp(),
+        'createdAt': FieldValue.serverTimestamp(), // ✅ Agregar timestamp
         'updatedAt': FieldValue.serverTimestamp(),
       });
     } catch (e) {
