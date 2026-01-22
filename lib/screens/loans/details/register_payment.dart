@@ -3,7 +3,14 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:provider/provider.dart';
+import 'package:walleta/blocs/authentication/bloc/authentication_bloc.dart';
+import 'package:walleta/blocs/loan/bloc/loan_bloc.dart';
+import 'package:walleta/blocs/loan/bloc/loan_event.dart';
+import 'package:walleta/blocs/payment/bloc/payment_bloc.dart';
+import 'package:walleta/blocs/payment/bloc/payment_event.dart';
 import 'package:walleta/models/loan.dart';
+import 'package:walleta/models/payment.dart';
 
 class RegisterPaymentDialog extends StatefulWidget {
   final Loan loan;
@@ -74,8 +81,8 @@ class _RegisterPaymentDialogState extends State<RegisterPaymentDialog> {
     }
 
     final double paymentAmount = double.parse(_paymentAmountController.text);
-    final double remainingBalance =
-        widget.loan.amount * (1 - widget.loan.progress);
+
+    final double remainingBalance = widget.loan.amount - widget.loan.paidAmount;
 
     if (paymentAmount > remainingBalance) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -91,39 +98,83 @@ class _RegisterPaymentDialogState extends State<RegisterPaymentDialog> {
       return;
     }
 
+    // Obtener el estado de autenticación
+    final authState = context.read<AuthenticationBloc>().state;
+
     setState(() {
       _isUploading = true;
     });
 
-    // Aquí iría la lógica para:
-    // 1. Subir la imagen a tu servidor/storage (si existe)
-    // 2. Registrar el pago en tu backend
-    // 3. Actualizar el progreso del préstamo
+    try {
+      // 1. Primero registrar el pago
+      context.read<PaymentBloc>().add(
+        AddPayment(
+          payment: Payment(
+            id: '', // Generar ID en el backend
+            loanId: widget.loan.id,
+            userId: authState.user.uid,
+            amount: paymentAmount,
+            date: DateTime.now(),
+            receiptImageUrl: _selectedImage?.path,
+            note: _noteController.text.isEmpty ? null : _noteController.text,
+          ),
+        ),
+      );
 
-    // Simular una carga
-    await Future.delayed(const Duration(seconds: 1));
+      final double newPaidAmount = widget.loan.paidAmount + paymentAmount;
 
-    // Calcular nuevo progreso
-    final double newProgress =
-        widget.loan.progress + (paymentAmount / widget.loan.amount);
+      // Determinar nuevo estado
+      LoanStatus newStatus = widget.loan.status;
+      if (newPaidAmount >= widget.loan.amount) {
+        newStatus = LoanStatus.pagado; // Préstamo completamente pagado
+        // } else if (newPaidAmount > 0 && widget.loan.paidAmount == 0) {
+        //   newStatus = 'Parcial' as LoanStatus; // Primer pago
+      } else if (newPaidAmount > 0) {
+        newStatus = LoanStatus.pendiente; // Pago adicional pero no completo
+      }
 
-    // // Actualizar el préstamo
-    // final updatedLoan = Loan(
-    //   name: widget.loan.name,
-    //   description: widget.loan.description,
-    //   amount: widget.loan.amount,
-    //   date: widget.loan.date,
-    //   status: newProgress >= 1.0 ? 'Pagado' : 'Parcial',
-    //   progress: newProgress.clamp(0.0, 1.0),
-    //   color: widget.loan.color,
-    // );
+      final updatedLoan = Loan(
+        id: widget.loan.id,
+        lenderUserId: widget.loan.lenderUserId,
+        borrowerUserId: widget.loan.borrowerUserId,
+        description: widget.loan.description,
+        amount: widget.loan.amount,
+        paidAmount: newPaidAmount, // ¡IMPORTANTE: Actualizar paidAmount!
+        dueDate: widget.loan.dueDate,
+        status: newStatus, // ¡IMPORTANTE: Actualizar status!
+        color: widget.loan.color,
+      );
 
-    // Notificar al widget padre
-    widget.onPaymentConfirmed(widget.loan, widget.selectedTab, paymentAmount);
+      context.read<LoanBloc>().add(UpdateLoan(loan: updatedLoan));
 
-    // Cerrar el diálogo
-    if (context.mounted) {
-      Navigator.pop(context);
+      await Future.delayed(const Duration(milliseconds: 500));
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Pago de ₡${paymentAmount.toInt()} registrado exitosamente',
+          ),
+          backgroundColor: Colors.green,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        ),
+      );
+      widget.onPaymentConfirmed(updatedLoan, widget.selectedTab, paymentAmount);
+    } catch (e) {
+      // Manejar error
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error al registrar pago: $e'),
+          backgroundColor: const Color(0xFFFF6B6B),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+        ),
+      );
+    } finally {
+      // 8. Cerrar el diálogo
+      if (context.mounted) {
+        Navigator.pop(context);
+      }
     }
   }
 

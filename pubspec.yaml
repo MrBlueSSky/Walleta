@@ -55,6 +55,7 @@ dependencies:
   iconsax: ^0.0.8
   image_picker: ^1.2.1
   firebase_storage: ^12.4.10
+  uuid: ^4.5.2
 
 dev_dependencies:
   flutter_test:

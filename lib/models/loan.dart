@@ -5,7 +5,7 @@ import 'package:walleta/models/appUser.dart';
 
 enum LoanType { iOwe, owedToMe }
 
-enum LoanStatus { pending, overdue, partial, paid }
+enum LoanStatus { pendiente, caduco, parcial, pagado }
 
 enum LoanRole {
   lender, // El que prestó
@@ -71,7 +71,7 @@ class Loan extends Equatable {
       dueDate: (map['dueDate'] as Timestamp).toDate(),
       status: LoanStatus.values.firstWhere(
         (e) => e.name == map['status'],
-        orElse: () => LoanStatus.pending,
+        orElse: () => LoanStatus.pendiente,
       ),
       color: Color(map['color']),
     );

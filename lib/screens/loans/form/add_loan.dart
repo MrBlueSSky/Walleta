@@ -463,7 +463,7 @@ class _AddLoanFormState extends State<AddLoanForm> {
       amount: double.parse(_amountController.text),
       paidAmount: 0.0,
       dueDate: _selectedDate!,
-      status: LoanStatus.pending,
+      status: LoanStatus.pendiente,
       color: const Color(0xFF2D5BFF),
     );
 

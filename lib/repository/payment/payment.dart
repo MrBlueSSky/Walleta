@@ -1,11 +1,13 @@
-// repository/payment/payment_repository.dart
 import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:uuid/uuid.dart';
 import 'package:walleta/models/payment.dart';
 
 class PaymentRepository {
+  PaymentRepository();
+
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   final FirebaseStorage _storage = FirebaseStorage.instance;
 
@@ -26,19 +28,22 @@ class PaymentRepository {
   // Agregar pago con imagen
   Future<void> addPaymentWithImage({required Payment payment}) async {
     try {
-      String? receiptUrl;
+      String? receiptUrl = "https//no-image.com/default.jpg";
+
+      final Uuid uuid = Uuid(); // Instancia única
+      final String paymentId = uuid.v4();
 
       // Subir imagen si existe
-      if (payment.receiptImageUrl != null) {
-        receiptUrl = await uploadReceiptImage(
-          payment.userId,
-          payment.receiptImageUrl!,
-        );
-      }
+      // if (payment.receiptImageUrl != null) {
+      //   receiptUrl = await uploadReceiptImage(
+      //     payment.userId,
+      //     payment.receiptImageUrl!,
+      //   );
+      // }
 
       // Crear pago con URL de imagen
       final paymentWithImage = Payment(
-        id: payment.id,
+        id: paymentId,
         loanId: payment.loanId,
         userId: payment.userId,
         amount: payment.amount,

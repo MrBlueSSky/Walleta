@@ -5,6 +5,7 @@ import 'package:walleta/repository/loan/loan_repository.dart';
 
 class LoanBloc extends Bloc<LoanEvent, LoanState> {
   final LoanRepository _repository;
+  String? _currentUserId; // Guardar el userId actual
 
   LoanBloc({required LoanRepository loanRepository})
     : _repository = loanRepository,
@@ -16,6 +17,7 @@ class LoanBloc extends Bloc<LoanEvent, LoanState> {
   }
 
   Future<void> _onLoadLoans(LoadLoans event, Emitter<LoanState> emit) async {
+    _currentUserId = event.userId; // Guardar userId
     emit(const LoanState.loading());
 
     try {
@@ -33,6 +35,7 @@ class LoanBloc extends Bloc<LoanEvent, LoanState> {
     try {
       await _repository.addLoan(event.loan);
 
+      // Recargar con el userId del préstamo creado
       final loans = await _repository.fetchLoans(event.loan.lenderUserId.uid);
       emit(LoanState.success(loans));
     } catch (e) {
@@ -42,12 +45,23 @@ class LoanBloc extends Bloc<LoanEvent, LoanState> {
   }
 
   Future<void> _onUpdateLoan(UpdateLoan event, Emitter<LoanState> emit) async {
-    emit(const LoanState.loading());
+    // NO emitir loading aquí para evitar parpadeo en la UI
+    // Mantener el estado actual mientras se actualiza
 
     try {
+      // 1. Actualizar en el repositorio
       await _repository.updateLoan(event.loan);
-      emit(const LoanState.updated());
+
+      // 2. Si tenemos un userId guardado, recargar la lista
+      if (_currentUserId != null) {
+        final loans = await _repository.fetchLoans(_currentUserId!);
+        emit(LoanState.success(loans)); // Emitir nueva lista
+      } else {
+        // Si no hay userId, emitir estado actualizado
+        emit(const LoanState.updated());
+      }
     } catch (e) {
+      // En caso de error, mantener el estado actual
       emit(const LoanState.error());
       print('Error al actualizar Loan ❌: $e');
     }
@@ -58,7 +72,14 @@ class LoanBloc extends Bloc<LoanEvent, LoanState> {
 
     try {
       await _repository.deleteLoan(event.loanId);
-      emit(const LoanState.deleted());
+
+      // Recargar si tenemos userId
+      if (_currentUserId != null) {
+        final loans = await _repository.fetchLoans(_currentUserId!);
+        emit(LoanState.success(loans));
+      } else {
+        emit(const LoanState.deleted());
+      }
     } catch (e) {
       emit(const LoanState.error());
       print('Error al eliminar Loan ❌: $e');

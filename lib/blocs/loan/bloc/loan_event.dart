@@ -32,7 +32,7 @@ class AddLoan extends LoanEvent {
 class UpdateLoan extends LoanEvent {
   final Loan loan;
 
-  const UpdateLoan(this.loan);
+  const UpdateLoan({required this.loan});
 
   @override
   List<Object?> get props => [loan];

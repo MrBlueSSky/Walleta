@@ -416,16 +416,16 @@ class _LoanCardState extends State<LoanCard> {
                     selectedTab: widget.selectedTab,
                     onPaymentConfirmed: (updatedLoan, tabIndex, paymentAmount) {
                       // Mostrar confirmación
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: const Text('Pago registrado exitosamente'),
-                          backgroundColor: const Color(0xFF00C896),
-                          behavior: SnackBarBehavior.floating,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
-                      );
+                      // ScaffoldMessenger.of(context).showSnackBar(
+                      //   SnackBar(
+                      //     content: const Text('Pago registrado exitosamente'),
+                      //     backgroundColor: const Color(0xFF00C896),
+                      //     behavior: SnackBarBehavior.floating,
+                      //     shape: RoundedRectangleBorder(
+                      //       borderRadius: BorderRadius.circular(8),
+                      //     ),
+                      //   ),
+                      // );
                     },
                   ),
                 );
@@ -449,16 +449,16 @@ class _LoanCardState extends State<LoanCard> {
           selectedTab: widget.selectedTab,
           onPaymentConfirmed: (updatedLoan, tabIndex, paymentAmount) {
             // Mostrar confirmación
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: const Text('Pago registrado exitosamente'),
-                backgroundColor: const Color(0xFF00C896),
-                behavior: SnackBarBehavior.floating,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-            );
+            // ScaffoldMessenger.of(context).showSnackBar(
+            //   SnackBar(
+            //     content: const Text('Pago registrado exitosamente'),
+            //     backgroundColor: const Color(0xFF00C896),
+            //     behavior: SnackBarBehavior.floating,
+            //     shape: RoundedRectangleBorder(
+            //       borderRadius: BorderRadius.circular(8),
+            //     ),
+            //   ),
+            // );
           },
         );
       },

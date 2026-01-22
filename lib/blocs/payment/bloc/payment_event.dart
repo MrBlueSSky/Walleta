@@ -17,7 +17,7 @@ class LoadPayments extends PaymentEvent {
 
 class AddPayment extends PaymentEvent {
   final Payment payment;
-  const AddPayment(this.payment);
+  const AddPayment({required this.payment});
   @override
   List<Object?> get props => [payment];
 }
