@@ -25,6 +25,7 @@ class LoanCard extends StatefulWidget {
 class _LoanCardState extends State<LoanCard> {
   @override
   Widget build(BuildContext context) {
+    final remainingBalance = widget.loan.amount - widget.loan.paidAmount;
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
@@ -275,67 +276,39 @@ class _LoanCardState extends State<LoanCard> {
                   },
                 ),
                 const SizedBox(height: 12),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(
-                          Iconsax.money_send,
-                          size: 14,
-                          color: widget.loan.color,
+
+                // Información de progreso
+                Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      // FALTANTE - AL INICIO (IZQUIERDA)
+                      Container(
+                        decoration: BoxDecoration(
+                          color: widget.loan.color.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: widget.loan.color.withOpacity(0.3),
+                            width: 0.5,
+                          ),
                         ),
-                        const SizedBox(width: 6),
-                        // Porcentaje animado también
-                        TweenAnimationBuilder<int>(
-                          duration: const Duration(milliseconds: 1500),
-                          curve: Curves.easeOutQuart,
-                          tween: IntTween(
-                            begin: 0,
-                            end: (widget.loan.progress * 100).toInt(),
-                          ),
-                          builder: (context, value, child) {
-                            return Text(
-                              '$value% pagado',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color:
-                                    widget.isDark
-                                        ? Colors.white70
-                                        : const Color(0xFF6B7280),
-                                fontWeight: FontWeight.w500,
-                              ),
-                            );
-                          },
-                        ),
-                      ],
-                    ),
-                    // Botón condicional basado en el tab
-                    if (widget.selectedTab == 1)
-                      TextButton(
-                        onPressed: () => _showRegisterPaymentDialog(),
-                        style: TextButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 6,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
                         ),
                         child: Row(
-                          mainAxisSize: MainAxisSize.min,
                           children: [
                             Icon(
-                              Iconsax.add_circle,
-                              size: 14,
+                              Iconsax.money_send,
+                              size: 10,
                               color: widget.loan.color,
                             ),
                             const SizedBox(width: 4),
                             Text(
-                              'Registrar pago',
+                              'Faltante: ₡${remainingBalance.toInt()}',
                               style: TextStyle(
-                                fontSize: 12,
+                                fontSize: 11,
                                 fontWeight: FontWeight.w600,
                                 color: widget.loan.color,
                               ),
@@ -343,7 +316,50 @@ class _LoanCardState extends State<LoanCard> {
                           ],
                         ),
                       ),
-                  ],
+
+                      if (widget.selectedTab ==
+                          1) // SOLO MOSTRAR SI ESTAMOS EN "YO DEBO"
+                        GestureDetector(
+                          onTap: () => _showRegisterPaymentDialog(),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: Theme.of(
+                                context,
+                              ).primaryColor.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color: Theme.of(
+                                  context,
+                                ).primaryColor.withOpacity(0.3),
+                                width: 0.5,
+                              ),
+                            ),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Iconsax.add_circle,
+                                  size: 10,
+                                  color: Theme.of(context).primaryColor,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  'Registrar Pago',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                    color: Theme.of(context).primaryColor,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
               ],
             ),

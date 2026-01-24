@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:walleta/interfaces/payment_base.dart';
 
-class Payment {
+class Payment implements PaymentBase {
   final String id;
   final String loanId;
   final String userId;
@@ -42,4 +43,7 @@ class Payment {
       note: map['note'],
     );
   }
+
+  @override
+  String? get payerName => null;
 }

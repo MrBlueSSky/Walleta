@@ -18,7 +18,7 @@ class AddSharedExpense extends SharedExpenseEvent {
 class UpdateSharedExpense extends SharedExpenseEvent {
   final SharedExpense expense;
 
-  UpdateSharedExpense(this.expense);
+  UpdateSharedExpense({required this.expense});
 }
 
 class DeleteSharedExpense extends SharedExpenseEvent {

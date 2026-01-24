@@ -5,6 +5,8 @@ import 'package:walleta/blocs/authentication/bloc/authentication_bloc.dart';
 import 'package:walleta/blocs/sharedExpense/bloc/shared_expense_bloc.dart';
 import 'package:walleta/blocs/sharedExpense/bloc/shared_expense_event.dart';
 import 'package:walleta/blocs/sharedExpense/bloc/shared_expense_state.dart';
+import 'package:walleta/blocs/sharedExpensePayment/bloc/shared_expense_payment_bloc.dart';
+
 import 'package:walleta/screens/sharedExpenses/add_expense.dart';
 import 'package:walleta/widgets/cards/expense_card.dart';
 
@@ -19,9 +21,11 @@ class _SharedExpensesScreenState extends State<SharedExpensesScreen> {
   @override
   void initState() {
     super.initState();
+    _loadExpenses();
+  }
 
+  void _loadExpenses() {
     final userId = context.read<AuthenticationBloc>().state.user.uid;
-
     context.read<SharedExpenseBloc>().add(LoadSharedExpenses(userId: userId));
   }
 
@@ -33,9 +37,8 @@ class _SharedExpensesScreenState extends State<SharedExpensesScreen> {
       builder:
           (context) => AddExpenseSheet(
             onSave: (expense) {
-              setState(() {
-                // expenses.insert(0, expense);
-              });
+              // Recargar los gastos después de agregar uno nuevo
+              _loadExpenses();
             },
           ),
     );
@@ -53,72 +56,93 @@ class _SharedExpensesScreenState extends State<SharedExpensesScreen> {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
-        child: BlocBuilder<SharedExpenseBloc, SharedExpenseState>(
-          builder: (context, state) {
-            if (state.status == SharedExpenseStatus.loading) {
-              return const Center(child: CircularProgressIndicator());
-            }
+        child: MultiBlocListener(
+          listeners: [
+            // Escuchar cuando se agrega un pago exitosamente
+            BlocListener<ExpensePaymentBloc, ExpensePaymentState>(
+              listener: (context, state) {
+                if (ExpensePaymentStatus.success == state.status) {
+                  // Recargar los gastos cuando se agrega un pago
+                  _loadExpenses();
+                }
+              },
+            ),
+          ],
+          child: BlocBuilder<SharedExpenseBloc, SharedExpenseState>(
+            builder: (context, state) {
+              if (state.status == SharedExpenseStatus.loading) {
+                return const Center(child: CircularProgressIndicator());
+              }
 
-            if (state.status == SharedExpenseStatus.error) {
-              return const Center(child: Text('Error al cargar los gastos'));
-            }
-
-            // SOLUCIÓN: Usar CustomScrollView correctamente
-            return CustomScrollView(
-              physics: const BouncingScrollPhysics(),
-              slivers: [
-                // AppBar
-                SliverAppBar(
-                  floating: true,
-                  backgroundColor: backgroundColor,
-                  elevation: 0,
-                  title: Text(
-                    'Gastos Compartidos',
-                    style: TextStyle(
-                      color: isDark ? Colors.white : const Color(0xFF1F2937),
-                      fontWeight: FontWeight.w700,
-                      fontSize: 22,
-                    ),
+              if (state.status == SharedExpenseStatus.error) {
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Text('Error al cargar los gastos'),
+                      const SizedBox(height: 16),
+                      ElevatedButton(
+                        onPressed: _loadExpenses,
+                        child: const Text('Reintentar'),
+                      ),
+                    ],
                   ),
-                  actions: [
-                    IconButton(
-                      icon: Icon(Iconsax.add, color: iconsColor),
-                      onPressed: () {
-                        _showAddExpenseSheet();
-                      },
-                    ),
-                    IconButton(
-                      icon: Icon(Iconsax.filter, color: iconsColor),
-                      onPressed: () {},
-                    ),
-                  ],
-                ),
+                );
+              }
 
-                if (state.expenses.isEmpty)
-                  SliverToBoxAdapter(child: _buildEmptyState())
-                else
-                  // Padding general para todas las cards
-                  SliverPadding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 8,
+              return CustomScrollView(
+                physics: const BouncingScrollPhysics(),
+                slivers: [
+                  // AppBar
+                  SliverAppBar(
+                    floating: true,
+                    backgroundColor: backgroundColor,
+                    elevation: 0,
+                    title: Text(
+                      'Gastos Compartidos',
+                      style: TextStyle(
+                        color: isDark ? Colors.white : const Color(0xFF1F2937),
+                        fontWeight: FontWeight.w700,
+                        fontSize: 22,
+                      ),
                     ),
-                    sliver: SliverList(
-                      delegate: SliverChildBuilderDelegate((context, index) {
-                        return Padding(
-                          // Padding entre cada card
-                          padding: const EdgeInsets.only(bottom: 12),
-                          child: ExpenseCard(expense: state.expenses[index]),
-                        );
-                      }, childCount: state.expenses.length),
-                    ),
+                    actions: [
+                      IconButton(
+                        icon: Icon(Iconsax.add, color: iconsColor),
+                        onPressed: () {
+                          _showAddExpenseSheet();
+                        },
+                      ),
+                      IconButton(
+                        icon: Icon(Iconsax.filter, color: iconsColor),
+                        onPressed: () {},
+                      ),
+                    ],
                   ),
 
-                // Espacio adicional al final para evitar que el FAB tape contenido
-                // const SliverToBoxAdapter(child: SizedBox(height: 10)),
-              ],
-            );
-          },
+                  if (state.expenses.isEmpty)
+                    SliverToBoxAdapter(child: _buildEmptyState())
+                  else
+                    // Padding general para todas las cards
+                    SliverPadding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
+                      sliver: SliverList(
+                        delegate: SliverChildBuilderDelegate((context, index) {
+                          return Padding(
+                            // Padding entre cada card
+                            padding: const EdgeInsets.only(bottom: 12),
+                            child: ExpenseCard(expense: state.expenses[index]),
+                          );
+                        }, childCount: state.expenses.length),
+                      ),
+                    ),
+                ],
+              );
+            },
+          ),
         ),
       ),
     );
