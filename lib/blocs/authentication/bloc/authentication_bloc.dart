@@ -123,6 +123,25 @@ class AuthenticationBloc
         emit(AuthenticationState.error(errorMessage));
       }
     });
+
+    // En authentication_bloc.dart
+    on<UpgradeToPremium>((event, emit) async {
+      try {
+        await _authenticationRepository.upgradeToPremium(
+          userId: event.userId,
+          duration: event.duration,
+        );
+
+        // Recargar usuario actualizado
+        final updatedUser = await _authenticationRepository.getCurrentUser();
+
+        if (updatedUser != null) {
+          emit(AuthenticationState.authenticated(updatedUser));
+        }
+      } catch (e) {
+        emit(AuthenticationState.error('Error al actualizar a premium'));
+      }
+    });
   } //?Fin del constructor
 
   String _getErrorMessage(dynamic error) {

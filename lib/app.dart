@@ -3,12 +3,14 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:provider/provider.dart';
 import 'package:walleta/blocs/loan/bloc/loan_bloc.dart';
 import 'package:walleta/blocs/payment/bloc/payment_bloc.dart';
+import 'package:walleta/blocs/personalExpense/bloc/personal_expense_bloc.dart';
 import 'package:walleta/blocs/sharedExpensePayment/bloc/shared_expense_payment_bloc.dart';
 import 'package:walleta/providers/auth_provider.dart';
 import 'package:walleta/providers/theme_provider.dart';
 import 'package:walleta/repository/SharedExpensePaymentRepository/shared_expense_payment_repository.dart';
 import 'package:walleta/repository/loan/loan_repository.dart';
 import 'package:walleta/repository/payment/payment.dart';
+import 'package:walleta/repository/personalExpense/personal_expense.dart';
 import 'package:walleta/repository/repository.dart';
 import 'package:walleta/routes/routes.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -54,6 +56,12 @@ class App extends StatelessWidget {
             create:
                 (context) => ExpensePaymentBloc(
                   repository: SharedExpensePaymentRepository(),
+                ),
+          ),
+          BlocProvider<PersonalExpenseBloc>(
+            create:
+                (context) => PersonalExpenseBloc(
+                  repository: PersonalExpenseRepository(),
                 ),
           ),
           // ChangeNotifierProvider(create: (_) => UserProvider()),

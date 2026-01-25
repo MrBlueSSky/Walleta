@@ -2,7 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:walleta/blocs/authentication/bloc/authentication_bloc.dart';
-import 'package:walleta/models/appUser.dart';
+import 'package:walleta/blocs/personalExpense/bloc/personal_expense_bloc.dart';
+import 'package:walleta/blocs/personalExpense/bloc/personal_expense_event.dart';
+import 'package:walleta/blocs/personalExpense/bloc/personal_expense_state.dart';
+import 'package:walleta/screens/profile/personalExpense/expense_card.dart';
+import 'package:walleta/screens/profile/personalExpense/expense_list.dart';
+import 'package:walleta/screens/profile/personalExpense/personal_expense.dart';
+import 'package:walleta/screens/profile/personal_info.dart';
 import 'package:walleta/screens/savings/savings_account.dart';
 import 'package:walleta/themes/app_colors.dart';
 import 'package:walleta/widgets/cards/savings_card.dart';
@@ -23,6 +29,7 @@ class _ProfileState extends State<Profile> {
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
+    _loadExpenses();
   }
 
   @override
@@ -38,6 +45,17 @@ class _ProfileState extends State<Profile> {
     } else if (_scrollController.offset <= 60 && _isScrolled) {
       setState(() => _isScrolled = false);
     }
+  }
+
+  void _loadExpenses() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final authState = context.read<AuthenticationBloc>().state;
+      if (authState.status == AuthenticationStatus.authenticated) {
+        context.read<PersonalExpenseBloc>().add(
+          LoadPersonalExpenses(authState.user.uid),
+        );
+      }
+    });
   }
 
   void _openDrawer() {
@@ -67,7 +85,18 @@ class _ProfileState extends State<Profile> {
   void _handleDrawerItemSelection(String item) {
     Navigator.of(context).pop();
 
+    final authState = context.read<AuthenticationBloc>().state;
+
+    if (authState.status != AuthenticationStatus.authenticated) {
+      return;
+    }
+
+    final user = authState.user;
+
     switch (item) {
+      case 'personalInfo':
+        showProfileFloatingWidget(context, user);
+        break;
       case 'notifications':
         _showPlaceholderDialog('Notificaciones');
         break;
@@ -112,7 +141,6 @@ class _ProfileState extends State<Profile> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Header con icono
                   Container(
                     padding: const EdgeInsets.all(24),
                     decoration: BoxDecoration(
@@ -153,8 +181,6 @@ class _ProfileState extends State<Profile> {
                       ),
                     ),
                   ),
-
-                  // Contenido
                   Padding(
                     padding: const EdgeInsets.all(24),
                     child: Column(
@@ -191,8 +217,6 @@ class _ProfileState extends State<Profile> {
                       ],
                     ),
                   ),
-
-                  // Botón
                   Padding(
                     padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
                     child: SizedBox(
@@ -225,67 +249,6 @@ class _ProfileState extends State<Profile> {
     );
   }
 
-  void _openSavingsScreen(BuildContext context) {
-    // Si ya tienes una pantalla de ahorros llamada 'SavingsScreen'
-    Navigator.push(
-      context,
-      PageRouteBuilder(
-        pageBuilder:
-            (context, animation, secondaryAnimation) =>
-                SavingsAccountScreen(), // Reemplaza con tu pantalla
-        transitionDuration: const Duration(milliseconds: 400),
-        transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          const begin = Offset(0.0, 1.0);
-          const end = Offset.zero;
-          const curve = Curves.easeInOutCubic;
-
-          var tween = Tween(
-            begin: begin,
-            end: end,
-          ).chain(CurveTween(curve: curve));
-          var offsetAnimation = animation.drive(tween);
-
-          return SlideTransition(position: offsetAnimation, child: child);
-        },
-      ),
-    );
-  }
-
-  // O con una animación de zoom/modal:
-  // void _openSavingsScreenWithModalAnimation(BuildContext context) {
-  //   showModalBottomSheet(
-  //     context: context,
-  //     isScrollControlled: true,
-  //     backgroundColor: Colors.transparent,
-  //     builder: (context) {
-  //       return GestureDetector(
-  //         onTap: () => Navigator.pop(context),
-  //         behavior: HitTestBehavior.opaque,
-  //         child: Container(
-  //           color: Colors.black.withOpacity(0.5),
-  //           child: DraggableScrollableSheet(
-  //             initialChildSize: 0.9,
-  //             minChildSize: 0.5,
-  //             maxChildSize: 0.95,
-  //             builder: (context, scrollController) {
-  //               return Container(
-  //                 decoration: BoxDecoration(
-  //                   color: Theme.of(context).scaffoldBackgroundColor,
-  //                   borderRadius: const BorderRadius.vertical(
-  //                     top: Radius.circular(24),
-  //                   ),
-  //                 ),
-  //                 child: SavingsScreen(), // Reemplaza con tu pantalla
-  //               );
-  //             },
-  //           ),
-  //         ),
-  //       );
-  //     },
-  //   );
-  // }
-
-  // O con una animación personalizada tipo "hero":
   void _openSavingsScreenWithHeroAnimation(BuildContext context) {
     Navigator.push(
       context,
@@ -320,6 +283,41 @@ class _ProfileState extends State<Profile> {
     );
   }
 
+  void _openExpensesListScreen(String userId) {
+    Navigator.push(
+      context,
+      PageRouteBuilder(
+        pageBuilder:
+            (context, animation, secondaryAnimation) =>
+                PersonalExpensesListScreen(userId: userId),
+        transitionDuration: const Duration(milliseconds: 400),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          const begin = Offset(0.0, 1.0);
+          const end = Offset.zero;
+          const curve = Curves.easeInOutCubic;
+
+          var tween = Tween(
+            begin: begin,
+            end: end,
+          ).chain(CurveTween(curve: curve));
+          var offsetAnimation = animation.drive(tween);
+
+          return SlideTransition(position: offsetAnimation, child: child);
+        },
+      ),
+    );
+  }
+
+  void _showAddPersonalExpenseSheet(String userId) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      barrierColor: Colors.black.withOpacity(0.5),
+      builder: (context) => PersonalExpenseSheet(userId: userId),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -328,6 +326,29 @@ class _ProfileState extends State<Profile> {
     return Scaffold(
       backgroundColor:
           isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFD),
+      floatingActionButton:
+          BlocBuilder<AuthenticationBloc, AuthenticationState>(
+            builder: (context, state) {
+              if (state.status != AuthenticationStatus.authenticated) {
+                return const SizedBox();
+              }
+
+              return FloatingActionButton.extended(
+                onPressed: () => _showAddPersonalExpenseSheet(state.user.uid),
+                backgroundColor: const Color(0xFF2D5BFF),
+                foregroundColor: Colors.white,
+                elevation: 4,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                icon: const Icon(Iconsax.add, size: 22),
+                label: const Text(
+                  'Agregar Gasto',
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                ),
+              );
+            },
+          ),
       body: BlocBuilder<AuthenticationBloc, AuthenticationState>(
         builder: (context, state) {
           if (state.status == AuthenticationStatus.unauthenticated) {
@@ -339,7 +360,6 @@ class _ProfileState extends State<Profile> {
             controller: _scrollController,
             physics: const BouncingScrollPhysics(),
             slivers: [
-              // AppBar personalizado - SIN FECHA DE RETROCESO
               SliverAppBar(
                 expandedHeight: screenHeight * 0.25,
                 floating: false,
@@ -355,8 +375,7 @@ class _ProfileState extends State<Profile> {
                 elevation: _isScrolled ? 4 : 0,
                 shadowColor: Colors.black.withOpacity(0.1),
                 surfaceTintColor: Colors.transparent,
-                automaticallyImplyLeading:
-                    false, // IMPORTANTE: No mostrar flecha automática
+                automaticallyImplyLeading: false,
                 actions: [
                   IconButton(
                     icon: Icon(
@@ -395,7 +414,6 @@ class _ProfileState extends State<Profile> {
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
                         colors: [
-                          //!Aqui va los colores del gradiente
                           const Color(0xFF0F172A),
                           const Color(0xFF1E293B),
                         ],
@@ -417,27 +435,7 @@ class _ProfileState extends State<Profile> {
                   ),
                 ),
               ),
-
-              // Sección de estadísticas
-              // SliverToBoxAdapter(
-              //   child: Padding(
-              //     padding: const EdgeInsets.symmetric(
-              //       horizontal: 16,
-              //       vertical: 20,
-              //     ),
-              //     child: _buildStatsSection(user),
-              //   ),
-              // ),
               SliverToBoxAdapter(child: const SizedBox(height: 20)),
-
-              // Sección de información personal
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: _buildPersonalInfoSection(user),
-                ),
-              ),
-
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(
@@ -446,29 +444,52 @@ class _ProfileState extends State<Profile> {
                   ),
                   child: SavingsCard(
                     onTap: () => _openSavingsScreenWithHeroAnimation(context),
-                    currentSavings: 25430, // Tu valor real
-                    monthlyGoal: 80000, // Tu valor real
+                    currentSavings: 25430,
+                    monthlyGoal: 80000,
                   ),
                 ),
               ),
-
-              // Sección de métricas financieras
-              // SliverToBoxAdapter(
-              //   child: Padding(
-              //     padding: const EdgeInsets.symmetric(
-              //       horizontal: 16,
-              //       vertical: 20,
-              //     ),
-              //     child: _buildFinancialMetrics(),
-              //   ),
-              // ),
-
-              // Espacio al final
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
+                  child: _buildPersonalExpensesCard(user.uid),
+                ),
+              ),
               const SliverToBoxAdapter(child: SizedBox(height: 80)),
             ],
           );
         },
       ),
+    );
+  }
+
+  Widget _buildPersonalExpensesCard(String userId) {
+    return BlocBuilder<PersonalExpenseBloc, PersonalExpenseState>(
+      builder: (context, state) {
+        // Calcular totales
+        final totalExpenses = state.expenses.fold(
+          0.0,
+          (sum, expense) => sum + expense.total,
+        );
+        final totalPaid = state.expenses.fold(
+          0.0,
+          (sum, expense) => sum + expense.paid,
+        );
+        final totalPending = totalExpenses - totalPaid;
+        final progress = totalExpenses > 0 ? totalPaid / totalExpenses : 0.0;
+
+        return PersonalExpensesCard(
+          onTap: () => _openExpensesListScreen(userId),
+          totalExpenses: totalExpenses,
+          totalPaid: totalPaid,
+          totalPending: totalPending,
+          progress: progress,
+          expenseCount: state.expenses.length,
+        );
+      },
     );
   }
 
@@ -530,468 +551,6 @@ class _ProfileState extends State<Profile> {
         fontSize: 14,
         color: Colors.white70,
         fontWeight: FontWeight.w500,
-      ),
-    );
-  }
-
-  // Widget _buildStatsSection(AppUser user) {
-  //   final isDark = Theme.of(context).brightness == Brightness.dark;
-
-  //   return Container(
-  //     decoration: BoxDecoration(
-  //       color: isDark ? const Color(0xFF1E293B) : Colors.white,
-  //       borderRadius: BorderRadius.circular(16),
-  //       boxShadow: [
-  //         BoxShadow(
-  //           color: Colors.black.withOpacity(0.05),
-  //           blurRadius: 12,
-  //           offset: const Offset(0, 4),
-  //         ),
-  //       ],
-  //       border: Border.all(
-  //         color:
-  //             isDark
-  //                 ? const Color(0xFF334155).withOpacity(0.3)
-  //                 : const Color(0xFFE5E7EB).withOpacity(0.8),
-  //         width: 0.5,
-  //       ),
-  //     ),
-  //     child: Padding(
-  //       padding: const EdgeInsets.all(16),
-  //       child: Row(
-  //         mainAxisAlignment: MainAxisAlignment.spaceAround,
-  //         children: [
-  //           _buildStatItem(
-  //             icon: Iconsax.wallet_3,
-  //             value: '₡125,430',
-  //             label: 'Balance',
-  //             color: const Color(0xFF00C896),
-  //           ),
-  //           _buildVerticalDivider(),
-  //           _buildStatItem(
-  //             icon: Iconsax.arrow_up_2,
-  //             value: '₡150,000',
-  //             label: 'Ingresos',
-  //             color: const Color(0xFF2D5BFF),
-  //           ),
-  //           _buildVerticalDivider(),
-  //           _buildStatItem(
-  //             icon: Iconsax.arrow_down_2,
-  //             value: '₡65,430',
-  //             label: 'Gastos',
-  //             color: const Color(0xFFFF6B6B),
-  //           ),
-  //         ],
-  //       ),
-  //     ),
-  //   );
-  // }
-
-  Widget _buildStatItem({
-    required IconData icon,
-    required String value,
-    required String label,
-    required Color color,
-  }) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return Expanded(
-      child: Column(
-        children: [
-          Container(
-            decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
-              shape: BoxShape.circle,
-            ),
-            padding: const EdgeInsets.all(12),
-            child: Icon(icon, size: 20, color: color),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
-              color: isDark ? Colors.white : const Color(0xFF1F2937),
-            ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 12,
-              color: isDark ? Colors.white70 : const Color(0xFF6B7280),
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildVerticalDivider() {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return Container(
-      width: 1,
-      height: 40,
-      color:
-          isDark
-              ? const Color(0xFF334155).withOpacity(0.5)
-              : const Color(0xFFE5E7EB),
-    );
-  }
-
-  Widget _buildPersonalInfoSection(AppUser user) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return Container(
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E293B) : Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-        border: Border.all(
-          color:
-              isDark
-                  ? const Color(0xFF334155).withOpacity(0.3)
-                  : const Color(0xFFE5E7EB).withOpacity(0.8),
-          width: 0.5,
-        ),
-      ),
-      child: Column(
-        children: [
-          // Header de la sección
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                Icon(
-                  Iconsax.profile_circle,
-                  size: 20,
-                  color: isDark ? Colors.white : const Color(0xFF2D5BFF),
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  'Información Personal',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: isDark ? Colors.white : const Color(0xFF1F2937),
-                  ),
-                ),
-                const Spacer(),
-                IconButton(
-                  onPressed: () => _showPlaceholderDialog('Editar Perfil'),
-                  icon: Icon(
-                    Iconsax.edit_2,
-                    size: 18,
-                    color: isDark ? Colors.white70 : const Color(0xFF6B7280),
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // Información del usuario
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Column(
-              children: [
-                _buildInfoRow(
-                  icon: Iconsax.user,
-                  label: 'Username',
-                  value: user.username,
-                  color: const Color(0xFF2D5BFF),
-                ),
-                const SizedBox(height: 12),
-                _buildInfoRow(
-                  icon: Iconsax.call,
-                  label: 'Teléfono',
-                  value: user.phoneNumber,
-                  color: const Color(0xFF00C896),
-                ),
-                const SizedBox(height: 12),
-                _buildInfoRow(
-                  icon: Iconsax.calendar,
-                  label: 'Miembro desde',
-                  value: 'Enero 2024', // Esto debería venir del usuario
-                  color: const Color(0xFFFFA726),
-                ),
-              ],
-            ),
-          ),
-
-          // Botón de verificación
-          if (true) // Cambiar a true cuando implementes verificación
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: InkWell(
-                onTap: () => _showPlaceholderDialog('Verificación'),
-                borderRadius: BorderRadius.circular(12),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF10B981).withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: const Color(0xFF10B981).withOpacity(0.3),
-                      width: 0.5,
-                    ),
-                  ),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 12,
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(
-                        Iconsax.verify,
-                        size: 18,
-                        color: Color(0xFF10B981),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Verificación de identidad',
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                                color:
-                                    isDark
-                                        ? Colors.white
-                                        : const Color(0xFF1F2937),
-                              ),
-                            ),
-                            Text(
-                              'Tu cuenta está verificada',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color:
-                                    isDark
-                                        ? Colors.white70
-                                        : const Color(0xFF6B7280),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const Icon(
-                        Iconsax.arrow_right_3,
-                        size: 18,
-                        color: Color(0xFF10B981),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildInfoRow({
-    required IconData icon,
-    required String label,
-    required String value,
-    required Color color,
-  }) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final displayValue = value.isEmpty ? 'No especificado' : value;
-
-    return Row(
-      children: [
-        Container(
-          decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          padding: const EdgeInsets.all(8),
-          child: Icon(icon, size: 18, color: color),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                label,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: isDark ? Colors.white70 : const Color(0xFF6B7280),
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                displayValue,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: isDark ? Colors.white : const Color(0xFF1F2937),
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildFinancialMetrics() {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.only(bottom: 12),
-          child: Text(
-            'Métricas Financieras',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: isDark ? Colors.white : const Color(0xFF1F2937),
-            ),
-          ),
-        ),
-        Row(
-          children: [
-            Expanded(
-              child: _buildMetricCard(
-                title: 'Presupuesto',
-                value: '₡80,000',
-                subtitle: 'Disponible',
-                icon: Iconsax.wallet_money,
-                color: const Color(0xFF2D5BFF),
-                progress: 0.65,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _buildMetricCard(
-                title: 'Ahorros',
-                value: '₡25,430',
-                subtitle: 'Este mes',
-                icon: Iconsax.chart_2,
-                color: const Color(0xFF00C896),
-                progress: 0.85,
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildMetricCard({
-    required String title,
-    required String value,
-    required String subtitle,
-    required IconData icon,
-    required Color color,
-    required double progress,
-  }) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return Container(
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E293B) : Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-          ),
-        ],
-        border: Border.all(
-          color:
-              isDark
-                  ? const Color(0xFF334155).withOpacity(0.3)
-                  : const Color(0xFFE5E7EB).withOpacity(0.8),
-          width: 0.5,
-        ),
-      ),
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                padding: const EdgeInsets.all(6),
-                child: Icon(icon, size: 18, color: color),
-              ),
-              const Spacer(),
-              Text(
-                '${(progress * 100).toInt()}%',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: color,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w700,
-              color: isDark ? Colors.white : const Color(0xFF1F2937),
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: 14,
-              color: isDark ? Colors.white70 : const Color(0xFF6B7280),
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            subtitle,
-            style: TextStyle(
-              fontSize: 12,
-              color: isDark ? Colors.white60 : const Color(0xFF9CA3AF),
-            ),
-          ),
-          const SizedBox(height: 12),
-          // Barra de progreso
-          Container(
-            height: 4,
-            decoration: BoxDecoration(
-              color: isDark ? const Color(0xFF334155) : const Color(0xFFF3F4F6),
-              borderRadius: BorderRadius.circular(2),
-            ),
-            child: FractionallySizedBox(
-              alignment: Alignment.centerLeft,
-              widthFactor: progress,
-              child: Container(
-                decoration: BoxDecoration(
-                  color: color,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }

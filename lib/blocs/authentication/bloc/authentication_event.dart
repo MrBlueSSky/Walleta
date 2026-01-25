@@ -98,3 +98,14 @@ class UpdateUser extends AuthenticationEvent {
     profilePictureUrl,
   ];
 }
+
+// En authentication_event.dart
+class UpgradeToPremium extends AuthenticationEvent {
+  final String userId;
+  final Duration duration;
+
+  UpgradeToPremium({required this.userId, required this.duration});
+
+  @override
+  List<Object> get props => [userId, duration];
+}

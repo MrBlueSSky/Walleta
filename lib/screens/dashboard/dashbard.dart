@@ -22,28 +22,31 @@ class _FinancialDashboardState extends State<FinancialDashboard> {
   final double changeVsPrevious = 0; // porcentaje
 
   final List<CategoryData> categoryData = [
-    CategoryData('Comida', 25000, const Color(0xFF2D5BFF), Icons.restaurant),
-    CategoryData(
-      'Viajes',
-      25000,
-      const Color(0xFF9C27B0),
-      Icons.airplanemode_active,
-    ),
+    CategoryData('Compras', 70000, const Color(0xFF2D5BFF), Icons.shopping_bag),
+
+    CategoryData('Comida', 25000, const Color(0xFF10B981), Icons.restaurant),
+
     CategoryData(
       'Entretenimiento',
       8000,
-      const Color(0xFFFFA726),
+      const Color(0xFF8B5CF6),
       Icons.sports_esports,
     ),
 
-    CategoryData('Hogar', 12000, const Color(0xFFFF6B6B), Icons.home),
+    CategoryData('Hogar', 12000, const Color(0xFFEC4899), Icons.home),
     CategoryData(
       'Transporte',
       18000,
-      const Color(0xFF00C896),
+      const Color(0xFFF59E0B),
       Icons.directions_car,
     ),
 
+    // CategoryData(
+    //   'Servicios',
+    //   13000,
+    //   const Color(0xFF14B8A6),
+    //   Icons.receipt_long,
+    // ),
     CategoryData('Otros', 3000, const Color(0xFF9CA3AF), Icons.more_horiz),
   ];
 
