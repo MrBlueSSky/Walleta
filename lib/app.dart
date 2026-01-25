@@ -1,9 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:provider/provider.dart';
+import 'package:walleta/blocs/loan/bloc/loan_bloc.dart';
+import 'package:walleta/blocs/payment/bloc/payment_bloc.dart';
+import 'package:walleta/blocs/saving/bloc/saving_bloc.dart';
 import 'package:walleta/providers/auth_provider.dart';
 import 'package:walleta/providers/theme_provider.dart';
+import 'package:walleta/repository/loan/loan_repository.dart';
+import 'package:walleta/repository/payment/payment.dart';
 import 'package:walleta/repository/repository.dart';
+import 'package:walleta/repository/saving/saving_repository.dart';
 import 'package:walleta/routes/routes.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'blocs/authentication/bloc/authentication_bloc.dart';
@@ -36,6 +42,21 @@ class App extends StatelessWidget {
                   sharedExpenseRepository: SharedExpenseRepository(),
                 ),
           ),
+          BlocProvider(
+            create: (context) => LoanBloc(loanRepository: LoanRepository()),
+          ),
+          BlocProvider(
+            create:
+                (context) =>
+                    PaymentBloc(paymentRepository: PaymentRepository()),
+          ),
+          BlocProvider(
+            create: 
+            (context) =>
+             SavingBloc(repository: SavingGoalRepository(),
+            ),
+          ),
+          
           // ChangeNotifierProvider(create: (_) => UserProvider()),
           // BlocProvider(create: (_) => RoleCubit()),
         ],
