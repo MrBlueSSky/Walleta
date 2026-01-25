@@ -317,8 +317,7 @@ class _LoanCardState extends State<LoanCard> {
                         ),
                       ),
 
-                      if (widget.selectedTab ==
-                          1) // SOLO MOSTRAR SI ESTAMOS EN "YO DEBO"
+                      if (widget.selectedTab == 1)
                         GestureDetector(
                           onTap: () => _showRegisterPaymentDialog(),
                           child: Container(
