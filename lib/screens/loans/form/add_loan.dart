@@ -7,6 +7,7 @@ import 'package:walleta/blocs/loan/bloc/loan_event.dart';
 import 'package:walleta/models/appUser.dart';
 import 'package:walleta/models/loan.dart';
 import 'package:walleta/widgets/buttons/search_button.dart';
+import 'package:walleta/widgets/snackBar/snackBar.dart';
 
 // Cambiar a StatefulWidget para manejar el estado interno
 class AddLoanForm extends StatefulWidget {
@@ -412,39 +413,35 @@ class _AddLoanFormState extends State<AddLoanForm> {
 
   bool _validateForm() {
     if (_selectedUser == null || _personController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Por favor, selecciona una persona'),
-          backgroundColor: const Color(0xFFFF6B6B),
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        ),
+      TopSnackBarOverlay.show(
+        context: context,
+        message: 'Por favor, selecciona una persona',
+        verticalOffset: 70.0,
+        backgroundColor: const Color(0xFFFF6B6B),
       );
       return false;
     }
 
     if (_amountController.text.isEmpty ||
         double.tryParse(_amountController.text) == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Por favor, ingresa un monto válido'),
-          backgroundColor: const Color(0xFFFF6B6B),
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        ),
+      TopSnackBarOverlay.show(
+        context: context,
+        message: 'Por favor, ingresa un monto válido',
+        verticalOffset: 70.0,
+        backgroundColor: const Color(0xFFFF6B6B),
       );
+
       return false;
     }
 
     if (_selectedDate == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Por favor, selecciona una fecha límite'),
-          backgroundColor: const Color(0xFFFF6B6B),
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        ),
+      TopSnackBarOverlay.show(
+        context: context,
+        message: 'Por favor, selecciona una fecha límite',
+        verticalOffset: 70.0,
+        backgroundColor: const Color(0xFFFF6B6B),
       );
+
       return false;
     }
 
@@ -472,13 +469,11 @@ class _AddLoanFormState extends State<AddLoanForm> {
     final loanBloc = context.read<LoanBloc>();
     loanBloc.add(AddLoan(newLoan));
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: const Text('Préstamo agregado'),
-        backgroundColor: const Color(0xFF00C896),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-      ),
+    TopSnackBarOverlay.show(
+      context: context,
+      message: 'Préstamo agregado',
+      verticalOffset: 70.0, // Ajusta este número: 50, 60, 70, 80, etc.
+      backgroundColor: const Color(0xFF00C896),
     );
 
     // Limpiar controles después de guardar

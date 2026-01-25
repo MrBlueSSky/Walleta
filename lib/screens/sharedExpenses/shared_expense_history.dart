@@ -5,6 +5,7 @@ import 'package:walleta/blocs/sharedExpensePayment/bloc/shared_expense_payment_b
 import 'package:walleta/models/shared_expense.dart';
 import 'package:walleta/models/shared_expense_payment.dart';
 import 'package:walleta/screens/loans/details/receipt_image_dialog%20.dart';
+import 'package:walleta/widgets/snackBar/snackBar.dart';
 
 class ExpensePaymentHistory extends StatefulWidget {
   final SharedExpense expense;
@@ -310,14 +311,13 @@ class _ExpensePaymentItem extends StatelessWidget {
   }
 
   void _showReceiptImage(BuildContext context) {
+    final screenHeight = MediaQuery.of(context).size.height;
     if (payment.receiptImageUrl == null || payment.receiptImageUrl!.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('No hay comprobante disponible'),
-          backgroundColor: Colors.orange,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        ),
+      TopSnackBarOverlay.show(
+        context: context,
+        message: 'No hay comprobante disponible',
+        verticalOffset: 70.0,
+        backgroundColor: const Color(0xFFFF6B6B),
       );
       return;
     }

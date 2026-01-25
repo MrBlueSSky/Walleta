@@ -11,6 +11,7 @@ import 'package:walleta/blocs/payment/bloc/payment_bloc.dart';
 import 'package:walleta/blocs/payment/bloc/payment_event.dart';
 import 'package:walleta/models/loan.dart';
 import 'package:walleta/models/payment.dart';
+import 'package:walleta/widgets/snackBar/snackBar.dart';
 
 class LoanRegisterPaymentDialog extends StatefulWidget {
   final Loan loan;
@@ -67,16 +68,15 @@ class _RegisterPaymentDialogState extends State<LoanRegisterPaymentDialog> {
   }
 
   void _handlePayment() async {
+    final screenHeight = MediaQuery.of(context).size.height;
     // Validar monto
     if (_paymentAmountController.text.isEmpty ||
         double.tryParse(_paymentAmountController.text) == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Por favor, ingresa un monto válido'),
-          backgroundColor: const Color(0xFFFF6B6B),
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        ),
+      TopSnackBarOverlay.show(
+        context: context,
+        message: 'Por favor, ingresa un monto válido',
+        verticalOffset: 70.0,
+        backgroundColor: const Color(0xFFFF6B6B),
       );
       return;
     }
@@ -86,15 +86,12 @@ class _RegisterPaymentDialogState extends State<LoanRegisterPaymentDialog> {
     final double remainingBalance = widget.loan.amount - widget.loan.paidAmount;
 
     if (paymentAmount > remainingBalance) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
+      TopSnackBarOverlay.show(
+        context: context,
+        message:
             'El monto no puede ser mayor al saldo pendiente (₡${remainingBalance.toInt()})',
-          ),
-          backgroundColor: const Color(0xFFFF6B6B),
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        ),
+        verticalOffset: 70.0,
+        backgroundColor: const Color(0xFFFF6B6B),
       );
       return;
     }
@@ -151,26 +148,21 @@ class _RegisterPaymentDialogState extends State<LoanRegisterPaymentDialog> {
 
       await Future.delayed(const Duration(milliseconds: 500));
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Pago de ₡${paymentAmount.toInt()} registrado exitosamente',
-          ),
-          backgroundColor: Colors.green,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        ),
+      TopSnackBarOverlay.show(
+        context: context,
+        message: 'Pago de ₡${paymentAmount.toInt()} registrado exitosamente',
+        verticalOffset: 70.0,
+        backgroundColor: const Color(0xFF00C896),
       );
       widget.onPaymentConfirmed(updatedLoan, widget.selectedTab, paymentAmount);
     } catch (e) {
       // Manejar error
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error al registrar pago: $e'),
-          backgroundColor: const Color(0xFFFF6B6B),
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        ),
+
+      TopSnackBarOverlay.show(
+        context: context,
+        message: 'Error al registrar pago: $e',
+        verticalOffset: 70.0, // Ajusta este número: 50, 60, 70, 80, etc.
+        backgroundColor: const Color(0xFFFF6B6B),
       );
     } finally {
       // 8. Cerrar el diálogo

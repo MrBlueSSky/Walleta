@@ -97,7 +97,6 @@ class _ForgotPasswordDialogState extends State<ForgotPasswordDialog>
   }
 
   void _showErrorSnackBar(String message) {
-    final screenHeight = MediaQuery.of(context).size.height;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
@@ -110,11 +109,7 @@ class _ForgotPasswordDialogState extends State<ForgotPasswordDialog>
         backgroundColor: const Color(0xFFFF6B6B),
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        margin: EdgeInsets.only(
-          bottom: screenHeight - 100,
-          left: 16,
-          right: 16,
-        ),
+
         duration: const Duration(seconds: 3),
         elevation: 8,
       ),

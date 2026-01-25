@@ -5,6 +5,7 @@ import 'package:walleta/blocs/authentication/bloc/authentication_bloc.dart';
 import 'package:walleta/blocs/personalExpense/bloc/personal_expense_bloc.dart';
 import 'package:walleta/blocs/personalExpense/bloc/personal_expense_event.dart';
 import 'package:walleta/models/personal_expense.dart';
+import 'package:walleta/widgets/snackBar/snackBar.dart';
 
 class PersonalExpenseSheet extends StatefulWidget {
   final String userId;
@@ -896,17 +897,11 @@ class _AddPersonalExpenseSheetState extends State<PersonalExpenseSheet> {
       final paid = double.tryParse(_paidController.text) ?? 0;
 
       if (paid > total) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('El monto pagado no puede ser mayor al total'),
-            backgroundColor: const Color(0xFFFF6B6B),
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            margin: const EdgeInsets.all(16),
-          ),
+        TopSnackBarOverlay.show(
+          context: context,
+          message: 'El monto pagado no puede ser mayor al total',
+          verticalOffset: 70.0,
+          backgroundColor: const Color(0xFFFF6B6B),
         );
         return;
       }
@@ -936,22 +931,11 @@ class _AddPersonalExpenseSheetState extends State<PersonalExpenseSheet> {
       context.read<PersonalExpenseBloc>().add(
         AddPersonalExpense(expense: expense, userId: widget.userId),
       );
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text("Gasto añadido"),
-          backgroundColor: const Color(0xFFFF6B6B),
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          margin: EdgeInsets.only(
-            bottom: screenHeight - 100,
-            left: 16,
-            right: 16,
-          ),
-        ),
+      TopSnackBarOverlay.show(
+        context: context,
+        message: 'Gasto añadido',
+        verticalOffset: 70.0,
+        backgroundColor: const Color(0xFF00C896),
       );
       Navigator.pop(context);
     } else {
@@ -960,21 +944,11 @@ class _AddPersonalExpenseSheetState extends State<PersonalExpenseSheet> {
         message = 'Selecciona una categoría';
       }
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(message),
-          backgroundColor: const Color(0xFFFF6B6B),
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          margin: EdgeInsets.only(
-            bottom: screenHeight - 100,
-            left: 16,
-            right: 16,
-          ),
-        ),
+      TopSnackBarOverlay.show(
+        context: context,
+        message: message,
+        verticalOffset: 70.0, // Ajusta este número: 50, 60, 70, 80, etc.
+        backgroundColor: const Color(0xFFFF6B6B),
       );
     }
   }

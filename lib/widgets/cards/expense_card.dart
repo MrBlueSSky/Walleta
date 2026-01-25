@@ -10,6 +10,7 @@ import 'package:walleta/models/shared_expense_payment.dart';
 import 'package:walleta/screens/sharedExpenses/shared_expense_history.dart';
 import 'package:walleta/themes/app_colors.dart';
 import 'package:walleta/widgets/payment/register_payment_dialog.dart';
+import 'package:walleta/widgets/snackBar/snackBar.dart';
 
 class ExpenseCard extends StatefulWidget {
   final SharedExpense expense;
@@ -218,16 +219,15 @@ class _ExpenseCardState extends State<ExpenseCard> {
   void _showRegisterPaymentDialog(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final remainingBalance = widget.expense.total - widget.expense.paid;
+    final screenHeight = MediaQuery.of(context).size.height;
 
     // Solo mostrar el diálogo si hay saldo pendiente
     if (remainingBalance <= 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Este gasto ya está completamente pagado'),
-          backgroundColor: Colors.orange,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        ),
+      TopSnackBarOverlay.show(
+        context: context,
+        message: 'Este gasto ya está completamente pagado',
+        verticalOffset: 70.0,
+        backgroundColor: Colors.orange,
       );
       return;
     }
@@ -294,28 +294,19 @@ class _ExpenseCardState extends State<ExpenseCard> {
               );
 
               // 4. Mostrar confirmación
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(
-                    'Pago de ₡${amount.toInt()} registrado exitosamente',
-                  ),
-                  backgroundColor: Colors.green,
-                  behavior: SnackBarBehavior.floating,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
+              TopSnackBarOverlay.show(
+                context: context,
+                message: 'Pago de ₡${amount.toInt()} registrado exitosamente',
+                verticalOffset: 70.0,
+                backgroundColor: const Color(0xFF00C896),
               );
             } catch (e) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('Error: $e'),
-                  backgroundColor: Colors.red,
-                  behavior: SnackBarBehavior.floating,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
+              TopSnackBarOverlay.show(
+                context: context,
+                message: 'Error: $e',
+                verticalOffset:
+                    70.0, // Ajusta este número: 50, 60, 70, 80, etc.
+                backgroundColor: const Color(0xFFFF6B6B),
               );
               rethrow;
             }
