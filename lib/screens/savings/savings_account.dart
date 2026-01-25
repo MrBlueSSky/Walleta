@@ -1,54 +1,33 @@
 import 'package:flutter/material.dart';
-import 'package:iconsax/iconsax.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:walleta/blocs/saving/bloc/saving_bloc.dart';
+import 'package:walleta/blocs/saving/bloc/saving_event.dart';
+import 'package:walleta/blocs/saving/bloc/saving_state.dart';
 import 'package:walleta/models/savings.dart';
+import 'package:iconsax/iconsax.dart';
+import 'package:flutter_colorpicker/flutter_colorpicker.dart';
+import 'package:walleta/screens/savings/savings_account.dart';
+
+import 'savings_account.dart';
 
 class SavingsAccountScreen extends StatefulWidget {
-  const SavingsAccountScreen({super.key});
+  final String userId;
+
+  const SavingsAccountScreen({super.key, required this.userId});
 
   @override
   State<SavingsAccountScreen> createState() => _SavingsAccountScreenState();
 }
 
 class _SavingsAccountScreenState extends State<SavingsAccountScreen> {
-  double totalSaved = 80000;
-  final List<SavingGoal> goals = [
-    SavingGoal(
-      title: "Viaje a la playa",
-      saved: 30000,
-      goal: 50000,
-      icon: Icons.beach_access,
-      color: const Color(0xFF00C896),
-      targetDate: DateTime.now().add(const Duration(days: 90)), // 3 meses
-    ),
-    SavingGoal(
-      title: "Fondo de emergencia",
-      saved: 50000,
-      goal: 100000,
-      icon: Iconsax.shield_tick,
-      color: const Color(0xFF2D5BFF),
-      targetDate: DateTime.now().add(const Duration(days: 180)), // 6 meses
-    ),
-    SavingGoal(
-      title: "Nueva computadora",
-      saved: 15000,
-      goal: 80000,
-      icon: Iconsax.monitor,
-      color: const Color(0xFFFFA726),
-      targetDate: DateTime.now().add(const Duration(days: 120)), // 4 meses
-    ),
-    SavingGoal(
-      title: "Curso de inglés",
-      saved: 0,
-      goal: 120000,
-      icon: Iconsax.book,
-      color: const Color(0xFF9C27B0),
-      targetDate: DateTime.now().add(const Duration(days: 365)), // 1 año
-    ),
-  ];
+  @override
+  void initState() {
+    super.initState();
+    context.read<SavingBloc>().add(LoadSavingGoals(widget.userId));
+  }
 
   @override
   Widget build(BuildContext context) {
-    Color iconsColor = Theme.of(context).primaryColor;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final backgroundColor =
         isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFD);
@@ -56,331 +35,198 @@ class _SavingsAccountScreenState extends State<SavingsAccountScreen> {
     return Scaffold(
       backgroundColor: backgroundColor,
       body: SafeArea(
-        bottom: false,
-        child: CustomScrollView(
-          physics: const BouncingScrollPhysics(),
-          slivers: [
-            // AppBar personalizado
-            SliverAppBar(
-              floating: true,
-              snap: true,
-              backgroundColor: backgroundColor,
-              elevation: 0,
-              title: Text(
-                "Mis Ahorros",
-                style: TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w700,
-                  color: isDark ? Colors.white : const Color(0xFF1F2937),
-                ),
-              ),
-              actions: [
-                IconButton(
-                  icon: Icon(Icons.add, color: iconsColor),
-                  onPressed: () => _openCreateGoal(context),
-                ),
-              ],
-            ),
+        child: BlocBuilder<SavingBloc, SavingState>(
+          builder: (context, state) {
+            if (state.status == SavingStateStatus.loading) {
+              return const Center(child: CircularProgressIndicator());
+            }
 
-            // Sección de total ahorrado
-            // SliverToBoxAdapter(
-            //   child: Padding(
-            //     padding: const EdgeInsets.symmetric(
-            //       horizontal: 16,
-            //       vertical: 8,
-            //     ),
-            //     child: _buildTotalSavings(isDark),
-            //   ),
-            // ),
+            if (state.status == SavingStateStatus.error) {
+              return const Center(child: Text('❌ Error al cargar metas'));
+            }
 
-            // Título de metas
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 24, 16, 16),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            final goals = state.goals;
+
+            if (goals.isEmpty) {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
+                    Icon(Iconsax.wallet, size: 100, color: Colors.grey[300]),
+                    const SizedBox(height: 20),
                     Text(
-                      "Tus metas de ahorro",
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                        color: isDark ? Colors.white : const Color(0xFF1F2937),
-                      ),
-                    ),
-                    Text(
-                      "${goals.length} metas",
-                      style: TextStyle(
-                        fontSize: 12,
-                        color:
-                            isDark ? Colors.white70 : const Color(0xFF6B7280),
-                      ),
+                      'No hay ahorros registrados',
+                      style: TextStyle(fontSize: 18, color: Colors.grey[500]),
                     ),
                   ],
                 ),
-              ),
-            ),
+              );
+            }
 
-            // Grid de metas
-            SliverPadding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              sliver: SliverGrid(
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  crossAxisSpacing: 12,
-                  mainAxisSpacing: 12,
-                  childAspectRatio: 1.0,
+            return CustomScrollView(
+              physics: const BouncingScrollPhysics(),
+              slivers: [
+                SliverAppBar(
+                  floating: true,
+                  snap: true,
+                  backgroundColor: backgroundColor,
+                  elevation: 0,
+                  title: const Text(
+                    "Mis Ahorros",
+                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
+                  ),
+                  actions: [
+                    IconButton(
+                      icon: const Icon(Icons.add),
+                      onPressed: () => _openCreateGoal(context),
+                    ),
+                  ],
                 ),
-                delegate: SliverChildBuilderDelegate((context, index) {
-                  return _buildGoalCard(context, goals[index], isDark);
-                }, childCount: goals.length),
-              ),
-            ),
-
-            // Espacio final
-            const SliverToBoxAdapter(child: SizedBox(height: 80)),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTotalSavings(bool isDark) {
-    final screenWidth = MediaQuery.of(context).size.width;
-
-    return Container(
-      width: double.infinity,
-      constraints: BoxConstraints(maxWidth: screenWidth - 32),
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF2D5BFF), Color(0xFF6366F1)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF2D5BFF).withOpacity(0.3),
-            blurRadius: 15,
-            offset: const Offset(0, 5),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                padding: const EdgeInsets.all(10),
-                child: const Icon(
-                  Iconsax.wallet_money,
-                  color: Colors.white,
-                  size: 22,
-                ),
-              ),
-              const Spacer(),
-              Container(
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 5,
-                ),
-                child: const Text(
-                  '+12.5%',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 24, 16, 16),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          "Tus metas de ahorro",
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        Text(
+                          "${goals.length} metas",
+                          style: TextStyle(
+                            fontSize: 12,
+                            color:
+                                isDark
+                                    ? Colors.white70
+                                    : const Color(0xFF6B7280),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          const Text(
-            'Total Ahorrado',
-            style: TextStyle(color: Colors.white70, fontSize: 13),
-          ),
-          const SizedBox(height: 4),
-          FittedBox(
-            fit: BoxFit.scaleDown,
-            child: Text(
-              _formatCurrency(totalSaved),
-              style: const TextStyle(
-                fontSize: 28,
-                fontWeight: FontWeight.w700,
-                color: Colors.white,
-                height: 1.2,
-              ),
-            ),
-          ),
-        ],
+                SliverPadding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  sliver: SliverGrid(
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          crossAxisSpacing: 12,
+                          mainAxisSpacing: 12,
+                          childAspectRatio: 0.8,
+                        ),
+                    delegate: SliverChildBuilderDelegate((context, index) {
+                      return _buildGoalCard(context, goals[index]);
+                    }, childCount: goals.length),
+                  ),
+                ),
+                const SliverToBoxAdapter(child: SizedBox(height: 80)),
+              ],
+            );
+          },
+        ),
       ),
     );
   }
 
-  Widget _buildGoalCard(BuildContext context, SavingGoal goal, bool isDark) {
-    final progress = goal.saved / goal.goal;
+  Widget _buildGoalCard(BuildContext context, SavingGoal goal) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final progress = (goal.saved / goal.goal).clamp(0.0, 1.0);
     final percentage = (progress * 100).toInt();
-    final cardWidth = (MediaQuery.of(context).size.width - 44) / 2;
-    final daysLeft = goal.targetDate.difference(DateTime.now()).inDays;
 
-    return Container(
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E293B) : Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
+    return GestureDetector(
+      onTap: () => _showPaymentHistory(context, goal),
+      onLongPress: () => _showGoalOptions(context, goal),
+      child: Container(
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF1E293B) : Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
+          border: Border.all(
+            color:
+                isDark
+                    ? const Color(0xFF334155).withOpacity(0.3)
+                    : const Color(0xFFE5E7EB).withOpacity(0.8),
+            width: 0.5,
           ),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
+        ),
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            // Encabezado con ícono y fecha
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Container(
                   decoration: BoxDecoration(
                     color: goal.color.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(10),
+                    shape: BoxShape.circle,
                   ),
-                  padding: const EdgeInsets.all(6),
-                  child: Icon(goal.icon, color: goal.color, size: 18),
+                  padding: const EdgeInsets.all(8),
+                  child: Icon(goal.icon, color: goal.color),
                 ),
-                // _buildDateIndicator(daysLeft, goal.color),
-
-                // Fecha objetivo
-                Row(
-                  children: [
-                    Icon(Iconsax.calendar_1, size: 10, color: goal.color),
-                    const SizedBox(width: 4),
-                    Text(
-                      _formatDate(goal.targetDate),
-                      style: TextStyle(
-                        fontSize: 10,
-                        color: goal.color,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
+                Text(
+                  '${_formatCurrency(goal.saved)} / ${_formatCurrency(goal.goal)}',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: goal.color,
+                  ),
                 ),
               ],
             ),
             const SizedBox(height: 12),
-
-            // Título y progreso
-            Text(
-              goal.title,
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: isDark ? Colors.white : const Color(0xFF1F2937),
-                height: 1.3,
-              ),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-            const SizedBox(height: 6),
-
-            // Montos
-            Text(
-              '${_formatCurrency(goal.saved)} / ${_formatCurrency(goal.goal)}',
-              style: TextStyle(
-                fontSize: 11,
-                color: isDark ? Colors.white70 : const Color(0xFF6B7280),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(3),
+              child: LinearProgressIndicator(
+                value: progress,
+                minHeight: 6,
+                backgroundColor:
+                    isDark ? const Color(0xFF334155) : const Color(0xFFF3F4F6),
+                valueColor: AlwaysStoppedAnimation(goal.color),
               ),
             ),
-            const SizedBox(height: 6),
-
-            // Fecha objetivo
-            // Row(
-            //   children: [
-            //     Icon(Iconsax.calendar_1, size: 10, color: goal.color),
-            //     const SizedBox(width: 4),
-            //     Text(
-            //       _formatDate(goal.targetDate),
-            //       style: TextStyle(
-            //         fontSize: 10,
-            //         color: goal.color,
-            //         fontWeight: FontWeight.w500,
-            //       ),
-            //     ),
-            //   ],
-            // ),
-            // const SizedBox(height: 8),
-
-            // Barra de progreso
-            SizedBox(
-              width: cardWidth - 24,
+            const SizedBox(height: 12),
+            Expanded(
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Stack(
-                    children: [
-                      Container(
-                        height: 5,
-                        decoration: BoxDecoration(
-                          color:
-                              isDark
-                                  ? const Color(0xFF334155)
-                                  : const Color(0xFFF3F4F6),
-                          borderRadius: BorderRadius.circular(2.5),
-                        ),
-                      ),
-                      Container(
-                        height: 5,
-                        width: (cardWidth - 24) * progress.clamp(0.0, 1.0),
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [goal.color, goal.color.withOpacity(0.8)],
-                          ),
-                          borderRadius: BorderRadius.circular(2.5),
-                        ),
-                      ),
-                    ],
+                  Text(
+                    goal.title,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 14,
+                      color: goal.color,
+                    ),
                   ),
-                  const SizedBox(height: 6),
-
-                  // Porcentaje y botón
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        '$percentage%',
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                          color: goal.color,
-                        ),
-                      ),
-                      GestureDetector(
-                        onTap: () => _openAddMoney(context, goal),
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: goal.color.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          padding: const EdgeInsets.all(4),
-                          child: Icon(Iconsax.add, size: 12, color: goal.color),
-                        ),
-                      ),
-                    ],
+                  const SizedBox(height: 4),
+                  Text(
+                    'Fecha límite: ${_formatDate(goal.targetDate)}',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: isDark ? Colors.white70 : const Color(0xFF6B7280),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '$percentage% completado',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      color: goal.color,
+                    ),
                   ),
                 ],
               ),
@@ -391,70 +237,102 @@ class _SavingsAccountScreenState extends State<SavingsAccountScreen> {
     );
   }
 
-  // Widget _buildDateIndicator(int daysLeft, Color color) {
-  //   if (daysLeft <= 0) {
-  //     return Container(
-  //       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-  //       decoration: BoxDecoration(
-  //         color: const Color(0xFF00C896).withOpacity(0.1),
-  //         borderRadius: BorderRadius.circular(10),
-  //       ),
-  //       child: Row(
-  //         children: [
-  //           Icon(Iconsax.tick_circle, size: 10, color: const Color(0xFF00C896)),
-  //           const SizedBox(width: 4),
-  //           Text(
-  //             'Completada',
-  //             style: TextStyle(
-  //               fontSize: 9,
-  //               color: const Color(0xFF00C896),
-  //               fontWeight: FontWeight.w600,
-  //             ),
-  //           ),
-  //         ],
-  //       ),
-  //     );
-  //   }
+  void _showGoalOptions(BuildContext context, SavingGoal goal) {
+    showModalBottomSheet(
+      context: context,
+      builder: (_) {
+        return Wrap(
+          children: [
+            ListTile(
+              leading: const Icon(Icons.edit),
+              title: const Text('Editar'),
+              onTap: () {
+                Navigator.pop(context);
+                _openCreateGoal(context, goal: goal);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.delete),
+              title: const Text('Borrar'),
+              onTap: () {
+                context.read<SavingBloc>().add(DeleteSavingGoal(goal.id));
+                Navigator.pop(context);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.add),
+              title: const Text('Abonar'),
+              onTap: () {
+                Navigator.pop(context);
+                _openAddMoney(context, goal);
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
 
-  //   String text;
-  //   Color bgColor;
+  void _showPaymentHistory(BuildContext context, SavingGoal goal) {
+    showDialog(
+      context: context,
+      builder: (_) {
+        return AlertDialog(
+          title: Text('Historial de abonos - ${goal.title}'),
+          content: SizedBox(
+            width: double.maxFinite,
+            child:
+                goal.payments.isEmpty
+                    ? const Text('No hay abonos realizados')
+                    : ListView.builder(
+                      shrinkWrap: true,
+                      itemCount: goal.payments.length,
+                      itemBuilder: (context, index) {
+                        final payment = goal.payments[index];
+                        final date = payment.date;
+                        final amount = payment.amount;
+                        return ListTile(
+                          leading: const Icon(Iconsax.money),
+                          title: Text('${_formatCurrency(amount)}'),
+                          subtitle: Text(_formatDate(date)),
+                        );
+                      },
+                    ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cerrar'),
+            ),
+          ],
+        );
+      },
+    );
+  }
 
-  //   if (daysLeft <= 7) {
-  //     text = '$daysLeft días';
-  //     bgColor = const Color(0xFFFF6B6B);
-  //   } else if (daysLeft <= 30) {
-  //     text = '${daysLeft ~/ 7} sem';
-  //     bgColor = const Color(0xFFFFA726);
-  //   } else {
-  //     text = '${daysLeft ~/ 30} mes';
-  //     if (daysLeft > 60) {
-  //       text += 'es';
-  //     }
-  //     bgColor = color;
-  //   }
+  void _openCreateGoal(BuildContext context, {SavingGoal? goal}) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _CreateGoalBottomSheet(userId: widget.userId, goal: goal),
+    );
+  }
 
-  //   return Container(
-  //     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-  //     decoration: BoxDecoration(
-  //       color: bgColor.withOpacity(0.1),
-  //       borderRadius: BorderRadius.circular(10),
-  //     ),
-  //     child: Row(
-  //       children: [
-  //         Icon(Iconsax.calendar_1, size: 10, color: bgColor),
-  //         const SizedBox(width: 4),
-  //         Text(
-  //           text,
-  //           style: TextStyle(
-  //             fontSize: 9,
-  //             color: bgColor,
-  //             fontWeight: FontWeight.w600,
-  //           ),
-  //         ),
-  //       ],
-  //     ),
-  //   );
-  // }
+  void _openAddMoney(BuildContext context, SavingGoal goal) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _AddMoneyBottomSheet(goal: goal, userId: widget.userId),
+    );
+  }
+
+  String _formatCurrency(double amount) {
+    if (amount >= 1000000) return '₡${(amount / 1000000).toStringAsFixed(1)}M';
+    if (amount >= 1000) return '₡${(amount / 1000).toStringAsFixed(1)}K';
+    return '₡${amount.toStringAsFixed(0)}';
+  }
 
   String _formatDate(DateTime date) {
     final monthNames = [
@@ -473,494 +351,383 @@ class _SavingsAccountScreenState extends State<SavingsAccountScreen> {
     ];
     return '${date.day} ${monthNames[date.month - 1]} ${date.year}';
   }
-
-  String _formatCurrency(double amount) {
-    if (amount >= 1000000) {
-      return '₡${(amount / 1000000).toStringAsFixed(1)}M';
-    } else if (amount >= 1000) {
-      return '₡${(amount / 1000).toStringAsFixed(1)}K';
-    }
-
-    return '₡${amount.toStringAsFixed(0).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}';
-  }
-
-  void _openCreateGoal(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      backgroundColor: Theme.of(context).colorScheme.background,
-      builder: (context) => const CreateSavingGoalScreen(),
-    );
-  }
-
-  void _openAddMoney(BuildContext context, SavingGoal goal) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      backgroundColor: Theme.of(context).colorScheme.background,
-      builder: (context) => AddSavingMoneyScreen(goal: goal),
-    );
-  }
 }
 
-// ===================================================
-// ================= CREAR META ======================
-// ===================================================
-
-class CreateSavingGoalScreen extends StatefulWidget {
-  const CreateSavingGoalScreen({super.key});
+/// ===========================
+/// BOTTOM SHEET CREAR META
+/// ===========================
+class _CreateGoalBottomSheet extends StatefulWidget {
+  final String userId;
+  final SavingGoal? goal;
+  const _CreateGoalBottomSheet({required this.userId, this.goal});
 
   @override
-  State<CreateSavingGoalScreen> createState() => _CreateSavingGoalScreenState();
+  State<_CreateGoalBottomSheet> createState() => _CreateGoalBottomSheetState();
 }
 
-class _CreateSavingGoalScreenState extends State<CreateSavingGoalScreen> {
+class _CreateGoalBottomSheetState extends State<_CreateGoalBottomSheet> {
   final _formKey = GlobalKey<FormState>();
-  final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _amountController = TextEditingController();
-  final TextEditingController _dateController = TextEditingController();
+  final TextEditingController _titleController = TextEditingController();
+  final TextEditingController _goalController = TextEditingController();
   DateTime? _selectedDate;
-  String _selectedIcon = 'beach_access';
+  Color _selectedColor = Colors.blue;
+  IconData _selectedIcon = Icons.savings;
+
+  final List<IconData> _icons = [
+    Icons.savings,
+    Icons.shopping_cart,
+    Icons.car_rental,
+    Icons.home,
+    Icons.flight,
+    Icons.sports_soccer,
+    Icons.school,
+    Icons.phone_iphone,
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.goal != null) {
+      _titleController.text = widget.goal!.title;
+      _goalController.text = widget.goal!.goal.toString();
+      _selectedDate = widget.goal!.targetDate;
+      _selectedColor = widget.goal!.color;
+      _selectedIcon = widget.goal!.icon;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    final mediaQuery = MediaQuery.of(context);
-
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final backgroundColor =
-        isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFD);
-    final cardColor = isDark ? const Color(0xFF1E293B) : Colors.white;
-    final textColor = isDark ? Colors.white : const Color(0xFF1F2937);
-    final secondaryTextColor =
-        isDark ? Colors.white70 : const Color(0xFF6B7280);
-
     return SingleChildScrollView(
       child: Container(
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF1E293B) : Colors.white,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        ),
         padding: EdgeInsets.only(
-          top: 24,
+          bottom: MediaQuery.of(context).viewInsets.bottom + 20,
           left: 20,
           right: 20,
-          bottom: mediaQuery.viewInsets.bottom + 24,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Center(
-              child: Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: textColor,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 12),
-            // Header
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Nueva meta',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                    color: Theme.of(context).colorScheme.onSurface,
-                  ),
-                ),
-                IconButton(
-                  onPressed: () => Navigator.pop(context),
-                  icon: const Icon(Iconsax.close_circle, size: 22),
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(),
-                ),
-              ],
-            ),
-            const SizedBox(height: 20),
-
-            // Formulario
-            Form(
-              key: _formKey,
-              child: Column(
-                children: [
-                  _buildInputField(
-                    label: 'Nombre de la meta',
-                    icon: Iconsax.flag,
-                    controller: _nameController,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Ingresa un nombre';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 12),
-
-                  _buildInputField(
-                    label: 'Monto objetivo (₡)',
-                    icon: Iconsax.money,
-                    controller: _amountController,
-                    keyboardType: TextInputType.number,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Ingresa un monto';
-                      }
-                      if (double.tryParse(value) == null) {
-                        return 'Número inválido';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 12),
-
-                  // Selector de fecha
-                  GestureDetector(
-                    onTap: _selectDate,
-                    child: AbsorbPointer(
-                      child: TextFormField(
-                        controller: _dateController,
-                        decoration: InputDecoration(
-                          labelText: 'Fecha objetivo (opcional)',
-                          labelStyle: const TextStyle(color: Color(0xFF6B7280)),
-                          prefixIcon: const Icon(
-                            Iconsax.calendar,
-                            color: Color(0xFF9CA3AF),
-                          ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: const BorderSide(
-                              color: Color(0xFFE5E7EB),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 24),
-
-            // Botón de guardar
-            SizedBox(
-              width: double.infinity,
-              height: 48,
-              child: ElevatedButton(
-                onPressed: _saveGoal,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF2D5BFF),
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  elevation: 0,
-                ),
-                child: const Text(
-                  'Crear meta',
-                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildInputField({
-    required String label,
-    required IconData icon,
-    required TextEditingController controller,
-    required String? Function(String?) validator,
-    TextInputType keyboardType = TextInputType.text,
-  }) {
-    return TextFormField(
-      controller: controller,
-      keyboardType: keyboardType,
-      validator: validator,
-      decoration: InputDecoration(
-        labelText: label,
-        labelStyle: const TextStyle(color: Color(0xFF6B7280)),
-        prefixIcon: Icon(icon, color: const Color(0xFF9CA3AF)),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFF2D5BFF), width: 1.5),
-        ),
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 16,
-          vertical: 14,
-        ),
-      ),
-    );
-  }
-
-  Future<void> _selectDate() async {
-    final date = await showDatePicker(
-      context: context,
-      initialDate: DateTime.now(),
-      firstDate: DateTime.now(),
-      lastDate: DateTime(2030),
-    );
-
-    if (date != null) {
-      setState(() {
-        _selectedDate = date;
-        _dateController.text = '${date.day}/${date.month}/${date.year}';
-      });
-    }
-  }
-
-  void _saveGoal() {
-    if (_formKey.currentState!.validate()) {
-      Navigator.pop(context);
-    }
-  }
-
-  @override
-  void dispose() {
-    _nameController.dispose();
-    _amountController.dispose();
-    _dateController.dispose();
-    super.dispose();
-  }
-}
-
-// ===================================================
-// ================= AGREGAR APORTE ==================
-// ===================================================
-
-class AddSavingMoneyScreen extends StatefulWidget {
-  final SavingGoal goal;
-
-  const AddSavingMoneyScreen({super.key, required this.goal});
-
-  @override
-  State<AddSavingMoneyScreen> createState() => _AddSavingMoneyScreenState();
-}
-
-class _AddSavingMoneyScreenState extends State<AddSavingMoneyScreen> {
-  final _formKey = GlobalKey<FormState>();
-  final TextEditingController _amountController = TextEditingController();
-  final TextEditingController _descriptionController = TextEditingController();
-
-  @override
-  Widget build(BuildContext context) {
-    final mediaQuery = MediaQuery.of(context);
-
-    return SingleChildScrollView(
-      child: Container(
-        padding: EdgeInsets.only(
           top: 20,
-          left: 20,
-          right: 20,
-          bottom: mediaQuery.viewInsets.bottom + 20,
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Header
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Agregar aporte',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700,
-                        color: Theme.of(context).colorScheme.onSurface,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      widget.goal.title,
-                      style: const TextStyle(
-                        color: Color(0xFF6B7280),
-                        fontSize: 13,
-                      ),
-                    ),
-                  ],
-                ),
-                IconButton(
-                  onPressed: () => Navigator.pop(context),
-                  icon: const Icon(Iconsax.close_circle, size: 22),
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(),
-                ),
-              ],
-            ),
-            const SizedBox(height: 20),
-
-            // Información de la fecha objetivo
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: widget.goal.color.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Row(
-                children: [
-                  Icon(Iconsax.calendar_1, size: 16, color: widget.goal.color),
-                  const SizedBox(width: 8),
-                  Text(
-                    'Fecha objetivo: ${_formatDate(widget.goal.targetDate)}',
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: widget.goal.color,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ],
+            Text(
+              widget.goal == null ? 'Crear nueva meta' : 'Editar meta',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: isDark ? Colors.white : const Color(0xFF1F2937),
               ),
             ),
             const SizedBox(height: 16),
-
-            // Campos del formulario
             Form(
               key: _formKey,
               child: Column(
                 children: [
-                  _buildInputField(
-                    label: 'Monto a agregar (₡)',
-                    icon: Iconsax.money_add,
-                    controller: _amountController,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Ingresa un monto';
-                      }
-                      if (double.tryParse(value) == null) {
-                        return 'Número inválido';
-                      }
-                      if (double.parse(value) <= 0) {
-                        return 'Debe ser mayor a 0';
-                      }
-                      return null;
-                    },
+                  TextFormField(
+                    controller: _titleController,
+                    decoration: const InputDecoration(labelText: 'Título'),
+                    validator:
+                        (value) => value!.isEmpty ? 'Ingrese un título' : null,
                   ),
-                  const SizedBox(height: 12),
-
-                  _buildInputField(
-                    label: 'Descripción (opcional)',
-                    icon: Iconsax.note,
-                    controller: _descriptionController,
-                    maxLines: 2,
+                  const SizedBox(height: 8),
+                  TextFormField(
+                    controller: _goalController,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(
+                      labelText: 'Monto objetivo',
+                    ),
+                    validator:
+                        (value) => value!.isEmpty ? 'Ingrese un monto' : null,
+                  ),
+                  const SizedBox(height: 8),
+                  InkWell(
+                    onTap: _pickDate,
+                    child: InputDecorator(
+                      decoration: const InputDecoration(
+                        labelText: 'Fecha límite',
+                        border: OutlineInputBorder(),
+                      ),
+                      child: Text(
+                        _selectedDate != null
+                            ? _formatDate(_selectedDate!)
+                            : 'Selecciona una fecha',
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      const Text('Color de la card: '),
+                      const SizedBox(width: 8),
+                      GestureDetector(
+                        onTap: _pickColor,
+                        child: Container(
+                          width: 30,
+                          height: 30,
+                          decoration: BoxDecoration(
+                            color: _selectedColor,
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(color: Colors.black26),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  SizedBox(
+                    height: 50,
+                    child: ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: _icons.length,
+                      itemBuilder: (context, index) {
+                        final icon = _icons[index];
+                        return GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              _selectedIcon = icon;
+                            });
+                          },
+                          child: Container(
+                            margin: const EdgeInsets.symmetric(horizontal: 6),
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color:
+                                  _selectedIcon == icon
+                                      ? _selectedColor.withOpacity(0.2)
+                                      : Colors.transparent,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Icon(icon, color: _selectedColor),
+                          ),
+                        );
+                      },
+                    ),
                   ),
                 ],
               ),
             ),
-
-            const SizedBox(height: 24),
-
-            // Botón de guardar
-            SizedBox(
-              width: double.infinity,
-              height: 48,
-              child: ElevatedButton(
-                onPressed: _saveContribution,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: widget.goal.color,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  elevation: 0,
+            const SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: _saveGoal,
+              style: ElevatedButton.styleFrom(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Text(
-                  'Registrar aporte',
-                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
-                ),
+                padding: const EdgeInsets.symmetric(vertical: 16),
+              ),
+              child: Text(
+                widget.goal == null ? 'Guardar meta' : 'Actualizar meta',
               ),
             ),
           ],
         ),
       ),
     );
+  }
+
+  void _pickDate() async {
+    final now = DateTime.now();
+    final date = await showDatePicker(
+      context: context,
+      initialDate: _selectedDate ?? now,
+      firstDate: now,
+      lastDate: DateTime(now.year + 5),
+    );
+    if (date != null) setState(() => _selectedDate = date);
+  }
+
+  void _pickColor() {
+    showDialog(
+      context: context,
+      builder: (_) {
+        Color tempColor = _selectedColor;
+        return AlertDialog(
+          title: const Text('Selecciona un color'),
+          content: SingleChildScrollView(
+            child: ColorPicker(
+              pickerColor: _selectedColor,
+              onColorChanged: (color) => tempColor = color,
+              enableAlpha: false,
+              showLabel: false,
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancelar'),
+            ),
+            TextButton(
+              onPressed: () {
+                setState(() => _selectedColor = tempColor);
+                Navigator.pop(context);
+              },
+              child: const Text('Aceptar'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _saveGoal() {
+    if (_formKey.currentState!.validate() && _selectedDate != null) {
+      final goal = SavingGoal(
+        id: widget.goal?.id ?? '',
+        title: _titleController.text,
+        saved: widget.goal?.saved ?? 0,
+        goal: double.parse(_goalController.text),
+        icon: _selectedIcon,
+        color: _selectedColor,
+        targetDate: _selectedDate!,
+      );
+
+      if (widget.goal == null) {
+        context.read<SavingBloc>().add(
+          AddSavingGoal(goal: goal, userId: widget.userId),
+        );
+      } else {
+        context.read<SavingBloc>().add(
+          UpdateSavingGoal(goalId: goal.id, goal: goal),
+        );
+      }
+
+      Navigator.pop(context);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Por favor completa todos los campos')),
+      );
+    }
   }
 
   String _formatDate(DateTime date) {
     final monthNames = [
-      'Enero',
-      'Febrero',
-      'Marzo',
-      'Abril',
-      'Mayo',
-      'Junio',
-      'Julio',
-      'Agosto',
-      'Septiembre',
-      'Octubre',
-      'Noviembre',
-      'Diciembre',
+      'Ene',
+      'Feb',
+      'Mar',
+      'Abr',
+      'May',
+      'Jun',
+      'Jul',
+      'Ago',
+      'Sep',
+      'Oct',
+      'Nov',
+      'Dic',
     ];
-    return '${date.day} de ${monthNames[date.month - 1]} ${date.year}';
+    return '${date.day} ${monthNames[date.month - 1]} ${date.year}';
   }
+}
 
-  Widget _buildInputField({
-    required String label,
-    required IconData icon,
-    required TextEditingController controller,
-    String? Function(String?)? validator,
-    int maxLines = 1,
-  }) {
-    return TextFormField(
-      controller: controller,
-      keyboardType: maxLines > 1 ? null : TextInputType.number,
-      validator: validator,
-      maxLines: maxLines,
-      decoration: InputDecoration(
-        labelText: label,
-        labelStyle: const TextStyle(color: Color(0xFF6B7280)),
-        prefixIcon: Icon(icon, color: const Color(0xFF9CA3AF)),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+/// ===========================
+/// BOTTOM SHEET ABONAR DINERO
+/// ===========================
+class _AddMoneyBottomSheet extends StatefulWidget {
+  final SavingGoal goal;
+  final String userId;
+  const _AddMoneyBottomSheet({required this.goal, required this.userId});
+
+  @override
+  State<_AddMoneyBottomSheet> createState() => _AddMoneyBottomSheetState();
+}
+
+class _AddMoneyBottomSheetState extends State<_AddMoneyBottomSheet> {
+  final _controller = TextEditingController();
+  String? _errorMessage; // <-- Guardará el mensaje de error
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return SingleChildScrollView(
+      child: Container(
+        decoration: BoxDecoration(
+          color: isDark ? const Color(0xFF1E293B) : Colors.white,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+        padding: EdgeInsets.only(
+          bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+          left: 20,
+          right: 20,
+          top: 20,
         ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: widget.goal.color, width: 1.5),
-        ),
-        contentPadding: EdgeInsets.symmetric(
-          horizontal: 16,
-          vertical: maxLines > 1 ? 12 : 14,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'Abonar a ${widget.goal.title}',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: isDark ? Colors.white : const Color(0xFF1F2937),
+              ),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: _controller,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(labelText: 'Monto a abonar'),
+              onChanged: (_) {
+                if (_errorMessage != null) {
+                  setState(() {
+                    _errorMessage = null; // Limpiar el error al escribir
+                  });
+                }
+              },
+            ),
+            if (_errorMessage != null) ...[
+              const SizedBox(height: 8),
+              Text(
+                _errorMessage!,
+                style: const TextStyle(color: Colors.red, fontSize: 13),
+              ),
+            ],
+            const SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: _addMoney,
+              style: ElevatedButton.styleFrom(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                padding: const EdgeInsets.symmetric(vertical: 16),
+              ),
+              child: const Text('Abonar'),
+            ),
+          ],
         ),
       ),
     );
   }
 
-  void _saveContribution() {
-    if (_formKey.currentState!.validate()) {
-      Navigator.pop(context);
-    }
-  }
+  void _addMoney() {
+    final amount = double.tryParse(_controller.text);
 
-  @override
-  void dispose() {
-    _amountController.dispose();
-    _descriptionController.dispose();
-    super.dispose();
+    // Validación: monto válido
+    if (amount == null || amount <= 0) {
+      setState(() {
+        _errorMessage = 'Ingrese un monto válido';
+      });
+      return;
+    }
+
+    // Validación: que no se pase del objetivo
+    final remaining = widget.goal.goal - widget.goal.saved;
+    if (amount > remaining) {
+      setState(() {
+        _errorMessage =
+            'No puede abonar más de ₡${remaining.toStringAsFixed(0)}';
+      });
+      return;
+    }
+
+    // Si todo está bien, agregar abono al Bloc
+    context.read<SavingBloc>().add(
+      AddMoneyToSavingGoal(goalId: widget.goal.id, amount: amount),
+    );
+
+    // Cerrar el bottom sheet
+    Navigator.pop(context);
   }
 }

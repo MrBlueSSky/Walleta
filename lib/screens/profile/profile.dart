@@ -225,14 +225,13 @@ class _ProfileState extends State<Profile> {
     );
   }
 
-  void _openSavingsScreen(BuildContext context) {
-    // Si ya tienes una pantalla de ahorros llamada 'SavingsScreen'
+  void _openSavingsScreen(BuildContext context, String userId) {
     Navigator.push(
       context,
       PageRouteBuilder(
         pageBuilder:
             (context, animation, secondaryAnimation) =>
-                SavingsAccountScreen(), // Reemplaza con tu pantalla
+                SavingsAccountScreen(userId: userId),
         transitionDuration: const Duration(milliseconds: 400),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           const begin = Offset(0.0, 1.0);
@@ -286,12 +285,16 @@ class _ProfileState extends State<Profile> {
   // }
 
   // O con una animación personalizada tipo "hero":
-  void _openSavingsScreenWithHeroAnimation(BuildContext context) {
+  void _openSavingsScreenWithHeroAnimation(
+    BuildContext context,
+    String userId,
+  ) {
     Navigator.push(
       context,
       PageRouteBuilder(
         pageBuilder:
-            (context, animation, secondaryAnimation) => SavingsAccountScreen(),
+            (context, animation, secondaryAnimation) =>
+                SavingsAccountScreen(userId: userId),
         transitionDuration: const Duration(milliseconds: 500),
         reverseTransitionDuration: const Duration(milliseconds: 400),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
@@ -445,7 +448,11 @@ class _ProfileState extends State<Profile> {
                     vertical: 12,
                   ),
                   child: SavingsCard(
-                    onTap: () => _openSavingsScreenWithHeroAnimation(context),
+                    onTap:
+                        () => _openSavingsScreenWithHeroAnimation(
+                          context,
+                          user.uid,
+                        ),
                     currentSavings: 25430, // Tu valor real
                     monthlyGoal: 80000, // Tu valor real
                   ),
