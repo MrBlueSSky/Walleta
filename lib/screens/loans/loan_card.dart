@@ -3,6 +3,7 @@ import 'package:iconsax/iconsax.dart';
 import 'package:walleta/models/loan.dart';
 import 'package:walleta/screens/loans/details/details_content.dart';
 import 'package:walleta/screens/loans/payment/loan_payment_dialog.dart';
+import 'package:walleta/utils/formatters.dart'; // ← AGREGAR ESTA LÍNEA
 
 class LoanCard extends StatefulWidget {
   const LoanCard({
@@ -140,7 +141,9 @@ class _LoanCardState extends State<LoanCard> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          '₡${widget.loan.amount.toInt()}',
+                          Formatters.formatCurrency(
+                            widget.loan.amount,
+                          ), // ← CAMBIAR ESTA LÍNEA
                           style: TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.w700,
@@ -306,7 +309,7 @@ class _LoanCardState extends State<LoanCard> {
                             ),
                             const SizedBox(width: 4),
                             Text(
-                              'Faltante: ₡${remainingBalance.toInt()}',
+                              'Faltante: ${Formatters.formatCurrency(remainingBalance)}', // ← CAMBIAR ESTA LÍNEA
                               style: TextStyle(
                                 fontSize: 11,
                                 fontWeight: FontWeight.w600,
@@ -440,19 +443,8 @@ class _LoanCardState extends State<LoanCard> {
                     isDark: widget.isDark,
                     scrollController: scrollController,
                     selectedTab: widget.selectedTab,
-                    onPaymentConfirmed: (updatedLoan, tabIndex, paymentAmount) {
-                      // Mostrar confirmación
-                      // ScaffoldMessenger.of(context).showSnackBar(
-                      //   SnackBar(
-                      //     content: const Text('Pago registrado exitosamente'),
-                      //     backgroundColor: const Color(0xFF00C896),
-                      //     behavior: SnackBarBehavior.floating,
-                      //     shape: RoundedRectangleBorder(
-                      //       borderRadius: BorderRadius.circular(8),
-                      //     ),
-                      //   ),
-                      // );
-                    },
+                    onPaymentConfirmed:
+                        (updatedLoan, tabIndex, paymentAmount) {},
                   ),
                 );
               },
@@ -473,19 +465,7 @@ class _LoanCardState extends State<LoanCard> {
           loan: widget.loan,
           isDark: widget.isDark,
           selectedTab: widget.selectedTab,
-          onPaymentConfirmed: (updatedLoan, tabIndex, paymentAmount) {
-            // Mostrar confirmación
-            // ScaffoldMessenger.of(context).showSnackBar(
-            //   SnackBar(
-            //     content: const Text('Pago registrado exitosamente'),
-            //     backgroundColor: const Color(0xFF00C896),
-            //     behavior: SnackBarBehavior.floating,
-            //     shape: RoundedRectangleBorder(
-            //       borderRadius: BorderRadius.circular(8),
-            //     ),
-            //   ),
-            // );
-          },
+          onPaymentConfirmed: (updatedLoan, tabIndex, paymentAmount) {},
         );
       },
     );

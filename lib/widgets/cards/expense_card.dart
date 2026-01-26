@@ -11,6 +11,7 @@ import 'package:walleta/screens/sharedExpenses/shared_expense_history.dart';
 import 'package:walleta/themes/app_colors.dart';
 import 'package:walleta/widgets/payment/register_payment_dialog.dart';
 import 'package:walleta/widgets/snackBar/snackBar.dart';
+import 'package:walleta/utils/formatters.dart'; // ← AGREGAR ESTA LÍNEA
 
 class ExpenseCard extends StatefulWidget {
   final SharedExpense expense;
@@ -106,7 +107,7 @@ class _ExpenseCardState extends State<ExpenseCard> {
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
-                                  '${widget.expense.participants.length} participantes • ₡${widget.expense.total.toInt()} total',
+                                  '${widget.expense.participants.length} participantes • ${Formatters.formatCurrency(widget.expense.total)} total', // ← CAMBIADO
                                   style: TextStyle(
                                     fontSize: 14,
                                     color:
@@ -152,7 +153,9 @@ class _ExpenseCardState extends State<ExpenseCard> {
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
-                                  '₡${widget.expense.paid.toInt()}',
+                                  Formatters.formatCurrency(
+                                    widget.expense.paid,
+                                  ), // ← CAMBIADO
                                   style: TextStyle(
                                     fontSize: 20,
                                     fontWeight: FontWeight.w700,
@@ -295,7 +298,8 @@ class _ExpenseCardState extends State<ExpenseCard> {
               // 4. Mostrar confirmación
               TopSnackBarOverlay.show(
                 context: context,
-                message: 'Pago de ₡${amount.toInt()} registrado exitosamente',
+                message:
+                    'Pago de ${Formatters.formatCurrency(amount)} registrado exitosamente', // ← CAMBIADO
                 verticalOffset: 70.0,
                 backgroundColor: const Color(0xFF00C896),
               );
@@ -669,7 +673,9 @@ class _ExpenseCardState extends State<ExpenseCard> {
                                   curve: Curves.easeOutCubic,
                                   builder: (context, paidValue, _) {
                                     return Text(
-                                      '₡${paidValue.toInt()}',
+                                      Formatters.formatCurrency(
+                                        paidValue,
+                                      ), // ← CAMBIADO
                                       style: TextStyle(
                                         fontSize: 18,
                                         fontWeight: FontWeight.w700,
@@ -679,7 +685,9 @@ class _ExpenseCardState extends State<ExpenseCard> {
                                   },
                                 ),
                                 Text(
-                                  '₡${widget.expense.total.toInt()}',
+                                  Formatters.formatCurrency(
+                                    widget.expense.total,
+                                  ), // ← CAMBIADO
                                   style: TextStyle(
                                     fontSize: 14,
                                     fontWeight: FontWeight.w500,
@@ -777,7 +785,7 @@ class _ExpenseCardState extends State<ExpenseCard> {
                                           ),
                                           const SizedBox(width: 4),
                                           Text(
-                                            'Faltante: ₡${remaining.toInt()}',
+                                            'Faltante: ${Formatters.formatCurrency(remaining)}', // ← CAMBIADO
                                             style: TextStyle(
                                               fontSize: 11,
                                               fontWeight: FontWeight.w600,

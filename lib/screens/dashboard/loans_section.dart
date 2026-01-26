@@ -10,6 +10,29 @@ import 'package:walleta/blocs/payment/bloc/payment_state.dart';
 import 'package:walleta/models/appUser.dart';
 import 'package:walleta/models/loan.dart';
 import 'package:walleta/models/payment.dart';
+import 'package:walleta/utils/formatters.dart';
+
+// Formatters class
+// class Formatters {
+//   static String formatCurrency(double amount, {String symbol = '₡'}) {
+//     return '$symbol${amount.toStringAsFixed(2).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}';
+//   }
+
+//   // Opcional: Formato abreviado para números grandes
+//   static String formatCurrencyCompact(double amount, {String symbol = '₡'}) {
+//     if (amount >= 1000000) {
+//       return '$symbol${(amount / 1000000).toStringAsFixed(1)}M';
+//     } else if (amount >= 1000) {
+//       return '$symbol${(amount / 1000).toStringAsFixed(1)}K';
+//     }
+//     return formatCurrency(amount, symbol: symbol);
+//   }
+
+//   // Opcional: Formato sin decimales
+//   static String formatCurrencyNoDecimals(double amount, {String symbol = '₡'}) {
+//     return '$symbol${amount.toInt().toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}';
+//   }
+// }
 
 // Clase para unificar todos los movimientos
 class Transaction {
@@ -58,9 +81,15 @@ class _LoansSectionState extends State<LoansSection> {
   bool _paymentsLoaded =
       false; // ✅ Nueva variable para controlar carga de pagos
 
+  // Método actualizado usando Formatters
   String _formatCurrency(double amount) {
-    return '₡${amount.toInt()}';
+    return Formatters.formatCurrency(amount);
   }
+
+  // Método para formato abreviado (opcional)
+  // String _formatCurrencyCompact(double amount) {
+  //   return Formatters.formatCurrencyCompact(amount);
+  // }
 
   @override
   void initState() {

@@ -426,24 +426,72 @@ class _FinancialDashboardState extends State<FinancialDashboard> {
                 style: TextStyle(fontSize: 12, color: Colors.grey[600]),
               ),
               const SizedBox(height: 4),
-              isLoading
-                  ? Container(
-                    height: 24,
-                    width: 100,
-                    decoration: BoxDecoration(
-                      color: Colors.grey[200],
-                      borderRadius: BorderRadius.circular(4),
+              if (isLoading)
+                // Loader estilo circular con animación
+                Row(
+                  children: [
+                    Container(
+                      width: 24,
+                      height: 24,
+                      padding: const EdgeInsets.all(2),
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          Theme.of(context).primaryColor,
+                        ),
+                        backgroundColor: Colors.grey[200],
+                      ),
                     ),
-                  )
-                  : Text(
-                    _formatCurrency(amount),
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Container(
+                        height: 8,
+                        decoration: BoxDecoration(
+                          color: Colors.grey[200],
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Stack(
+                          children: [
+                            Positioned.fill(
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(4),
+                                child: AnimatedOpacity(
+                                  opacity: 0.7,
+                                  duration: const Duration(milliseconds: 1000),
+                                  curve: Curves.easeInOut,
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      gradient: LinearGradient(
+                                        begin: Alignment.centerLeft,
+                                        end: Alignment.centerRight,
+                                        colors: [
+                                          Colors.transparent,
+                                          Colors.grey[300]!,
+                                          Colors.transparent,
+                                        ],
+                                        stops: const [0.0, 0.5, 1.0],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                  ],
+                )
+              else
+                Text(
+                  _formatCurrency(amount),
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
                   ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
             ],
           ),
         ],

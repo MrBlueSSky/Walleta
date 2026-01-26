@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:walleta/utils/formatters.dart'; // ← AGREGAR ESTA LÍNEA
 
 // En tu archivo profile.dart, actualiza la clase PersonalExpensesCard:
 
@@ -33,11 +34,11 @@ class _PersonalExpensesCardState extends State<PersonalExpensesCard>
   late AnimationController _progressController;
   late Animation<double> _progressAnimation;
 
-  String get formattedTotalExpenses =>
-      '₡${widget.totalExpenses.toStringAsFixed(0)}';
-  String get formattedTotalPaid => '₡${widget.totalPaid.toStringAsFixed(0)}';
-  String get formattedTotalPending =>
-      '₡${widget.totalPending.clamp(0, double.infinity).toStringAsFixed(0)}';
+  // String get formattedTotalExpenses =>
+  //     '₡${widget.totalExpenses.toStringAsFixed(0)}'; // ← ELIMINAR
+  // String get formattedTotalPaid => '₡${widget.totalPaid.toStringAsFixed(0)}'; // ← ELIMINAR
+  // String get formattedTotalPending =>
+  //     '₡${widget.totalPending.clamp(0, double.infinity).toStringAsFixed(0)}'; // ← ELIMINAR
 
   @override
   void initState() {
@@ -213,7 +214,9 @@ class _PersonalExpensesCardState extends State<PersonalExpensesCard>
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              formattedTotalPaid,
+                              Formatters.formatCurrency(
+                                widget.totalPaid,
+                              ), // ← CAMBIADO
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600,
@@ -236,7 +239,9 @@ class _PersonalExpensesCardState extends State<PersonalExpensesCard>
                           crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
                             Text(
-                              formattedTotalExpenses,
+                              Formatters.formatCurrency(
+                                widget.totalExpenses,
+                              ), // ← CAMBIADO
                               style: TextStyle(
                                 fontSize: 20,
                                 fontWeight: FontWeight.w700,
@@ -303,7 +308,7 @@ class _PersonalExpensesCardState extends State<PersonalExpensesCard>
                                 ),
                                 const SizedBox(width: 4),
                                 Text(
-                                  'Pendiente: $formattedTotalPending',
+                                  'Pendiente: ${Formatters.formatCurrency(widget.totalPending.clamp(0, double.infinity))}', // ← CAMBIADO
                                   style: TextStyle(
                                     fontSize: 11,
                                     fontWeight: FontWeight.w600,

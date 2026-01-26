@@ -1,6 +1,7 @@
 // utils/formatters.dart
 
 class Formatters {
+  //!Con .00
   static String formatCurrency(double amount, {String symbol = '₡'}) {
     return '$symbol${amount.toStringAsFixed(2).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}';
   }
@@ -16,6 +17,7 @@ class Formatters {
   }
 
   // Opcional: Formato sin decimales
+  //!Sin .00
   static String formatCurrencyNoDecimals(double amount, {String symbol = '₡'}) {
     return '$symbol${amount.toInt().toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}';
   }

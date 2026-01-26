@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:walleta/utils/formatters.dart';
 import 'package:walleta/widgets/snackBar/snackBar.dart';
 
 class RegisterPaymentDialog extends StatefulWidget {
@@ -220,7 +221,7 @@ class _RegisterPaymentDialogState extends State<RegisterPaymentDialog> {
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                '₡${remainingBalance.toInt()}',
+                                Formatters.formatCurrency(remainingBalance),
                                 style: TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.w700,
@@ -247,7 +248,7 @@ class _RegisterPaymentDialogState extends State<RegisterPaymentDialog> {
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                '₡${widget.totalAmount.toInt()}',
+                                Formatters.formatCurrency(widget.totalAmount),
                                 style: TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.w600,

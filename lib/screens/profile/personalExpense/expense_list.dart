@@ -9,6 +9,7 @@ import 'package:walleta/blocs/personalExpense/bloc/personal_expense_state.dart';
 import 'package:walleta/models/personal_expense.dart';
 import 'package:walleta/screens/loans/filter_option.dart';
 import 'package:walleta/screens/profile/personalExpense/personal_expense.dart';
+import 'package:walleta/utils/formatters.dart'; // ← AGREGAR ESTA LÍNEA
 
 class PersonalExpensesListScreen extends StatefulWidget {
   final String userId;
@@ -97,12 +98,12 @@ class _PersonalExpensesListScreenState
     return months[month - 1];
   }
 
-  String _formatAmount(double amount) {
-    if (amount >= 1000) {
-      return '₡${(amount / 1000).toStringAsFixed(1)}k';
-    }
-    return '₡${amount.toInt()}';
-  }
+  // String _formatAmount(double amount) { // ← ELIMINAR ESTA FUNCIÓN
+  //   if (amount >= 1000) {
+  //     return '₡${(amount / 1000).toStringAsFixed(1)}k';
+  //   }
+  //   return '₡${amount.toInt()}';
+  // }
 
   List<PersonalExpense> _filterExpenses(List<PersonalExpense> expenses) {
     switch (_selectedFilter) {
@@ -659,7 +660,9 @@ class _PersonalExpenseListCardState extends State<PersonalExpenseListCard> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          '₡${widget.expense.total.toInt()}',
+                          Formatters.formatCurrency(
+                            widget.expense.total,
+                          ), // ← CAMBIADO
                           style: TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.w700,
@@ -822,7 +825,7 @@ class _PersonalExpenseListCardState extends State<PersonalExpenseListCard> {
                             ),
                             const SizedBox(width: 4),
                             Text(
-                              'Faltante: ₡${remaining.toInt()}',
+                              'Faltante: ${Formatters.formatCurrency(remaining)}', // ← CAMBIADO
                               style: TextStyle(
                                 fontSize: 11,
                                 fontWeight: FontWeight.w600,
@@ -995,16 +998,22 @@ class _PersonalExpenseListCardState extends State<PersonalExpenseListCard> {
                 children: [
                   _buildDetailRow(
                     'Total del gasto',
-                    '₡${widget.expense.total.toStringAsFixed(2)}',
+                    Formatters.formatCurrency(
+                      widget.expense.total,
+                    ), // ← CAMBIADO
                   ),
                   _buildDetailRow(
                     'Pagado',
-                    '₡${widget.expense.paid.toStringAsFixed(2)}',
+                    Formatters.formatCurrency(
+                      widget.expense.paid,
+                    ), // ← CAMBIADO
                     color: const Color(0xFF10B981),
                   ),
                   _buildDetailRow(
                     'Pendiente',
-                    '₡${(widget.expense.total - widget.expense.paid).toStringAsFixed(2)}',
+                    Formatters.formatCurrency(
+                      widget.expense.total - widget.expense.paid,
+                    ), // ← CAMBIADO
                     color: const Color(0xFFF59E0B),
                   ),
                   _buildDetailRow(

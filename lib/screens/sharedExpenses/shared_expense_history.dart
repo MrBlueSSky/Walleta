@@ -6,6 +6,7 @@ import 'package:walleta/models/shared_expense.dart';
 import 'package:walleta/models/shared_expense_payment.dart';
 import 'package:walleta/screens/loans/details/receipt_image_dialog%20.dart';
 import 'package:walleta/widgets/snackBar/snackBar.dart';
+import 'package:walleta/utils/formatters.dart'; // ← AGREGAR ESTA LÍNEA
 
 class ExpensePaymentHistory extends StatefulWidget {
   final SharedExpense expense;
@@ -89,7 +90,7 @@ class _ExpensePaymentHistoryState extends State<ExpensePaymentHistory> {
                   ),
                 ),
                 Text(
-                  '$paymentCount pago${paymentCount != 1 ? 's' : ''} • ₡${totalPaid.toInt()}',
+                  '$paymentCount pago${paymentCount != 1 ? 's' : ''}', // ← CAMBIADO
                   style: TextStyle(
                     fontSize: 14,
                     color:
@@ -220,7 +221,7 @@ class _ExpensePaymentHistoryState extends State<ExpensePaymentHistory> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '₡${totalPaid.toInt()}',
+                      Formatters.formatCurrency(totalPaid), // ← CAMBIADO
                       style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.w700,
@@ -247,7 +248,9 @@ class _ExpensePaymentHistoryState extends State<ExpensePaymentHistory> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '₡${(widget.expense.total - totalPaid).toInt()}',
+                      Formatters.formatCurrency(
+                        widget.expense.total - totalPaid,
+                      ), // ← CAMBIADO
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
@@ -388,7 +391,9 @@ class _ExpensePaymentItem extends StatelessWidget {
                           ),
                         ),
                         Text(
-                          '₡${payment.amount.toInt()}',
+                          Formatters.formatCurrency(
+                            payment.amount,
+                          ), // ← CAMBIADO
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w700,
