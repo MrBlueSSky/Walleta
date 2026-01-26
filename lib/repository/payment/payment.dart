@@ -100,8 +100,6 @@ class PaymentRepository {
   // En repository/payment/payment.dart
   Future<List<Payment>> fetchPaymentsByLoanIds(List<String> loanIds) async {
     try {
-      print('🔍 Buscando pagos por IDs de préstamos: ${loanIds.length}');
-
       if (loanIds.isEmpty) {
         return [];
       }
@@ -116,8 +114,6 @@ class PaymentRepository {
               .where('loanId', whereIn: limitedLoanIds)
               .orderBy('date', descending: true)
               .get();
-
-      print('📊 Pagos encontrados: ${snapshot.docs.length}');
 
       return snapshot.docs.map((doc) {
         return Payment.fromMap(doc.id, doc.data());

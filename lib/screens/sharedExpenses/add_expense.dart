@@ -6,6 +6,7 @@ import 'package:walleta/blocs/sharedExpense/sharedExpense.dart';
 import 'package:walleta/models/shared_expense.dart';
 import 'package:walleta/models/appUser.dart';
 import 'package:walleta/widgets/buttons/search_button.dart';
+import 'package:walleta/widgets/snackBar/snackBar.dart';
 
 class AddExpenseSheet extends StatefulWidget {
   final Function(SharedExpense) onSave;
@@ -347,123 +348,123 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
                                     ),
                                   ),
                                   const SizedBox(width: 12),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        _buildSectionLabel('Pagado', isDark),
-                                        const SizedBox(height: 8),
-                                        TextFormField(
-                                          controller: _paidController,
-                                          keyboardType: TextInputType.number,
-                                          style: TextStyle(
-                                            color: textColor,
-                                            height: 1.0,
-                                          ),
-                                          decoration: InputDecoration(
-                                            hintText: '0',
-                                            hintStyle: TextStyle(
-                                              color: secondaryTextColor,
-                                            ),
-                                            prefixIcon: Padding(
-                                              padding: const EdgeInsets.only(
-                                                left: 16,
-                                                right: 8,
-                                              ),
-                                              child: Align(
-                                                widthFactor: 1.0,
-                                                heightFactor: 1.0,
-                                                child: Text(
-                                                  '₡',
-                                                  style: TextStyle(
-                                                    fontSize: 16,
-                                                    fontWeight: FontWeight.w600,
-                                                    color: const Color(
-                                                      0xFF00C896,
-                                                    ),
-                                                    height: 1.0,
-                                                  ),
-                                                ),
-                                              ),
-                                            ),
-                                            prefixIconConstraints:
-                                                const BoxConstraints(
-                                                  minWidth: 24,
-                                                  minHeight: 0,
-                                                ),
-                                            filled: true,
-                                            fillColor:
-                                                isDark
-                                                    ? const Color(0xFF0F172A)
-                                                    : const Color(0xFFF9FAFB),
-                                            border: OutlineInputBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(12),
-                                              borderSide: BorderSide.none,
-                                            ),
-                                            enabledBorder: OutlineInputBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(12),
-                                              borderSide: const BorderSide(
-                                                color: Color(0xFFE5E7EB),
-                                              ),
-                                            ),
-                                            focusedBorder: OutlineInputBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(12),
-                                              borderSide: const BorderSide(
-                                                color: Color(0xFF2D5BFF),
-                                                width: 2,
-                                              ),
-                                            ),
-                                            contentPadding:
-                                                const EdgeInsets.symmetric(
-                                                  horizontal: 16,
-                                                  vertical: 16,
-                                                ),
-                                            alignLabelWithHint: true,
-                                          ),
-                                          validator: (value) {
-                                            if (value == null ||
-                                                value.isEmpty) {
-                                              return 'Requerido';
-                                            }
-                                            final paid = double.tryParse(value);
-                                            if (paid == null) {
-                                              return 'Ingresa un número válido';
-                                            }
-                                            if (paid < 0) {
-                                              return 'El monto no puede ser negativo';
-                                            }
+                                  // Expanded(
+                                  //   child: Column(
+                                  //     crossAxisAlignment:
+                                  //         CrossAxisAlignment.start,
+                                  //     children: [
+                                  //       _buildSectionLabel('Pagado', isDark),
+                                  //       const SizedBox(height: 8),
+                                  //       TextFormField(
+                                  //         controller: _paidController,
+                                  //         keyboardType: TextInputType.number,
+                                  //         style: TextStyle(
+                                  //           color: textColor,
+                                  //           height: 1.0,
+                                  //         ),
+                                  //         decoration: InputDecoration(
+                                  //           hintText: '0',
+                                  //           hintStyle: TextStyle(
+                                  //             color: secondaryTextColor,
+                                  //           ),
+                                  //           prefixIcon: Padding(
+                                  //             padding: const EdgeInsets.only(
+                                  //               left: 16,
+                                  //               right: 8,
+                                  //             ),
+                                  //             child: Align(
+                                  //               widthFactor: 1.0,
+                                  //               heightFactor: 1.0,
+                                  //               child: Text(
+                                  //                 '₡',
+                                  //                 style: TextStyle(
+                                  //                   fontSize: 16,
+                                  //                   fontWeight: FontWeight.w600,
+                                  //                   color: const Color(
+                                  //                     0xFF00C896,
+                                  //                   ),
+                                  //                   height: 1.0,
+                                  //                 ),
+                                  //               ),
+                                  //             ),
+                                  //           ),
+                                  //           prefixIconConstraints:
+                                  //               const BoxConstraints(
+                                  //                 minWidth: 24,
+                                  //                 minHeight: 0,
+                                  //               ),
+                                  //           filled: true,
+                                  //           fillColor:
+                                  //               isDark
+                                  //                   ? const Color(0xFF0F172A)
+                                  //                   : const Color(0xFFF9FAFB),
+                                  //           border: OutlineInputBorder(
+                                  //             borderRadius:
+                                  //                 BorderRadius.circular(12),
+                                  //             borderSide: BorderSide.none,
+                                  //           ),
+                                  //           enabledBorder: OutlineInputBorder(
+                                  //             borderRadius:
+                                  //                 BorderRadius.circular(12),
+                                  //             borderSide: const BorderSide(
+                                  //               color: Color(0xFFE5E7EB),
+                                  //             ),
+                                  //           ),
+                                  //           focusedBorder: OutlineInputBorder(
+                                  //             borderRadius:
+                                  //                 BorderRadius.circular(12),
+                                  //             borderSide: const BorderSide(
+                                  //               color: Color(0xFF2D5BFF),
+                                  //               width: 2,
+                                  //             ),
+                                  //           ),
+                                  //           contentPadding:
+                                  //               const EdgeInsets.symmetric(
+                                  //                 horizontal: 16,
+                                  //                 vertical: 16,
+                                  //               ),
+                                  //           alignLabelWithHint: true,
+                                  //         ),
+                                  //         validator: (value) {
+                                  //           if (value == null ||
+                                  //               value.isEmpty) {
+                                  //             return 'Requerido';
+                                  //           }
+                                  //           final paid = double.tryParse(value);
+                                  //           if (paid == null) {
+                                  //             return 'Ingresa un número válido';
+                                  //           }
+                                  //           if (paid < 0) {
+                                  //             return 'El monto no puede ser negativo';
+                                  //           }
 
-                                            // NUEVA VALIDACIÓN: Pagado debe ser menor o igual al total
-                                            final totalText =
-                                                _totalController.text;
-                                            if (totalText.isNotEmpty) {
-                                              final total = double.tryParse(
-                                                totalText,
-                                              );
-                                              if (total != null &&
-                                                  paid > total) {
-                                                return 'No puede pagar más del total';
-                                              }
-                                            }
+                                  //           // NUEVA VALIDACIÓN: Pagado debe ser menor o igual al total
+                                  //           final totalText =
+                                  //               _totalController.text;
+                                  //           if (totalText.isNotEmpty) {
+                                  //             final total = double.tryParse(
+                                  //               totalText,
+                                  //             );
+                                  //             if (total != null &&
+                                  //                 paid > total) {
+                                  //               return 'No puede pagar más del total';
+                                  //             }
+                                  //           }
 
-                                            return null;
-                                          },
-                                          onChanged: (_) {
-                                            // Forzar validación cruzada cuando cambia lo pagado
-                                            if (_totalController
-                                                .text
-                                                .isNotEmpty) {
-                                              _formKey.currentState?.validate();
-                                            }
-                                          },
-                                        ),
-                                      ],
-                                    ),
-                                  ),
+                                  //           return null;
+                                  //         },
+                                  //         onChanged: (_) {
+                                  //           // Forzar validación cruzada cuando cambia lo pagado
+                                  //           if (_totalController
+                                  //               .text
+                                  //               .isNotEmpty) {
+                                  //             _formKey.currentState?.validate();
+                                  //           }
+                                  //         },
+                                  //       ),
+                                  //     ],
+                                  //   ),
+                                  // ),
                                 ],
                               ),
 
@@ -1039,6 +1040,7 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
   }
 
   void _saveExpense() {
+    final screenHeight = MediaQuery.of(context).size.height;
     if (_formKey.currentState!.validate() &&
         selectedCategory != null &&
         selectedParticipants.isNotEmpty) {
@@ -1047,17 +1049,11 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
       final paid = double.tryParse(_paidController.text) ?? 0;
 
       if (paid > total) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('El monto pagado no puede ser mayor al total'),
-            backgroundColor: const Color(0xFFFF6B6B),
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            margin: const EdgeInsets.all(16),
-          ),
+        TopSnackBarOverlay.show(
+          context: context,
+          message: 'El monto pagado no puede ser mayor al total',
+          verticalOffset: 70.0,
+          backgroundColor: const Color(0xFFFF6B6B),
         );
         return;
       }
@@ -1092,17 +1088,11 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
         message = 'Selecciona una categoría';
       }
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(message),
-          backgroundColor: const Color(0xFFFF6B6B),
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          margin: const EdgeInsets.all(16),
-        ),
+      TopSnackBarOverlay.show(
+        context: context,
+        message: message,
+        verticalOffset: 70.0,
+        backgroundColor: const Color(0xFFFF6B6B),
       );
     }
   }

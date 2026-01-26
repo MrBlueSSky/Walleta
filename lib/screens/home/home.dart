@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:walleta/blocs/authentication/bloc/authentication_bloc.dart';
 import 'package:walleta/screens/dashboard/dashbard.dart';
 import 'package:walleta/screens/loans/loans.dart';
 import 'package:walleta/screens/profile/profile.dart';

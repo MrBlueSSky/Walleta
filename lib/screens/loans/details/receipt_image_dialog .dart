@@ -1,11 +1,10 @@
-// Crea un nuevo archivo: screens/loans/details/receipt_image_dialog.dart
 import 'package:flutter/material.dart';
-import 'package:walleta/models/payment.dart';
 import 'package:intl/intl.dart';
+import 'package:walleta/interfaces/payment_base.dart';
 
 class ReceiptImageDialog extends StatelessWidget {
   final String imageUrl;
-  final Payment payment;
+  final PaymentBase payment;
   final bool isDark;
 
   const ReceiptImageDialog({
@@ -38,28 +37,46 @@ class ReceiptImageDialog extends StatelessWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Comprobante de Pago',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w700,
-                          color:
-                              isDark ? Colors.white : const Color(0xFF1F2937),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Comprobante de Pago',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w700,
+                            color:
+                                isDark ? Colors.white : const Color(0xFF1F2937),
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        _formatDate(payment.date),
-                        style: TextStyle(
-                          fontSize: 12,
-                          color:
-                              isDark ? Colors.white70 : const Color(0xFF6B7280),
+                        const SizedBox(height: 4),
+                        if (payment.payerName != null &&
+                            payment.payerName!.isNotEmpty) ...[
+                          Text(
+                            'Pagado por: ${payment.payerName}',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color:
+                                  isDark
+                                      ? Colors.white70
+                                      : const Color(0xFF6B7280),
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                        ],
+                        Text(
+                          _formatDate(payment.date),
+                          style: TextStyle(
+                            fontSize: 12,
+                            color:
+                                isDark
+                                    ? Colors.white70
+                                    : const Color(0xFF6B7280),
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                   IconButton(
                     onPressed: () => Navigator.pop(context),
@@ -222,7 +239,6 @@ class ReceiptImageDialog extends StatelessWidget {
                   Expanded(
                     child: OutlinedButton(
                       onPressed: () {
-                        // Aquí podrías implementar compartir la imagen
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
                             content: const Text(

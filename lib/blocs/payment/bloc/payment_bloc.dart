@@ -28,7 +28,7 @@ class PaymentBloc extends Bloc<PaymentEvent, PaymentState> {
     emit(const PaymentState.loading());
     try {
       final payments = await _repository.fetchPaymentsByUser(event.userId);
-      print('✅ Pagos cargados: ${payments.length}');
+
       emit(PaymentState.success(payments));
     } catch (e) {
       print('❌ Error al cargar todos los pagos del usuario: $e');
@@ -58,9 +58,8 @@ class PaymentBloc extends Bloc<PaymentEvent, PaymentState> {
     emit(const PaymentState.loading());
 
     try {
-      print('🔍 Cargando pagos para ${event.loanIds.length} préstamos');
       final payments = await _repository.fetchPaymentsByLoanIds(event.loanIds);
-      print('✅ Pagos cargados: ${payments.length}');
+
       emit(PaymentState.success(payments));
     } catch (e) {
       print('❌ Error al cargar pagos por loanIds: $e');

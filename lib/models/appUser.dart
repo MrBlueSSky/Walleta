@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:equatable/equatable.dart';
 
 class AppUser extends Equatable {
@@ -8,6 +9,8 @@ class AppUser extends Equatable {
   final String email;
   final String phoneNumber;
   final String profilePictureUrl;
+  final bool isPremium; // Nuevo campo
+  final DateTime? premiumUntil; // Fecha de expiración premium
 
   const AppUser({
     required this.uid,
@@ -17,6 +20,8 @@ class AppUser extends Equatable {
     required this.email,
     required this.phoneNumber,
     required this.profilePictureUrl,
+    this.isPremium = false,
+    this.premiumUntil,
   });
 
   static const empty = AppUser(
@@ -27,6 +32,7 @@ class AppUser extends Equatable {
     email: '',
     phoneNumber: '',
     profilePictureUrl: '',
+    isPremium: false,
   );
 
   factory AppUser.fromFirestore(Map<String, dynamic> data) {
@@ -38,7 +44,19 @@ class AppUser extends Equatable {
       email: data['email'] ?? '',
       phoneNumber: data['phoneNumber'] ?? '',
       profilePictureUrl: data['profilePictureUrl'] ?? '',
+      isPremium: data['isPremium'] ?? false,
+      premiumUntil:
+          data['premiumUntil'] != null
+              ? (data['premiumUntil'] as Timestamp).toDate()
+              : null,
     );
+  }
+
+  // Getter para verificar si el premium está activo
+  bool get isPremiumActive {
+    if (!isPremium) return false;
+    if (premiumUntil == null) return false;
+    return premiumUntil!.isAfter(DateTime.now());
   }
 
   @override
@@ -50,5 +68,7 @@ class AppUser extends Equatable {
     email,
     phoneNumber,
     profilePictureUrl,
+    isPremium,
+    premiumUntil,
   ];
 }

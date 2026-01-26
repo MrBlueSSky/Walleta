@@ -189,6 +189,16 @@ class _CustomDrawerState extends State<CustomDrawer>
 
                       // Opciones regulares
                       _buildMenuItem(
+                        icon: Icons.person,
+                        title: 'Información Personal',
+                        subtitle: 'Configura tu perfil',
+                        onTap: () => widget.onItemSelected('personalInfo'),
+                        surfaceColor: surfaceColor,
+                        textColor: textColor,
+                      ),
+
+                      // Opciones regulares
+                      _buildMenuItem(
                         icon: Iconsax.notification,
                         title: 'Notificaciones',
                         subtitle: 'Configurar alertas',

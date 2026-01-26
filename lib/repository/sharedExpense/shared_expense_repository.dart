@@ -7,7 +7,7 @@ class SharedExpenseRepository {
   Future<List<SharedExpense>> fetchSharedExpenses(String userId) async {
     final snapshot =
         await FirebaseFirestore.instance
-            .collection('sharedExpenses')
+            .collection('shared_expenses')
             .where('userId', isEqualTo: userId)
             .orderBy('createdAt', descending: true)
             .get();
@@ -26,7 +26,7 @@ class SharedExpenseRepository {
     required String userId,
   }) async {
     try {
-      await FirebaseFirestore.instance.collection('sharedExpenses').add({
+      await FirebaseFirestore.instance.collection('shared_expenses').add({
         'userId': userId,
         ...expense.toMap(),
         'status': 'pending',

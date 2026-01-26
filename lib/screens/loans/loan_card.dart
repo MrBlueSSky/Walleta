@@ -3,6 +3,7 @@ import 'package:iconsax/iconsax.dart';
 import 'package:walleta/models/loan.dart';
 import 'package:walleta/screens/loans/details/details_content.dart';
 import 'package:walleta/screens/loans/payment/loan_payment_dialog.dart';
+import 'package:walleta/utils/formatters.dart'; // ← AGREGAR ESTA LÍNEA
 
 class LoanCard extends StatefulWidget {
   const LoanCard({
@@ -25,6 +26,7 @@ class LoanCard extends StatefulWidget {
 class _LoanCardState extends State<LoanCard> {
   @override
   Widget build(BuildContext context) {
+    final remainingBalance = widget.loan.amount - widget.loan.paidAmount;
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
@@ -139,7 +141,9 @@ class _LoanCardState extends State<LoanCard> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          '₡${widget.loan.amount.toInt()}',
+                          Formatters.formatCurrencyNoDecimals(
+                            widget.loan.amount,
+                          ), // ← CAMBIAR ESTA LÍNEA
                           style: TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.w700,
@@ -275,67 +279,39 @@ class _LoanCardState extends State<LoanCard> {
                   },
                 ),
                 const SizedBox(height: 12),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(
-                          Iconsax.money_send,
-                          size: 14,
-                          color: widget.loan.color,
+
+                // Información de progreso
+                Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      // FALTANTE - AL INICIO (IZQUIERDA)
+                      Container(
+                        decoration: BoxDecoration(
+                          color: widget.loan.color.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: widget.loan.color.withOpacity(0.3),
+                            width: 0.5,
+                          ),
                         ),
-                        const SizedBox(width: 6),
-                        // Porcentaje animado también
-                        TweenAnimationBuilder<int>(
-                          duration: const Duration(milliseconds: 1500),
-                          curve: Curves.easeOutQuart,
-                          tween: IntTween(
-                            begin: 0,
-                            end: (widget.loan.progress * 100).toInt(),
-                          ),
-                          builder: (context, value, child) {
-                            return Text(
-                              '$value% pagado',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color:
-                                    widget.isDark
-                                        ? Colors.white70
-                                        : const Color(0xFF6B7280),
-                                fontWeight: FontWeight.w500,
-                              ),
-                            );
-                          },
-                        ),
-                      ],
-                    ),
-                    // Botón condicional basado en el tab
-                    if (widget.selectedTab == 1)
-                      TextButton(
-                        onPressed: () => _showRegisterPaymentDialog(),
-                        style: TextButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 6,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                          ),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
                         ),
                         child: Row(
-                          mainAxisSize: MainAxisSize.min,
                           children: [
                             Icon(
-                              Iconsax.add_circle,
-                              size: 14,
+                              Iconsax.money_send,
+                              size: 10,
                               color: widget.loan.color,
                             ),
                             const SizedBox(width: 4),
                             Text(
-                              'Registrar pago',
+                              'Faltante: ${Formatters.formatCurrencyNoDecimals(remainingBalance)}', // ← CAMBIAR ESTA LÍNEA
                               style: TextStyle(
-                                fontSize: 12,
+                                fontSize: 11,
                                 fontWeight: FontWeight.w600,
                                 color: widget.loan.color,
                               ),
@@ -343,7 +319,49 @@ class _LoanCardState extends State<LoanCard> {
                           ],
                         ),
                       ),
-                  ],
+
+                      if (widget.selectedTab == 1)
+                        GestureDetector(
+                          onTap: () => _showRegisterPaymentDialog(),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: Theme.of(
+                                context,
+                              ).primaryColor.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color: Theme.of(
+                                  context,
+                                ).primaryColor.withOpacity(0.3),
+                                width: 0.5,
+                              ),
+                            ),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Iconsax.add_circle,
+                                  size: 10,
+                                  color: Theme.of(context).primaryColor,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  'Registrar Pago',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                    color: Theme.of(context).primaryColor,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -425,19 +443,8 @@ class _LoanCardState extends State<LoanCard> {
                     isDark: widget.isDark,
                     scrollController: scrollController,
                     selectedTab: widget.selectedTab,
-                    onPaymentConfirmed: (updatedLoan, tabIndex, paymentAmount) {
-                      // Mostrar confirmación
-                      // ScaffoldMessenger.of(context).showSnackBar(
-                      //   SnackBar(
-                      //     content: const Text('Pago registrado exitosamente'),
-                      //     backgroundColor: const Color(0xFF00C896),
-                      //     behavior: SnackBarBehavior.floating,
-                      //     shape: RoundedRectangleBorder(
-                      //       borderRadius: BorderRadius.circular(8),
-                      //     ),
-                      //   ),
-                      // );
-                    },
+                    onPaymentConfirmed:
+                        (updatedLoan, tabIndex, paymentAmount) {},
                   ),
                 );
               },
@@ -458,19 +465,7 @@ class _LoanCardState extends State<LoanCard> {
           loan: widget.loan,
           isDark: widget.isDark,
           selectedTab: widget.selectedTab,
-          onPaymentConfirmed: (updatedLoan, tabIndex, paymentAmount) {
-            // Mostrar confirmación
-            // ScaffoldMessenger.of(context).showSnackBar(
-            //   SnackBar(
-            //     content: const Text('Pago registrado exitosamente'),
-            //     backgroundColor: const Color(0xFF00C896),
-            //     behavior: SnackBarBehavior.floating,
-            //     shape: RoundedRectangleBorder(
-            //       borderRadius: BorderRadius.circular(8),
-            //     ),
-            //   ),
-            // );
-          },
+          onPaymentConfirmed: (updatedLoan, tabIndex, paymentAmount) {},
         );
       },
     );

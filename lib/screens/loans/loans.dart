@@ -11,6 +11,7 @@ import 'package:walleta/screens/loans/filter_option.dart';
 import 'package:walleta/screens/loans/form/add_loan.dart';
 import 'package:walleta/screens/loans/loan_card.dart';
 import 'package:walleta/widgets/toggle/loan_tab_button.dart';
+import 'package:walleta/utils/formatters.dart'; // ← AGREGAR ESTA LÍNEA
 
 class Loans extends StatefulWidget {
   const Loans({super.key});
@@ -293,7 +294,7 @@ class _LoansState extends State<Loans> {
   //             ),
   //             const SizedBox(height: 4),
   //             Text(
-  //               '₡${netBalance.toInt()}',
+  //               Formatters.formatCurrencyNoDecimals(netBalance), // ← CAMBIAR ESTA LÍNEA
   //               style: TextStyle(
   //                 fontSize: 24,
   //                 fontWeight: FontWeight.w700,
@@ -353,7 +354,7 @@ class _LoansState extends State<Loans> {
           ),
           const SizedBox(height: 2),
           Text(
-            '₡${amount.toInt()}',
+            Formatters.formatCurrencyNoDecimals(amount), // ← CAMBIAR ESTA LÍNEA
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w700,
@@ -503,7 +504,9 @@ class _LoansState extends State<Loans> {
                 ),
                 const Spacer(),
                 Text(
-                  '₡${loans.fold(0.0, (sum, item) => sum + item.amount).toInt()}',
+                  Formatters.formatCurrencyNoDecimals(
+                    loans.fold(0.0, (sum, item) => sum + item.amount),
+                  ), // ← CAMBIAR ESTA LÍNEA
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w700,

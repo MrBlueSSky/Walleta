@@ -8,6 +8,7 @@ import 'package:walleta/models/payment.dart';
 import 'package:walleta/screens/loans/details/detail_row.dart';
 import 'package:intl/intl.dart';
 import 'package:walleta/screens/loans/details/receipt_image_dialog%20.dart';
+import 'package:walleta/utils/formatters.dart';
 
 class LoanDetailsContent extends StatefulWidget {
   const LoanDetailsContent({
@@ -158,7 +159,10 @@ class _LoanDetailsContentState extends State<LoanDetailsContent> {
               children: [
                 DetailRow(
                   label: 'Monto total',
-                  value: '₡${widget.loan.amount.toInt()}',
+
+                  value: Formatters.formatCurrencyNoDecimals(
+                    widget.loan.amount,
+                  ),
                   isDark: widget.isDark,
                 ),
                 const SizedBox(height: 12),

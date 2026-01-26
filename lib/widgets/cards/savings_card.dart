@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:walleta/utils/formatters.dart'; // ← AGREGAR ESTA LÍNEA
 
 class SavingsCard extends StatefulWidget {
   final VoidCallback onTap;
@@ -30,10 +31,10 @@ class _SavingsCardState extends State<SavingsCard>
           ? (widget.currentSavings / widget.monthlyGoal).clamp(0.0, 1.0)
           : 0.0;
 
-  String get formattedCurrentSavings =>
-      '₡${widget.currentSavings.toStringAsFixed(0)}';
-  String get formattedMonthlyGoal =>
-      '₡${widget.monthlyGoal.toStringAsFixed(0)}';
+  // String get formattedCurrentSavings =>
+  //     '₡${widget.currentSavings.toStringAsFixed(0)}'; // ← ELIMINAR
+  // String get formattedMonthlyGoal =>
+  //     '₡${widget.monthlyGoal.toStringAsFixed(0)}'; // ← ELIMINAR
 
   @override
   void initState() {
@@ -201,7 +202,9 @@ class _SavingsCardState extends State<SavingsCard>
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              formattedCurrentSavings,
+                              Formatters.formatCurrencyNoDecimals(
+                                widget.currentSavings,
+                              ), // ← CAMBIADO
                               style: TextStyle(
                                 fontSize: 24,
                                 fontWeight: FontWeight.w700,
@@ -227,7 +230,9 @@ class _SavingsCardState extends State<SavingsCard>
                           crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
                             Text(
-                              formattedMonthlyGoal,
+                              Formatters.formatCurrencyNoDecimals(
+                                widget.monthlyGoal,
+                              ), // ← CAMBIADO
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600,
@@ -286,7 +291,7 @@ class _SavingsCardState extends State<SavingsCard>
                             ),
                             const SizedBox(width: 6),
                             Text(
-                              'Faltan: ₡${(widget.monthlyGoal - widget.currentSavings).clamp(0, double.infinity).toInt()}',
+                              'Faltan: ${Formatters.formatCurrencyNoDecimals((widget.monthlyGoal - widget.currentSavings).clamp(0, double.infinity))}', // ← CAMBIADO
                               style: TextStyle(
                                 fontSize: 11,
                                 color:

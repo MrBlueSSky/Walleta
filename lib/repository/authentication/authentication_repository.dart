@@ -214,17 +214,13 @@ class AuthenticationRepository {
             'uid': firebaseUser.uid,
             'username': username.toLowerCase(),
             'email': email.toLowerCase(),
-
             'name': name,
             'surname': surname,
-
-            // 'displayName': '$name $surname',
             'phoneNumber': phone,
-            'profilePictureUrl': profilePictureUrl,
-
+            'profilePictureUrl': profilePictureUrl ?? '',
             'role': 'user',
             'isActive': true,
-
+            'isPremium': false, // ← Agregar este campo
             'createdAt': now,
             'updatedAt': now,
           });
@@ -292,6 +288,60 @@ class AuthenticationRepository {
       print("No sirvio se pudo actualizar el user: ❌❌❌❌❌");
       print(e);
     }
+  }
+
+  // Agrega este método a tu AuthenticationRepository
+  Future<void> upgradeToPremium({
+    required String userId,
+    required Duration duration,
+  }) async {
+    try {
+      final premiumUntil = DateTime.now().add(duration);
+
+      await FirebaseFirestore.instance.collection('users').doc(userId).update({
+        'isPremium': true,
+        'premiumUntil': Timestamp.fromDate(premiumUntil),
+        'updatedAt': FieldValue.serverTimestamp(),
+      });
+
+      print("✅ Usuario actualizado a premium");
+    } catch (e) {
+      print("❌ Error actualizando a premium: $e");
+      rethrow;
+    }
+  }
+
+  // Método para verificar estado premium
+  Future<bool> checkPremiumStatus(String userId) async {
+    try {
+      final doc =
+          await FirebaseFirestore.instance
+              .collection('users')
+              .doc(userId)
+              .get();
+
+      if (doc.exists) {
+        final data = doc.data()!;
+        final isPremium = data['isPremium'] ?? false;
+
+        if (isPremium && data['premiumUntil'] != null) {
+          final premiumUntil = (data['premiumUntil'] as Timestamp).toDate();
+          return premiumUntil.isAfter(DateTime.now());
+        }
+      }
+      return false;
+    } catch (e) {
+      print("❌ Error verificando premium: $e");
+      return false;
+    }
+  }
+
+  Future<AppUser?> getCurrentUser() async {
+    final firebaseUser = _firebaseAuth.currentUser;
+    if (firebaseUser == null) return null;
+
+    final userData = await getUserDataFromFirestore(firebaseUser.uid);
+    return userData.toAppUser(firebaseUser.uid);
   }
 }
 

@@ -10,6 +10,29 @@ import 'package:walleta/blocs/payment/bloc/payment_state.dart';
 import 'package:walleta/models/appUser.dart';
 import 'package:walleta/models/loan.dart';
 import 'package:walleta/models/payment.dart';
+import 'package:walleta/utils/formatters.dart';
+
+// Formatters class
+// class Formatters {
+//   static String formatCurrencyNoDecimals(double amount, {String symbol = '₡'}) {
+//     return '$symbol${amount.toStringAsFixed(2).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}';
+//   }
+
+//   // Opcional: Formato abreviado para números grandes
+//   static String formatCurrencyNoDecimalsCompact(double amount, {String symbol = '₡'}) {
+//     if (amount >= 1000000) {
+//       return '$symbol${(amount / 1000000).toStringAsFixed(1)}M';
+//     } else if (amount >= 1000) {
+//       return '$symbol${(amount / 1000).toStringAsFixed(1)}K';
+//     }
+//     return formatCurrencyNoDecimals(amount, symbol: symbol);
+//   }
+
+//   // Opcional: Formato sin decimales
+//   static String formatCurrencyNoDecimalsNoDecimals(double amount, {String symbol = '₡'}) {
+//     return '$symbol${amount.toInt().toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}';
+//   }
+// }
 
 // Clase para unificar todos los movimientos
 class Transaction {
@@ -58,9 +81,15 @@ class _LoansSectionState extends State<LoansSection> {
   bool _paymentsLoaded =
       false; // ✅ Nueva variable para controlar carga de pagos
 
-  String _formatCurrency(double amount) {
-    return '₡${amount.toInt()}';
+  // Método actualizado usando Formatters
+  String _formatCurrencyNoDecimals(double amount) {
+    return Formatters.formatCurrencyNoDecimals(amount);
   }
+
+  // Método para formato abreviado (opcional)
+  // String _formatCurrencyNoDecimalsCompact(double amount) {
+  //   return Formatters.formatCurrencyNoDecimalsCompact(amount);
+  // }
 
   @override
   void initState() {
@@ -125,10 +154,6 @@ class _LoansSectionState extends State<LoansSection> {
     List<Payment> payments,
     String currentUserId,
   ) {
-    print('🔍 Combinando transacciones...');
-    print('   📋 Préstamos: ${loans.length}');
-    print('   💳 Pagos: ${payments.length}');
-
     final transactions = <Transaction>[];
 
     try {
@@ -536,7 +561,7 @@ class _LoansSectionState extends State<LoansSection> {
                                             CrossAxisAlignment.end,
                                         children: [
                                           Text(
-                                            '${transaction.isOutgoing ? '-' : '+'}${_formatCurrency(transaction.amount)}',
+                                            '${transaction.isOutgoing ? '-' : '+'}${_formatCurrencyNoDecimals(transaction.amount)}',
                                             style: TextStyle(
                                               fontSize: 14,
                                               fontWeight: FontWeight.w600,
@@ -645,7 +670,7 @@ class _LoansSectionState extends State<LoansSection> {
               ),
               const SizedBox(height: 4),
               Text(
-                '+${_formatCurrency(totalIngresos)}',
+                '+${_formatCurrencyNoDecimals(totalIngresos)}',
                 style: const TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
@@ -670,7 +695,7 @@ class _LoansSectionState extends State<LoansSection> {
               ),
               const SizedBox(height: 4),
               Text(
-                '-${_formatCurrency(totalEgresos)}',
+                '-${_formatCurrencyNoDecimals(totalEgresos)}',
                 style: const TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
@@ -695,7 +720,7 @@ class _LoansSectionState extends State<LoansSection> {
               ),
               const SizedBox(height: 4),
               Text(
-                '${balance >= 0 ? '+' : ''}${_formatCurrency(balance.abs())}',
+                '${balance >= 0 ? '+' : ''}${_formatCurrencyNoDecimals(balance.abs())}',
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
