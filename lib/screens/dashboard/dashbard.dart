@@ -7,7 +7,7 @@ import 'package:walleta/blocs/financialSummary/bloc/financial_summary_bloc.dart'
 import 'package:walleta/blocs/financialSummary/bloc/financial_summary_event.dart';
 import 'package:walleta/blocs/financialSummary/bloc/financial_summary_state.dart';
 import 'package:walleta/models/financial_summary.dart';
-import 'package:walleta/repository/FinancialSummary/financial_summary_repository.dart';
+
 import 'package:walleta/screens/dashboard/loans_section.dart';
 import 'package:walleta/widgets/buttons/search_button.dart';
 
@@ -54,7 +54,6 @@ class _FinancialDashboardState extends State<FinancialDashboard> {
           'restaurante': Icons.restaurant,
           'entretenimiento': Icons.sports_esports,
           'hogar': Icons.home,
-          'casa': Icons.home,
           'transporte': Icons.directions_car,
           'servicios': Icons.receipt_long,
           'salud': Icons.local_hospital,
@@ -72,25 +71,30 @@ class _FinancialDashboardState extends State<FinancialDashboard> {
       // Mapear categorías a colores específicos
       Color getColorForCategory(String category) {
         final colorMap = {
-          'compras': const Color(0xFF2D5BFF),
-          'comida': const Color(0xFF10B981),
-          'restaurante': const Color(0xFF10B981),
-          'entretenimiento': const Color(0xFF8B5CF6),
-          'hogar': const Color(0xFFEC4899),
-          'casa': const Color(0xFFEC4899),
-          'transporte': const Color(0xFFF59E0B),
-          'servicios': const Color(0xFF14B8A6),
-          'salud': const Color(0xFFEF4444),
-          'educación': const Color(0xFF3B82F6),
-          'ropa': const Color(0xFF8B5CF6),
-          'deportes': const Color(0xFF10B981),
-          'viajes': const Color(0xFFF59E0B),
-          'regalos': const Color(0xFFEC4899),
-          'mascotas': const Color(0xFF8B5CF6),
+          'compras': const Color(0xFF2563EB), // Azul real vibrante
+          'comida': const Color(0xFF10B981), // Verde esmeralda (mantenido)
+          'restaurante': const Color(0xFFF59E0B), // Ámbar cálido
+          'entretenimiento': const Color(0xFF7C3AED), // Púrpura elegante
+          'hogar': const Color(0xFFDB2777), // Rosa profesional
+          'transporte': const Color(0xFF0EA5E9), // Azul cielo (mantenido)
+          'servicios': const Color(0xFF0891B2), // Azul turquesa
+          'salud': const Color(0xFFDC2626), // Rojo profesional
+          'educación': const Color(0xFF4F46E5), // Índigo elegante
+          'ropa': const Color(0xFFC026D3), // Magenta moderno
+          'deportes': const Color(0xFF059669), // Verde bosque
+          'viajes': const Color(0xFFEA580C), // Naranja terracota
+          'regalos': const Color(0xFFBE185D), // Rojo frambuesa
+          'mascotas': const Color(0xFF65A30D), // Verde lima suave
+          'ahorro': const Color(0xFF0D9488), // Verde azulado
+          'inversiones': const Color(0xFF7DD3FC), // Azul pastel claro
+          'seguros': const Color(0xFF475569), // Gris azulado profesional
+          'impuestos': const Color(0xFF991B1B), // Rojo vino
+          'cuotas': const Color(0xFF9333EA), // Violeta intenso
+          'otros': const Color(0xFF64748B), // Gris pizarra
         };
 
         return colorMap[category.toLowerCase()] ??
-            const Color(0xFF9CA3AF); // Gris para otros
+            const Color(0xFF6B7280); // Gris neutro para otros
       }
 
       return CategoryData(
@@ -323,15 +327,6 @@ class _FinancialDashboardState extends State<FinancialDashboard> {
                             color: textColor,
                           ),
                         ),
-                        if (hasData && monthlyExpenses > 0)
-                          Text(
-                            'Total: ${_formatCurrency(monthlyExpenses)}',
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: textColor.withOpacity(0.7),
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
                       ],
                     ),
                     const SizedBox(height: 16),
@@ -340,6 +335,7 @@ class _FinancialDashboardState extends State<FinancialDashboard> {
                       textColor,
                       chartData,
                       isLoading,
+                      context,
                     ),
                     const SizedBox(height: 32),
 
@@ -573,6 +569,7 @@ class _FinancialDashboardState extends State<FinancialDashboard> {
     Color textColor,
     List<CategoryData> chartData,
     bool isLoading,
+    BuildContext context,
   ) {
     // Calcular total para porcentajes
     final totalAmount = chartData.fold<double>(
@@ -595,8 +592,9 @@ class _FinancialDashboardState extends State<FinancialDashboard> {
       padding: const EdgeInsets.all(16),
       child: Column(
         children: [
+          // Gráfico responsive
           SizedBox(
-            height: 200,
+            height: MediaQuery.of(context).size.width < 350 ? 180 : 220,
             child:
                 isLoading
                     ? Center(
@@ -626,6 +624,7 @@ class _FinancialDashboardState extends State<FinancialDashboard> {
                       ),
                     )
                     : SfCircularChart(
+                      margin: EdgeInsets.zero,
                       series: <CircularSeries>[
                         DoughnutSeries<CategoryData, String>(
                           dataSource: chartData,
@@ -633,145 +632,333 @@ class _FinancialDashboardState extends State<FinancialDashboard> {
                           yValueMapper: (CategoryData data, _) => data.amount,
                           pointColorMapper:
                               (CategoryData data, _) => data.color,
-                          innerRadius: '70%',
-                          dataLabelSettings: const DataLabelSettings(
+                          innerRadius:
+                              MediaQuery.of(context).size.width < 350
+                                  ? '60%'
+                                  : '70%',
+                          radius: '75%',
+                          dataLabelSettings: DataLabelSettings(
                             isVisible: true,
                             labelPosition: ChartDataLabelPosition.outside,
                             textStyle: TextStyle(
-                              fontSize: 12,
+                              fontSize:
+                                  MediaQuery.of(context).size.width < 350
+                                      ? 10
+                                      : 12,
                               fontWeight: FontWeight.w500,
                             ),
                             connectorLineSettings: ConnectorLineSettings(
-                              length: '20',
+                              length:
+                                  MediaQuery.of(context).size.width < 350
+                                      ? '15%'
+                                      : '20%',
+                              width: 1,
+                              type: ConnectorType.line,
                             ),
+                            labelIntersectAction: LabelIntersectAction.none,
+                            overflowMode: OverflowMode.shift,
+                            // Ocultar etiquetas para porcentajes muy pequeños
+                            builder: (
+                              dynamic data,
+                              dynamic point,
+                              dynamic series,
+                              int pointIndex,
+                              int seriesIndex,
+                            ) {
+                              final percentage = (point.y / totalAmount) * 100;
+                              if (percentage < 1) {
+                                //! Ocultar etiquetas para porcentajes < 1%
+                                return const SizedBox.shrink();
+                              }
+
+                              // Formato abreviado para pantallas pequeñas
+                              String label;
+                              if (MediaQuery.of(context).size.width < 350) {
+                                // Pantallas pequeñas: mostrar solo porcentaje
+                                label = '${percentage.toStringAsFixed(0)}%';
+                              } else {
+                                // Pantallas normales: mostrar monto abreviado
+                                if (point.y >= 1000000) {
+                                  label =
+                                      '₡${(point.y / 1000000).toStringAsFixed(1)}M';
+                                } else if (point.y >= 1000) {
+                                  label =
+                                      '₡${(point.y / 1000).toStringAsFixed(1)}K';
+                                } else {
+                                  label = '₡${point.y.toStringAsFixed(0)}';
+                                }
+                              }
+
+                              return Text(
+                                label,
+                                style: TextStyle(
+                                  fontSize:
+                                      MediaQuery.of(context).size.width < 350
+                                          ? 10
+                                          : 12,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              );
+                            },
                           ),
+                          enableTooltip: true,
                         ),
                       ],
                     ),
           ),
           const SizedBox(height: 16),
+
+          // Lista de categorías - Responsive
           isLoading
-              ? ListView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: 3,
-                itemBuilder: (context, index) {
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 12,
-                          height: 12,
-                          decoration: BoxDecoration(
-                            color: Colors.grey[300],
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Container(
-                          width: 16,
-                          height: 16,
-                          color: Colors.grey[300],
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Container(height: 16, color: Colors.grey[200]),
-                        ),
-                        Container(
-                          width: 60,
-                          height: 16,
-                          color: Colors.grey[200],
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              )
+              ? _buildLoadingCategories(context)
               : chartData.isEmpty || totalAmount == 0
               ? Padding(
-                padding: const EdgeInsets.all(16.0),
+                padding: const EdgeInsets.all(8.0),
                 child: Column(
                   children: [
-                    Icon(Icons.data_array, size: 48, color: Colors.grey[400]),
-                    const SizedBox(height: 16),
+                    Icon(Icons.data_array, size: 36, color: Colors.grey[400]),
+                    const SizedBox(height: 12),
                     Text(
                       'Agrega gastos para ver el desglose',
                       style: TextStyle(color: Colors.grey[600], fontSize: 14),
+                      textAlign: TextAlign.center,
                     ),
                   ],
                 ),
               )
-              : Column(
-                children:
-                    chartData.map((category) {
-                      final percentage =
-                          totalAmount > 0
-                              ? (category.amount / totalAmount * 100)
-                              : 0;
-
-                      return Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 8),
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 12,
-                              height: 12,
-                              decoration: BoxDecoration(
-                                color: category.color,
-                                shape: BoxShape.circle,
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Icon(
-                              category.icon,
-                              color: category.color,
-                              size: 16,
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                category.name,
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: textColor.withOpacity(0.8),
-                                ),
-                              ),
-                            ),
-                            Text(
-                              _formatCurrency(category.amount),
-                              style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                                color: textColor,
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 6,
-                                vertical: 2,
-                              ),
-                              decoration: BoxDecoration(
-                                color: category.color.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                              child: Text(
-                                '${percentage.toStringAsFixed(1)}%',
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  color: category.color,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    }).toList(),
+              : _buildCategoriesList(
+                chartData,
+                totalAmount,
+                textColor,
+                context,
               ),
         ],
       ),
+    );
+  }
+
+  Widget _buildLoadingCategories(BuildContext context) {
+    final isSmallScreen = MediaQuery.of(context).size.width < 350;
+    final theme = Theme.of(context);
+    final primaryColor = theme.primaryColor;
+    final isDark = theme.brightness == Brightness.dark;
+
+    return ListView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: 3,
+      itemBuilder: (context, index) {
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          child: Row(
+            children: [
+              // Círculo de color placeholder
+              Container(
+                width: isSmallScreen ? 10 : 12,
+                height: isSmallScreen ? 10 : 12,
+                decoration: BoxDecoration(
+                  color: _getLoadingColor(index).withOpacity(0.3),
+                  shape: BoxShape.circle,
+                ),
+                child: const Padding(
+                  padding: EdgeInsets.all(1.5),
+                  child: CircularProgressIndicator(
+                    strokeWidth: 1,
+                    valueColor: AlwaysStoppedAnimation(Colors.white),
+                  ),
+                ),
+              ),
+              SizedBox(width: isSmallScreen ? 8 : 12),
+              // Icono placeholder
+              Container(
+                width: isSmallScreen ? 14 : 16,
+                height: isSmallScreen ? 14 : 16,
+                decoration: BoxDecoration(
+                  color: _getLoadingColor(index),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Icon(
+                  _getLoadingIcon(index),
+                  size: isSmallScreen ? 10 : 12,
+                  color: Colors.white,
+                ),
+              ),
+              SizedBox(width: isSmallScreen ? 6 : 8),
+              // Texto placeholder animado
+              Expanded(
+                child: Container(
+                  height: 16,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(4),
+                    color: isDark ? Colors.grey[800] : Colors.grey[200],
+                  ),
+                  child: Stack(
+                    children: [
+                      Container(
+                        width: double.infinity,
+                        height: double.infinity,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(4),
+                          color: isDark ? Colors.grey[800] : Colors.grey[200],
+                        ),
+                      ),
+                      Positioned.fill(
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(4),
+                          child: AnimatedOpacity(
+                            opacity: 0.5,
+                            duration: const Duration(milliseconds: 1000),
+                            curve: Curves.easeInOut,
+                            child: Container(
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment.centerLeft,
+                                  end: Alignment.centerRight,
+                                  colors: [
+                                    Colors.transparent,
+                                    isDark
+                                        ? Colors.grey[700]!
+                                        : Colors.grey[300]!,
+                                    Colors.transparent,
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              // Monto placeholder
+              Container(
+                width: isSmallScreen ? 40 : 60,
+                height: 16,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(4),
+                  color: isDark ? Colors.grey[800] : Colors.grey[200],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  // Función para obtener colores de carga diferentes
+  Color _getLoadingColor(int index) {
+    final colors = [
+      const Color(0xFF2563EB), // Azul
+      const Color(0xFF10B981), // Verde
+      const Color(0xFFF59E0B), // Naranja
+      const Color(0xFF7C3AED), // Púrpura
+      const Color(0xFFDB2777), // Rosa
+    ];
+    return colors[index % colors.length];
+  }
+
+  // Función para obtener íconos de carga diferentes
+  IconData _getLoadingIcon(int index) {
+    final icons = [
+      Icons.shopping_bag,
+      Icons.restaurant,
+      Icons.home,
+      Icons.directions_car,
+      Icons.local_hospital,
+    ];
+    return icons[index % icons.length];
+  }
+
+  Widget _buildCategoriesList(
+    List<CategoryData> chartData,
+    double totalAmount,
+    Color textColor,
+    BuildContext context,
+  ) {
+    final isSmallScreen = MediaQuery.of(context).size.width < 350;
+
+    return Column(
+      children:
+          chartData.map((category) {
+            final percentage =
+                totalAmount > 0 ? (category.amount / totalAmount * 100) : 0;
+
+            // Acortar nombres largos en pantallas pequeñas
+            final categoryName =
+                isSmallScreen && category.name.length > 10
+                    ? '${category.name.substring(0, 9)}...'
+                    : category.name;
+
+            return Padding(
+              padding: const EdgeInsets.symmetric(vertical: 6),
+              child: Row(
+                children: [
+                  Container(
+                    width: isSmallScreen ? 10 : 12,
+                    height: isSmallScreen ? 10 : 12,
+                    decoration: BoxDecoration(
+                      color: category.color,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  SizedBox(width: isSmallScreen ? 6 : 8),
+                  Icon(
+                    category.icon,
+                    color: category.color,
+                    size: isSmallScreen ? 14 : 16,
+                  ),
+                  SizedBox(width: isSmallScreen ? 6 : 8),
+                  Expanded(
+                    child: Text(
+                      categoryName,
+                      style: TextStyle(
+                        fontSize: isSmallScreen ? 12 : 14,
+                        color: textColor.withOpacity(0.8),
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.only(left: isSmallScreen ? 2 : 4),
+                    child: Text(
+                      isSmallScreen && category.amount > 1000
+                          ? '₡${(category.amount / 1000).toStringAsFixed(1)}K'
+                          : _formatCurrency(category.amount),
+                      style: TextStyle(
+                        fontSize: isSmallScreen ? 12 : 14,
+                        fontWeight: FontWeight.w600,
+                        color: textColor,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  SizedBox(width: isSmallScreen ? 4 : 8),
+                  Container(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: isSmallScreen ? 4 : 6,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: category.color.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: Text(
+                      '${percentage.toStringAsFixed(percentage < 1 ? 1 : 0)}%',
+                      style: TextStyle(
+                        fontSize: isSmallScreen ? 9 : 11,
+                        color: category.color,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }).toList(),
     );
   }
 }

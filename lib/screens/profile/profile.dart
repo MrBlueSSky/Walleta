@@ -5,7 +5,6 @@ import 'package:walleta/blocs/authentication/bloc/authentication_bloc.dart';
 import 'package:walleta/blocs/personalExpense/bloc/personal_expense_bloc.dart';
 import 'package:walleta/blocs/personalExpense/bloc/personal_expense_event.dart';
 import 'package:walleta/blocs/personalExpense/bloc/personal_expense_state.dart';
-import 'package:walleta/screens/home/testi.dart';
 import 'package:walleta/screens/profile/personalExpense/expense_card.dart';
 import 'package:walleta/screens/profile/personalExpense/expense_list.dart';
 import 'package:walleta/screens/profile/personalExpense/personal_expense.dart';

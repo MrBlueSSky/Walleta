@@ -16,7 +16,6 @@ import 'package:walleta/repository/personalExpense/personal_expense.dart';
 import 'package:walleta/repository/repository.dart';
 import 'package:walleta/routes/routes.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:walleta/screens/home/testi.dart';
 import 'blocs/authentication/bloc/authentication_bloc.dart';
 import 'blocs/sharedExpense/bloc/shared_expense_bloc.dart';
 import 'repository/sharedExpense/shared_expense_repository.dart';
