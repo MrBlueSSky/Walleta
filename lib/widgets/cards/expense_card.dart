@@ -107,7 +107,7 @@ class _ExpenseCardState extends State<ExpenseCard> {
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
-                                  '${widget.expense.participants.length} participantes • ${Formatters.formatCurrency(widget.expense.total)} total', // ← CAMBIADO
+                                  '${widget.expense.participants.length} participantes • ${Formatters.formatCurrencyNoDecimals(widget.expense.total)} total', // ← CAMBIADO
                                   style: TextStyle(
                                     fontSize: 14,
                                     color:
@@ -153,7 +153,7 @@ class _ExpenseCardState extends State<ExpenseCard> {
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
-                                  Formatters.formatCurrency(
+                                  Formatters.formatCurrencyNoDecimals(
                                     widget.expense.paid,
                                   ), // ← CAMBIADO
                                   style: TextStyle(
@@ -299,7 +299,7 @@ class _ExpenseCardState extends State<ExpenseCard> {
               TopSnackBarOverlay.show(
                 context: context,
                 message:
-                    'Pago de ${Formatters.formatCurrency(amount)} registrado exitosamente', // ← CAMBIADO
+                    'Pago de ${Formatters.formatCurrencyNoDecimals(amount)} registrado exitosamente', // ← CAMBIADO
                 verticalOffset: 70.0,
                 backgroundColor: const Color(0xFF00C896),
               );
@@ -673,7 +673,7 @@ class _ExpenseCardState extends State<ExpenseCard> {
                                   curve: Curves.easeOutCubic,
                                   builder: (context, paidValue, _) {
                                     return Text(
-                                      Formatters.formatCurrency(
+                                      Formatters.formatCurrencyNoDecimals(
                                         paidValue,
                                       ), // ← CAMBIADO
                                       style: TextStyle(
@@ -685,7 +685,7 @@ class _ExpenseCardState extends State<ExpenseCard> {
                                   },
                                 ),
                                 Text(
-                                  Formatters.formatCurrency(
+                                  Formatters.formatCurrencyNoDecimals(
                                     widget.expense.total,
                                   ), // ← CAMBIADO
                                   style: TextStyle(
@@ -785,7 +785,7 @@ class _ExpenseCardState extends State<ExpenseCard> {
                                           ),
                                           const SizedBox(width: 4),
                                           Text(
-                                            'Faltante: ${Formatters.formatCurrency(remaining)}', // ← CAMBIADO
+                                            'Faltante: ${Formatters.formatCurrencyNoDecimals(remaining)}', // ← CAMBIADO
                                             style: TextStyle(
                                               fontSize: 11,
                                               fontWeight: FontWeight.w600,

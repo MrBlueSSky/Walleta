@@ -214,7 +214,7 @@ class _SavingsAccountScreenState extends State<SavingsAccountScreen> {
           FittedBox(
             fit: BoxFit.scaleDown,
             child: Text(
-              _formatCurrency(totalSaved),
+              _formatCurrencyNoDecimals(totalSaved),
               style: const TextStyle(
                 fontSize: 28,
                 fontWeight: FontWeight.w700,
@@ -301,7 +301,7 @@ class _SavingsAccountScreenState extends State<SavingsAccountScreen> {
 
             // Montos
             Text(
-              '${_formatCurrency(goal.saved)} / ${_formatCurrency(goal.goal)}',
+              '${_formatCurrencyNoDecimals(goal.saved)} / ${_formatCurrencyNoDecimals(goal.goal)}',
               style: TextStyle(
                 fontSize: 11,
                 color: isDark ? Colors.white70 : const Color(0xFF6B7280),
@@ -474,7 +474,7 @@ class _SavingsAccountScreenState extends State<SavingsAccountScreen> {
     return '${date.day} ${monthNames[date.month - 1]} ${date.year}';
   }
 
-  String _formatCurrency(double amount) {
+  String _formatCurrencyNoDecimals(double amount) {
     if (amount >= 1000000) {
       return '₡${(amount / 1000000).toStringAsFixed(1)}M';
     } else if (amount >= 1000) {

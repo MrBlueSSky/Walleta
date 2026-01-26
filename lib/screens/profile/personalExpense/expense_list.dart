@@ -660,7 +660,7 @@ class _PersonalExpenseListCardState extends State<PersonalExpenseListCard> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          Formatters.formatCurrency(
+                          Formatters.formatCurrencyNoDecimals(
                             widget.expense.total,
                           ), // ← CAMBIADO
                           style: TextStyle(
@@ -825,7 +825,7 @@ class _PersonalExpenseListCardState extends State<PersonalExpenseListCard> {
                             ),
                             const SizedBox(width: 4),
                             Text(
-                              'Faltante: ${Formatters.formatCurrency(remaining)}', // ← CAMBIADO
+                              'Faltante: ${Formatters.formatCurrencyNoDecimals(remaining)}', // ← CAMBIADO
                               style: TextStyle(
                                 fontSize: 11,
                                 fontWeight: FontWeight.w600,
@@ -998,20 +998,20 @@ class _PersonalExpenseListCardState extends State<PersonalExpenseListCard> {
                 children: [
                   _buildDetailRow(
                     'Total del gasto',
-                    Formatters.formatCurrency(
+                    Formatters.formatCurrencyNoDecimals(
                       widget.expense.total,
                     ), // ← CAMBIADO
                   ),
                   _buildDetailRow(
                     'Pagado',
-                    Formatters.formatCurrency(
+                    Formatters.formatCurrencyNoDecimals(
                       widget.expense.paid,
                     ), // ← CAMBIADO
                     color: const Color(0xFF10B981),
                   ),
                   _buildDetailRow(
                     'Pendiente',
-                    Formatters.formatCurrency(
+                    Formatters.formatCurrencyNoDecimals(
                       widget.expense.total - widget.expense.paid,
                     ), // ← CAMBIADO
                     color: const Color(0xFFF59E0B),

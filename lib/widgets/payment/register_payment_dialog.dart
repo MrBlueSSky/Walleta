@@ -221,7 +221,9 @@ class _RegisterPaymentDialogState extends State<RegisterPaymentDialog> {
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                Formatters.formatCurrency(remainingBalance),
+                                Formatters.formatCurrencyNoDecimals(
+                                  remainingBalance,
+                                ),
                                 style: TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.w700,
@@ -248,7 +250,9 @@ class _RegisterPaymentDialogState extends State<RegisterPaymentDialog> {
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                Formatters.formatCurrency(widget.totalAmount),
+                                Formatters.formatCurrencyNoDecimals(
+                                  widget.totalAmount,
+                                ),
                                 style: TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.w600,

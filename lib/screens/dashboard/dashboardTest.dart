@@ -39,7 +39,7 @@ class _FinancialDashboardState extends State<FinancialDashboard> {
     });
   }
 
-  String _formatCurrency(double amount) {
+  String _formatCurrencyNoDecimals(double amount) {
     return '₡${amount.toStringAsFixed(2).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}';
   }
 
@@ -325,7 +325,7 @@ class _FinancialDashboardState extends State<FinancialDashboard> {
                         ),
                         if (hasData && monthlyExpenses > 0)
                           Text(
-                            'Total: ${_formatCurrency(monthlyExpenses)}',
+                            'Total: ${_formatCurrencyNoDecimals(monthlyExpenses)}',
                             style: TextStyle(
                               fontSize: 14,
                               color: textColor.withOpacity(0.7),
@@ -412,7 +412,7 @@ class _FinancialDashboardState extends State<FinancialDashboard> {
                     vertical: 4,
                   ),
                   child: Text(
-                    '-${_formatCurrency(amount)}',
+                    '-${_formatCurrencyNoDecimals(amount)}',
                     style: const TextStyle(
                       color: Color(0xFFFF6B6B),
                       fontWeight: FontWeight.w600,
@@ -440,7 +440,7 @@ class _FinancialDashboardState extends State<FinancialDashboard> {
                     ),
                   )
                   : Text(
-                    _formatCurrency(amount),
+                    _formatCurrencyNoDecimals(amount),
                     style: const TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
@@ -739,7 +739,7 @@ class _FinancialDashboardState extends State<FinancialDashboard> {
                               ),
                             ),
                             Text(
-                              _formatCurrency(category.amount),
+                              _formatCurrencyNoDecimals(category.amount),
                               style: TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w600,

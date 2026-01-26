@@ -160,7 +160,9 @@ class _LoanDetailsContentState extends State<LoanDetailsContent> {
                 DetailRow(
                   label: 'Monto total',
 
-                  value: Formatters.formatCurrency(widget.loan.amount),
+                  value: Formatters.formatCurrencyNoDecimals(
+                    widget.loan.amount,
+                  ),
                   isDark: widget.isDark,
                 ),
                 const SizedBox(height: 12),

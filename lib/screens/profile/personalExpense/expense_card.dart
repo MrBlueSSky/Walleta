@@ -214,7 +214,7 @@ class _PersonalExpensesCardState extends State<PersonalExpensesCard>
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              Formatters.formatCurrency(
+                              Formatters.formatCurrencyNoDecimals(
                                 widget.totalPaid,
                               ), // ← CAMBIADO
                               style: TextStyle(
@@ -239,7 +239,7 @@ class _PersonalExpensesCardState extends State<PersonalExpensesCard>
                           crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
                             Text(
-                              Formatters.formatCurrency(
+                              Formatters.formatCurrencyNoDecimals(
                                 widget.totalExpenses,
                               ), // ← CAMBIADO
                               style: TextStyle(
@@ -308,7 +308,7 @@ class _PersonalExpensesCardState extends State<PersonalExpensesCard>
                                 ),
                                 const SizedBox(width: 4),
                                 Text(
-                                  'Pendiente: ${Formatters.formatCurrency(widget.totalPending.clamp(0, double.infinity))}', // ← CAMBIADO
+                                  'Pendiente: ${Formatters.formatCurrencyNoDecimals(widget.totalPending.clamp(0, double.infinity))}', // ← CAMBIADO
                                   style: TextStyle(
                                     fontSize: 11,
                                     fontWeight: FontWeight.w600,

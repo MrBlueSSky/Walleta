@@ -14,22 +14,22 @@ import 'package:walleta/utils/formatters.dart';
 
 // Formatters class
 // class Formatters {
-//   static String formatCurrency(double amount, {String symbol = '₡'}) {
+//   static String formatCurrencyNoDecimals(double amount, {String symbol = '₡'}) {
 //     return '$symbol${amount.toStringAsFixed(2).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}';
 //   }
 
 //   // Opcional: Formato abreviado para números grandes
-//   static String formatCurrencyCompact(double amount, {String symbol = '₡'}) {
+//   static String formatCurrencyNoDecimalsCompact(double amount, {String symbol = '₡'}) {
 //     if (amount >= 1000000) {
 //       return '$symbol${(amount / 1000000).toStringAsFixed(1)}M';
 //     } else if (amount >= 1000) {
 //       return '$symbol${(amount / 1000).toStringAsFixed(1)}K';
 //     }
-//     return formatCurrency(amount, symbol: symbol);
+//     return formatCurrencyNoDecimals(amount, symbol: symbol);
 //   }
 
 //   // Opcional: Formato sin decimales
-//   static String formatCurrencyNoDecimals(double amount, {String symbol = '₡'}) {
+//   static String formatCurrencyNoDecimalsNoDecimals(double amount, {String symbol = '₡'}) {
 //     return '$symbol${amount.toInt().toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}';
 //   }
 // }
@@ -82,13 +82,13 @@ class _LoansSectionState extends State<LoansSection> {
       false; // ✅ Nueva variable para controlar carga de pagos
 
   // Método actualizado usando Formatters
-  String _formatCurrency(double amount) {
-    return Formatters.formatCurrency(amount);
+  String _formatCurrencyNoDecimals(double amount) {
+    return Formatters.formatCurrencyNoDecimals(amount);
   }
 
   // Método para formato abreviado (opcional)
-  // String _formatCurrencyCompact(double amount) {
-  //   return Formatters.formatCurrencyCompact(amount);
+  // String _formatCurrencyNoDecimalsCompact(double amount) {
+  //   return Formatters.formatCurrencyNoDecimalsCompact(amount);
   // }
 
   @override
@@ -561,7 +561,7 @@ class _LoansSectionState extends State<LoansSection> {
                                             CrossAxisAlignment.end,
                                         children: [
                                           Text(
-                                            '${transaction.isOutgoing ? '-' : '+'}${_formatCurrency(transaction.amount)}',
+                                            '${transaction.isOutgoing ? '-' : '+'}${_formatCurrencyNoDecimals(transaction.amount)}',
                                             style: TextStyle(
                                               fontSize: 14,
                                               fontWeight: FontWeight.w600,
@@ -670,7 +670,7 @@ class _LoansSectionState extends State<LoansSection> {
               ),
               const SizedBox(height: 4),
               Text(
-                '+${_formatCurrency(totalIngresos)}',
+                '+${_formatCurrencyNoDecimals(totalIngresos)}',
                 style: const TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
@@ -695,7 +695,7 @@ class _LoansSectionState extends State<LoansSection> {
               ),
               const SizedBox(height: 4),
               Text(
-                '-${_formatCurrency(totalEgresos)}',
+                '-${_formatCurrencyNoDecimals(totalEgresos)}',
                 style: const TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
@@ -720,7 +720,7 @@ class _LoansSectionState extends State<LoansSection> {
               ),
               const SizedBox(height: 4),
               Text(
-                '${balance >= 0 ? '+' : ''}${_formatCurrency(balance.abs())}',
+                '${balance >= 0 ? '+' : ''}${_formatCurrencyNoDecimals(balance.abs())}',
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,

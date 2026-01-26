@@ -294,7 +294,7 @@ class _LoansState extends State<Loans> {
   //             ),
   //             const SizedBox(height: 4),
   //             Text(
-  //               Formatters.formatCurrency(netBalance), // ← CAMBIAR ESTA LÍNEA
+  //               Formatters.formatCurrencyNoDecimals(netBalance), // ← CAMBIAR ESTA LÍNEA
   //               style: TextStyle(
   //                 fontSize: 24,
   //                 fontWeight: FontWeight.w700,
@@ -354,7 +354,7 @@ class _LoansState extends State<Loans> {
           ),
           const SizedBox(height: 2),
           Text(
-            Formatters.formatCurrency(amount), // ← CAMBIAR ESTA LÍNEA
+            Formatters.formatCurrencyNoDecimals(amount), // ← CAMBIAR ESTA LÍNEA
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w700,
@@ -504,7 +504,7 @@ class _LoansState extends State<Loans> {
                 ),
                 const Spacer(),
                 Text(
-                  Formatters.formatCurrency(
+                  Formatters.formatCurrencyNoDecimals(
                     loans.fold(0.0, (sum, item) => sum + item.amount),
                   ), // ← CAMBIAR ESTA LÍNEA
                   style: TextStyle(

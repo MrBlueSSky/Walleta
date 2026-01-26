@@ -9,6 +9,7 @@ import 'package:walleta/blocs/financialSummary/bloc/financial_summary_state.dart
 import 'package:walleta/models/financial_summary.dart';
 
 import 'package:walleta/screens/dashboard/loans_section.dart';
+import 'package:walleta/utils/formatters.dart';
 import 'package:walleta/widgets/buttons/search_button.dart';
 
 class FinancialDashboard extends StatefulWidget {
@@ -39,8 +40,9 @@ class _FinancialDashboardState extends State<FinancialDashboard> {
     });
   }
 
-  String _formatCurrency(double amount) {
-    return '₡${amount.toStringAsFixed(2).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}';
+  // Método actualizado para quitar .00
+  String _formatCurrencyNoDecimals(double amount) {
+    return Formatters.formatCurrencyNoDecimals(amount);
   }
 
   // Convertir FinancialSummary a CategoryData para el gráfico
@@ -408,7 +410,7 @@ class _FinancialDashboardState extends State<FinancialDashboard> {
                     vertical: 4,
                   ),
                   child: Text(
-                    '-${_formatCurrency(amount)}',
+                    '-${_formatCurrencyNoDecimals(amount)}',
                     style: const TextStyle(
                       color: Color(0xFFFF6B6B),
                       fontWeight: FontWeight.w600,
@@ -484,7 +486,7 @@ class _FinancialDashboardState extends State<FinancialDashboard> {
                 )
               else
                 Text(
-                  _formatCurrency(amount),
+                  _formatCurrencyNoDecimals(amount),
                   style: const TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
@@ -733,7 +735,10 @@ class _FinancialDashboardState extends State<FinancialDashboard> {
                                   label =
                                       '₡${(point.y / 1000).toStringAsFixed(1)}K';
                                 } else {
-                                  label = '₡${point.y.toStringAsFixed(0)}';
+                                  // Usar formato sin decimales aquí también
+                                  label = Formatters.formatCurrencyNoDecimals(
+                                    point.y,
+                                  );
                                 }
                               }
 
@@ -972,9 +977,8 @@ class _FinancialDashboardState extends State<FinancialDashboard> {
                   Padding(
                     padding: EdgeInsets.only(left: isSmallScreen ? 2 : 4),
                     child: Text(
-                      isSmallScreen && category.amount > 1000
-                          ? '₡${(category.amount / 1000).toStringAsFixed(1)}K'
-                          : _formatCurrency(category.amount),
+                      // Usar formato sin decimales para pantallas pequeñas también
+                      Formatters.formatCurrencyNoDecimals(category.amount),
                       style: TextStyle(
                         fontSize: isSmallScreen ? 12 : 14,
                         fontWeight: FontWeight.w600,

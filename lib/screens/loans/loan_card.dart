@@ -141,7 +141,7 @@ class _LoanCardState extends State<LoanCard> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          Formatters.formatCurrency(
+                          Formatters.formatCurrencyNoDecimals(
                             widget.loan.amount,
                           ), // ← CAMBIAR ESTA LÍNEA
                           style: TextStyle(
@@ -309,7 +309,7 @@ class _LoanCardState extends State<LoanCard> {
                             ),
                             const SizedBox(width: 4),
                             Text(
-                              'Faltante: ${Formatters.formatCurrency(remainingBalance)}', // ← CAMBIAR ESTA LÍNEA
+                              'Faltante: ${Formatters.formatCurrencyNoDecimals(remainingBalance)}', // ← CAMBIAR ESTA LÍNEA
                               style: TextStyle(
                                 fontSize: 11,
                                 fontWeight: FontWeight.w600,

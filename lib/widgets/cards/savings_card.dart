@@ -202,7 +202,7 @@ class _SavingsCardState extends State<SavingsCard>
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              Formatters.formatCurrency(
+                              Formatters.formatCurrencyNoDecimals(
                                 widget.currentSavings,
                               ), // ← CAMBIADO
                               style: TextStyle(
@@ -230,7 +230,7 @@ class _SavingsCardState extends State<SavingsCard>
                           crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
                             Text(
-                              Formatters.formatCurrency(
+                              Formatters.formatCurrencyNoDecimals(
                                 widget.monthlyGoal,
                               ), // ← CAMBIADO
                               style: TextStyle(
@@ -291,7 +291,7 @@ class _SavingsCardState extends State<SavingsCard>
                             ),
                             const SizedBox(width: 6),
                             Text(
-                              'Faltan: ${Formatters.formatCurrency((widget.monthlyGoal - widget.currentSavings).clamp(0, double.infinity))}', // ← CAMBIADO
+                              'Faltan: ${Formatters.formatCurrencyNoDecimals((widget.monthlyGoal - widget.currentSavings).clamp(0, double.infinity))}', // ← CAMBIADO
                               style: TextStyle(
                                 fontSize: 11,
                                 color:

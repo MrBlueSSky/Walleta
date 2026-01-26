@@ -221,7 +221,9 @@ class _ExpensePaymentHistoryState extends State<ExpensePaymentHistory> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      Formatters.formatCurrency(totalPaid), // ← CAMBIADO
+                      Formatters.formatCurrencyNoDecimals(
+                        totalPaid,
+                      ), // ← CAMBIADO
                       style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.w700,
@@ -248,7 +250,7 @@ class _ExpensePaymentHistoryState extends State<ExpensePaymentHistory> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      Formatters.formatCurrency(
+                      Formatters.formatCurrencyNoDecimals(
                         widget.expense.total - totalPaid,
                       ), // ← CAMBIADO
                       style: TextStyle(
@@ -391,7 +393,7 @@ class _ExpensePaymentItem extends StatelessWidget {
                           ),
                         ),
                         Text(
-                          Formatters.formatCurrency(
+                          Formatters.formatCurrencyNoDecimals(
                             payment.amount,
                           ), // ← CAMBIADO
                           style: TextStyle(
