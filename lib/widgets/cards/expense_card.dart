@@ -245,14 +245,13 @@ class _ExpenseCardState extends State<ExpenseCard> {
           isDark: isDark,
           onPaymentConfirmed: (amount, note, image) async {
             // Obtener el nombre del usuario actual
-            final currentUser =
-                context.read<AuthenticationBloc>().state.user?.name ??
-                'Desconocido';
+            final currentUser = context.read<AuthenticationBloc>().state.user;
 
             // Crear el pago
             final payment = SharedExpensePayment(
+              userId: currentUser.uid,
               expenseId: widget.expense.id!,
-              payerName: currentUser,
+              payerName: currentUser.username,
               amount: amount,
               date: DateTime.now(),
               description: note,

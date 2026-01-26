@@ -6,6 +6,7 @@ import 'package:walleta/blocs/sharedExpense/bloc/shared_expense_bloc.dart';
 import 'package:walleta/blocs/sharedExpense/bloc/shared_expense_event.dart';
 import 'package:walleta/blocs/sharedExpense/bloc/shared_expense_state.dart';
 import 'package:walleta/blocs/sharedExpensePayment/bloc/shared_expense_payment_bloc.dart';
+import 'package:walleta/screens/loans/filter_option.dart';
 
 import 'package:walleta/screens/sharedExpenses/add_expense.dart';
 import 'package:walleta/widgets/cards/expense_card.dart';
@@ -39,6 +40,107 @@ class _SharedExpensesScreenState extends State<SharedExpensesScreen> {
             onSave: (expense) {
               // Recargar los gastos después de agregar uno nuevo
               _loadExpenses();
+            },
+          ),
+    );
+  }
+
+  //!Hacer esto un widget porque se usa mucho
+  void _showFilterDialog(bool isDark) {
+    bool allSelected = true;
+    bool pendingSelected = false;
+    bool partialSelected = false;
+    bool overdueSelected = false;
+
+    showDialog(
+      context: context,
+      builder:
+          (context) => StatefulBuilder(
+            builder: (context, setState) {
+              return AlertDialog(
+                backgroundColor:
+                    isDark ? const Color(0xFF1E293B) : Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                title: Text(
+                  'Filtrar',
+                  style: TextStyle(
+                    color: isDark ? Colors.white : const Color(0xFF1F2937),
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                content: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    FilterOption(
+                      option: 'Todos',
+                      isSelected: allSelected,
+                      isDark: isDark,
+                      onTap: () {
+                        setState(() {
+                          allSelected = !allSelected;
+                        });
+                      },
+                    ),
+                    FilterOption(
+                      option: 'Pendientes',
+                      isSelected: pendingSelected,
+                      isDark: isDark,
+                      onTap: () {
+                        setState(() {
+                          pendingSelected = !pendingSelected;
+                        });
+                      },
+                    ),
+                    FilterOption(
+                      option: 'Parciales',
+                      isSelected: partialSelected,
+                      isDark: isDark,
+                      onTap: () {
+                        setState(() {
+                          partialSelected = !partialSelected;
+                        });
+                      },
+                    ),
+                    FilterOption(
+                      option: 'Atrasados',
+                      isSelected: overdueSelected,
+                      isDark: isDark,
+                      onTap: () {
+                        setState(() {
+                          overdueSelected = !overdueSelected;
+                        });
+                      },
+                    ),
+                  ],
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: Text(
+                      'Cancelar',
+                      style: TextStyle(
+                        color:
+                            isDark ? Colors.white70 : const Color(0xFF6B7280),
+                      ),
+                    ),
+                  ),
+                  ElevatedButton(
+                    onPressed: () => Navigator.pop(context),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF2D5BFF),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: const Text(
+                      'Aplicar',
+                      style: TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                ],
+              );
             },
           ),
     );
@@ -93,9 +195,9 @@ class _SharedExpensesScreenState extends State<SharedExpensesScreen> {
               return CustomScrollView(
                 physics: const BouncingScrollPhysics(),
                 slivers: [
-                  // AppBar
                   SliverAppBar(
                     floating: true,
+                    pinned: true,
                     backgroundColor: backgroundColor,
                     elevation: 0,
                     title: Text(
@@ -108,14 +210,14 @@ class _SharedExpensesScreenState extends State<SharedExpensesScreen> {
                     ),
                     actions: [
                       IconButton(
-                        icon: Icon(Iconsax.add, color: iconsColor),
+                        icon: Icon(Iconsax.add, color: iconsColor, size: 24),
                         onPressed: () {
                           _showAddExpenseSheet();
                         },
                       ),
                       IconButton(
-                        icon: Icon(Iconsax.filter, color: iconsColor),
-                        onPressed: () {},
+                        icon: Icon(Iconsax.filter, color: iconsColor, size: 24),
+                        onPressed: () => _showFilterDialog(isDark),
                       ),
                     ],
                   ),

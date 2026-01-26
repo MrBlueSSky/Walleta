@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:provider/provider.dart';
+import 'package:walleta/blocs/financialSummary/bloc/financial_summary_bloc.dart';
 import 'package:walleta/blocs/loan/bloc/loan_bloc.dart';
 import 'package:walleta/blocs/payment/bloc/payment_bloc.dart';
 import 'package:walleta/blocs/personalExpense/bloc/personal_expense_bloc.dart';
 import 'package:walleta/blocs/sharedExpensePayment/bloc/shared_expense_payment_bloc.dart';
 import 'package:walleta/providers/auth_provider.dart';
 import 'package:walleta/providers/theme_provider.dart';
+import 'package:walleta/repository/FinancialSummary/financial_summary_repository.dart';
 import 'package:walleta/repository/SharedExpensePaymentRepository/shared_expense_payment_repository.dart';
 import 'package:walleta/repository/loan/loan_repository.dart';
 import 'package:walleta/repository/payment/payment.dart';
@@ -14,6 +16,7 @@ import 'package:walleta/repository/personalExpense/personal_expense.dart';
 import 'package:walleta/repository/repository.dart';
 import 'package:walleta/routes/routes.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:walleta/screens/home/testi.dart';
 import 'blocs/authentication/bloc/authentication_bloc.dart';
 import 'blocs/sharedExpense/bloc/shared_expense_bloc.dart';
 import 'repository/sharedExpense/shared_expense_repository.dart';
@@ -64,6 +67,13 @@ class App extends StatelessWidget {
                   repository: PersonalExpenseRepository(),
                 ),
           ),
+          BlocProvider<FinancialSummaryBloc>(
+            create:
+                (context) => FinancialSummaryBloc(
+                  repository: FinancialSummaryRepository(),
+                ),
+          ),
+
           // ChangeNotifierProvider(create: (_) => UserProvider()),
           // BlocProvider(create: (_) => RoleCubit()),
         ],
@@ -121,6 +131,7 @@ class _AppViewState extends State<AppView> {
                       '/home',
                       (route) => false,
                     );
+
                     break;
                   // case AuthenticationStatus.unknown:
                   //   _navigatorKey.currentState?.pushNamedAndRemoveUntil(

@@ -10,7 +10,7 @@ class SharedExpensePaymentRepository {
   ) async {
     final snapshot =
         await FirebaseFirestore.instance
-            .collection('expensePayments')
+            .collection('shared_expenses_payments')
             .where('expenseId', isEqualTo: expenseId)
             .orderBy('date', descending: true)
             .get();
@@ -30,7 +30,7 @@ class SharedExpensePaymentRepository {
   }) async {
     try {
       await FirebaseFirestore.instance
-          .collection('expensePayments')
+          .collection('shared_expenses_payments')
           .add(payment.toMap());
       print('✅ Pago agregado exitosamente');
     } catch (e) {
@@ -46,7 +46,7 @@ class SharedExpensePaymentRepository {
   }) async {
     try {
       await FirebaseFirestore.instance
-          .collection('sharedExpenses')
+          .collection('shared_expenses')
           .doc(expenseId)
           .update({
             'paid': newPaidAmount,
@@ -63,7 +63,7 @@ class SharedExpensePaymentRepository {
   Future<void> deleteExpensePayment(String paymentId) async {
     try {
       await FirebaseFirestore.instance
-          .collection('expensePayments')
+          .collection('shared_expenses_payments')
           .doc(paymentId)
           .delete();
       print('✅ Pago eliminado exitosamente');

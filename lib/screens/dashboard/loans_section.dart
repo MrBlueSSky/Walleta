@@ -125,10 +125,6 @@ class _LoansSectionState extends State<LoansSection> {
     List<Payment> payments,
     String currentUserId,
   ) {
-    print('🔍 Combinando transacciones...');
-    print('   📋 Préstamos: ${loans.length}');
-    print('   💳 Pagos: ${payments.length}');
-
     final transactions = <Transaction>[];
 
     try {

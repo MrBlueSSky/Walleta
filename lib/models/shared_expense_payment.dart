@@ -2,7 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:walleta/interfaces/payment_base.dart';
 
 class SharedExpensePayment implements PaymentBase {
-  final String? id;
+  final String userId;
   final String expenseId;
   final String payerName;
   final double amount;
@@ -13,7 +13,7 @@ class SharedExpensePayment implements PaymentBase {
   final DateTime? createdAt;
 
   SharedExpensePayment({
-    this.id,
+    required this.userId,
     required this.expenseId,
     required this.payerName,
     required this.amount,
@@ -34,7 +34,7 @@ class SharedExpensePayment implements PaymentBase {
 
   factory SharedExpensePayment.fromMap(String id, Map<String, dynamic> map) {
     return SharedExpensePayment(
-      id: id,
+      userId: map['userId'],
       expenseId: map['expenseId'] ?? '',
       payerName: map['payerName'] ?? '',
       amount: (map['amount'] as num).toDouble(),
@@ -48,6 +48,7 @@ class SharedExpensePayment implements PaymentBase {
 
   Map<String, dynamic> toMap() {
     return {
+      'userId': userId,
       'expenseId': expenseId,
       'payerName': payerName,
       'amount': amount,
