@@ -13,6 +13,10 @@ import 'package:walleta/screens/savings/savings_account.dart';
 import 'package:walleta/themes/app_colors.dart';
 import 'package:walleta/widgets/cards/savings_card.dart';
 import 'package:walleta/widgets/layaout/appbar/drawer/custom_drawer.dart';
+import 'package:walleta/blocs/saving/bloc/saving_bloc.dart';
+import 'package:walleta/blocs/saving/bloc/saving_state.dart';
+import 'package:walleta/blocs/saving/bloc/saving_event.dart';
+
 
 class Profile extends StatefulWidget {
   const Profile({super.key});
@@ -30,6 +34,7 @@ class _ProfileState extends State<Profile> {
     super.initState();
     _scrollController.addListener(_onScroll);
     _loadExpenses();
+    _loadSavings();
   }
 
   @override
@@ -54,6 +59,15 @@ class _ProfileState extends State<Profile> {
         context.read<PersonalExpenseBloc>().add(
           LoadPersonalExpenses(authState.user.uid),
         );
+      }
+    });
+  }
+
+  void _loadSavings() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final authState = context.read<AuthenticationBloc>().state;
+      if (authState.status == AuthenticationStatus.authenticated) {
+        context.read<SavingBloc>().add(LoadSavingGoals(authState.user.uid));
       }
     });
   }
@@ -506,14 +520,33 @@ class _ProfileState extends State<Profile> {
                     horizontal: 16,
                     vertical: 12,
                   ),
-                  child: SavingsCard(
-                    onTap:
-                        () => _openSavingsScreenWithHeroAnimation(
-                          context,
-                          user.uid,
-                        ),
-                    currentSavings: 25430, // Tu valor real
-                    monthlyGoal: 80000, // Tu valor real
+                  child: BlocBuilder<SavingBloc, SavingState>(
+                    builder: (context, state) {
+                      if (state.status == SavingStateStatus.success &&
+                          state.goals.isNotEmpty) {
+                        final totalSaved = state.goals.fold(
+                          0.0,
+                          (sum, goal) => sum + goal.saved,
+                        );
+
+                        final totalGoal = state.goals.fold(
+                          0.0,
+                          (sum, goal) => sum + goal.goal,
+                        );
+
+                        return SavingsCard(
+                          onTap:
+                              () => _openSavingsScreenWithHeroAnimation(
+                                context,
+                                user.uid,
+                              ),
+                          currentSavings: totalSaved,
+                          monthlyGoal: totalGoal,
+                        );
+                      }
+
+                      return const SizedBox();
+                    },
                   ),
                 ),
               ),
