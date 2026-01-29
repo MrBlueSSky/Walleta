@@ -11,7 +11,7 @@ import 'package:walleta/screens/sharedExpenses/shared_expense_history.dart';
 import 'package:walleta/themes/app_colors.dart';
 import 'package:walleta/widgets/payment/register_payment_dialog.dart';
 import 'package:walleta/widgets/snackBar/snackBar.dart';
-import 'package:walleta/utils/formatters.dart'; // ← AGREGAR ESTA LÍNEA
+import 'package:walleta/utils/formatters.dart';
 
 class ExpenseCard extends StatefulWidget {
   final SharedExpense expense;
@@ -107,7 +107,7 @@ class _ExpenseCardState extends State<ExpenseCard> {
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
-                                  '${widget.expense.participants.length} participantes • ${Formatters.formatCurrencyNoDecimals(widget.expense.total)} total', // ← CAMBIADO
+                                  '${widget.expense.participants.length} participantes • ${Formatters.formatCurrencyNoDecimals(widget.expense.total)} total',
                                   style: TextStyle(
                                     fontSize: 14,
                                     color:
@@ -155,7 +155,7 @@ class _ExpenseCardState extends State<ExpenseCard> {
                                 Text(
                                   Formatters.formatCurrencyNoDecimals(
                                     widget.expense.paid,
-                                  ), // ← CAMBIADO
+                                  ),
                                   style: TextStyle(
                                     fontSize: 20,
                                     fontWeight: FontWeight.w700,
@@ -288,6 +288,7 @@ class _ExpenseCardState extends State<ExpenseCard> {
                         ? 'completado'
                         : 'pendiente',
                 createdAt: widget.expense.createdAt,
+                createdBy: currentUser,
               );
 
               // 3. Actualizar en el BLoC de gastos compartidos
@@ -299,7 +300,7 @@ class _ExpenseCardState extends State<ExpenseCard> {
               TopSnackBarOverlay.show(
                 context: context,
                 message:
-                    'Pago de ${Formatters.formatCurrencyNoDecimals(amount)} registrado exitosamente', // ← CAMBIADO
+                    'Pago de ${Formatters.formatCurrencyNoDecimals(amount)} registrado exitosamente',
                 verticalOffset: 70.0,
                 backgroundColor: const Color(0xFF00C896),
               );
@@ -307,8 +308,7 @@ class _ExpenseCardState extends State<ExpenseCard> {
               TopSnackBarOverlay.show(
                 context: context,
                 message: 'Error: $e',
-                verticalOffset:
-                    70.0, // Ajusta este número: 50, 60, 70, 80, etc.
+                verticalOffset: 70.0,
                 backgroundColor: const Color(0xFFFF6B6B),
               );
               rethrow;
@@ -486,8 +486,8 @@ class _ExpenseCardState extends State<ExpenseCard> {
                                                     ),
                                                     child: Center(
                                                       child: Text(
-                                                        participant
-                                                            .substring(0, 1)
+                                                        // Cambiado para usar username del AppUser
+                                                        participant.username[0]
                                                             .toUpperCase(),
                                                         style: TextStyle(
                                                           fontSize: 11,
@@ -503,7 +503,8 @@ class _ExpenseCardState extends State<ExpenseCard> {
                                                   ),
                                                   const SizedBox(width: 8),
                                                   Text(
-                                                    participant,
+                                                    // Cambiado para mostrar username del AppUser
+                                                    participant.username,
                                                     style: TextStyle(
                                                       fontSize: 13,
                                                       color:
@@ -675,7 +676,7 @@ class _ExpenseCardState extends State<ExpenseCard> {
                                     return Text(
                                       Formatters.formatCurrencyNoDecimals(
                                         paidValue,
-                                      ), // ← CAMBIADO
+                                      ),
                                       style: TextStyle(
                                         fontSize: 18,
                                         fontWeight: FontWeight.w700,
@@ -687,7 +688,7 @@ class _ExpenseCardState extends State<ExpenseCard> {
                                 Text(
                                   Formatters.formatCurrencyNoDecimals(
                                     widget.expense.total,
-                                  ), // ← CAMBIADO
+                                  ),
                                   style: TextStyle(
                                     fontSize: 14,
                                     fontWeight: FontWeight.w500,
@@ -785,7 +786,7 @@ class _ExpenseCardState extends State<ExpenseCard> {
                                           ),
                                           const SizedBox(width: 4),
                                           Text(
-                                            'Faltante: ${Formatters.formatCurrencyNoDecimals(remaining)}', // ← CAMBIADO
+                                            'Faltante: ${Formatters.formatCurrencyNoDecimals(remaining)}',
                                             style: TextStyle(
                                               fontSize: 11,
                                               fontWeight: FontWeight.w600,

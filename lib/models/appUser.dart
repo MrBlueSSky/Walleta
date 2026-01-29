@@ -9,8 +9,9 @@ class AppUser extends Equatable {
   final String email;
   final String phoneNumber;
   final String profilePictureUrl;
-  final bool isPremium; // Nuevo campo
-  final DateTime? premiumUntil; // Fecha de expiración premium
+  final bool isPremium;
+  final DateTime? premiumUntil;
+  final List<String> sharedExpenseIds;
 
   const AppUser({
     required this.uid,
@@ -22,6 +23,7 @@ class AppUser extends Equatable {
     required this.profilePictureUrl,
     this.isPremium = false,
     this.premiumUntil,
+    this.sharedExpenseIds = const [],
   });
 
   static const empty = AppUser(
@@ -33,6 +35,7 @@ class AppUser extends Equatable {
     phoneNumber: '',
     profilePictureUrl: '',
     isPremium: false,
+    sharedExpenseIds: [],
   );
 
   factory AppUser.fromFirestore(Map<String, dynamic> data) {
@@ -49,7 +52,24 @@ class AppUser extends Equatable {
           data['premiumUntil'] != null
               ? (data['premiumUntil'] as Timestamp).toDate()
               : null,
+      sharedExpenseIds: List<String>.from(data['sharedExpenseIds'] ?? []), // 👈
     );
+  }
+
+  Map<String, dynamic> toFirestore() {
+    return {
+      'uid': uid,
+      'username': username,
+      'name': name,
+      'surname': surname,
+      'email': email,
+      'phoneNumber': phoneNumber,
+      'profilePictureUrl': profilePictureUrl,
+      'isPremium': isPremium,
+      'premiumUntil':
+          premiumUntil != null ? Timestamp.fromDate(premiumUntil!) : null,
+      'sharedExpenseIds': sharedExpenseIds, // 👈
+    };
   }
 
   // Getter para verificar si el premium está activo
@@ -57,6 +77,46 @@ class AppUser extends Equatable {
     if (!isPremium) return false;
     if (premiumUntil == null) return false;
     return premiumUntil!.isAfter(DateTime.now());
+  }
+
+  // Métodos de conveniencia para sharedExpenseIds
+  AppUser copyWith({
+    String? uid,
+    String? username,
+    String? name,
+    String? surname,
+    String? email,
+    String? phoneNumber,
+    String? profilePictureUrl,
+    bool? isPremium,
+    DateTime? premiumUntil,
+    List<String>? sharedExpenseIds,
+  }) {
+    return AppUser(
+      uid: uid ?? this.uid,
+      username: username ?? this.username,
+      name: name ?? this.name,
+      surname: surname ?? this.surname,
+      email: email ?? this.email,
+      phoneNumber: phoneNumber ?? this.phoneNumber,
+      profilePictureUrl: profilePictureUrl ?? this.profilePictureUrl,
+      isPremium: isPremium ?? this.isPremium,
+      premiumUntil: premiumUntil ?? this.premiumUntil,
+      sharedExpenseIds: sharedExpenseIds ?? this.sharedExpenseIds,
+    );
+  }
+
+  /// Agregar un expenseId
+  AppUser withAddedExpenseId(String expenseId) {
+    return copyWith(sharedExpenseIds: [...sharedExpenseIds, expenseId]);
+  }
+
+  /// Remover un expenseId
+  AppUser withRemovedExpenseId(String expenseId) {
+    return copyWith(
+      sharedExpenseIds:
+          sharedExpenseIds.where((id) => id != expenseId).toList(),
+    );
   }
 
   @override
@@ -70,5 +130,6 @@ class AppUser extends Equatable {
     profilePictureUrl,
     isPremium,
     premiumUntil,
+    sharedExpenseIds,
   ];
 }

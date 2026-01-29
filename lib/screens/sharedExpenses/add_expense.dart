@@ -21,11 +21,10 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
   final _totalController = TextEditingController();
-  final _paidController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
 
   String? selectedCategory;
-  List<Map<String, dynamic>> selectedParticipants = [];
+  List<AppUser> selectedParticipants = []; // 👈 Cambiado a List<AppUser>
 
   final List<Map<String, dynamic>> categories = [
     {
@@ -56,9 +55,10 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
     },
   ];
 
-  void _addParticipant(Map<String, dynamic> user) {
+  void _addParticipant(AppUser user) {
+    // 👈 Cambiado el parámetro
     bool alreadyAdded = selectedParticipants.any(
-      (participant) => participant['username'] == user['username'],
+      (participant) => participant.uid == user.uid,
     );
 
     if (!alreadyAdded) {
@@ -85,7 +85,6 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
   void dispose() {
     _titleController.dispose();
     _totalController.dispose();
-    _paidController.dispose();
     _scrollController.dispose();
     super.dispose();
   }
@@ -239,242 +238,93 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
 
                               const SizedBox(height: 20),
 
-                              // Montos (Total y Pagado)
-                              Row(
+                              // Monto Total
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        _buildSectionLabel('Total', isDark),
-                                        const SizedBox(height: 8),
-                                        TextFormField(
-                                          controller: _totalController,
-                                          keyboardType: TextInputType.number,
-                                          style: TextStyle(
-                                            color: textColor,
-                                            height: 1.0,
-                                          ),
-                                          decoration: InputDecoration(
-                                            hintText: '0',
-                                            hintStyle: TextStyle(
-                                              color: secondaryTextColor,
-                                            ),
-                                            prefixIcon: Padding(
-                                              padding: const EdgeInsets.only(
-                                                left: 16,
-                                                right: 8,
-                                              ),
-                                              child: Align(
-                                                widthFactor: 1.0,
-                                                heightFactor: 1.0,
-                                                child: Text(
-                                                  '₡',
-                                                  style: TextStyle(
-                                                    fontSize: 16,
-                                                    fontWeight: FontWeight.w600,
-                                                    color: const Color(
-                                                      0xFF00C896,
-                                                    ),
-                                                    height: 1.0,
-                                                  ),
-                                                ),
-                                              ),
-                                            ),
-                                            prefixIconConstraints:
-                                                const BoxConstraints(
-                                                  minWidth: 24,
-                                                  minHeight: 0,
-                                                ),
-                                            filled: true,
-                                            fillColor:
-                                                isDark
-                                                    ? const Color(0xFF0F172A)
-                                                    : const Color(0xFFF9FAFB),
-                                            border: OutlineInputBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(12),
-                                              borderSide: BorderSide.none,
-                                            ),
-                                            enabledBorder: OutlineInputBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(12),
-                                              borderSide: const BorderSide(
-                                                color: Color(0xFFE5E7EB),
-                                              ),
-                                            ),
-                                            focusedBorder: OutlineInputBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(12),
-                                              borderSide: const BorderSide(
-                                                color: Color(0xFF2D5BFF),
-                                                width: 2,
-                                              ),
-                                            ),
-                                            contentPadding:
-                                                const EdgeInsets.symmetric(
-                                                  horizontal: 16,
-                                                  vertical: 16,
-                                                ),
-                                            alignLabelWithHint: true,
-                                          ),
-                                          validator: (value) {
-                                            if (value == null ||
-                                                value.isEmpty) {
-                                              return 'Requerido';
-                                            }
-                                            final total = double.tryParse(
-                                              value,
-                                            );
-                                            if (total == null) {
-                                              return 'Ingresa un número válido';
-                                            }
-                                            if (total <= 0) {
-                                              return 'El total debe ser mayor a 0';
-                                            }
-                                            return null;
-                                          },
-                                          onChanged: (_) {
-                                            // Forzar validación cruzada cuando cambia el total
-                                            if (_paidController
-                                                .text
-                                                .isNotEmpty) {
-                                              _formKey.currentState?.validate();
-                                            }
-                                          },
-                                        ),
-                                      ],
+                                  _buildSectionLabel('Total', isDark),
+                                  const SizedBox(height: 8),
+                                  TextFormField(
+                                    controller: _totalController,
+                                    keyboardType: TextInputType.number,
+                                    style: TextStyle(
+                                      color: textColor,
+                                      height: 1.0,
                                     ),
+                                    decoration: InputDecoration(
+                                      hintText: '0',
+                                      hintStyle: TextStyle(
+                                        color: secondaryTextColor,
+                                      ),
+                                      prefixIcon: Padding(
+                                        padding: const EdgeInsets.only(
+                                          left: 16,
+                                          right: 8,
+                                        ),
+                                        child: Align(
+                                          widthFactor: 1.0,
+                                          heightFactor: 1.0,
+                                          child: Text(
+                                            '₡',
+                                            style: TextStyle(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.w600,
+                                              color: const Color(0xFF00C896),
+                                              height: 1.0,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      prefixIconConstraints:
+                                          const BoxConstraints(
+                                            minWidth: 24,
+                                            minHeight: 0,
+                                          ),
+                                      filled: true,
+                                      fillColor:
+                                          isDark
+                                              ? const Color(0xFF0F172A)
+                                              : const Color(0xFFF9FAFB),
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                        borderSide: BorderSide.none,
+                                      ),
+                                      enabledBorder: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                        borderSide: const BorderSide(
+                                          color: Color(0xFFE5E7EB),
+                                        ),
+                                      ),
+                                      focusedBorder: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                        borderSide: const BorderSide(
+                                          color: Color(0xFF2D5BFF),
+                                          width: 2,
+                                        ),
+                                      ),
+                                      contentPadding:
+                                          const EdgeInsets.symmetric(
+                                            horizontal: 16,
+                                            vertical: 16,
+                                          ),
+                                      alignLabelWithHint: true,
+                                    ),
+                                    validator: (value) {
+                                      if (value == null || value.isEmpty) {
+                                        return 'Requerido';
+                                      }
+                                      final total = double.tryParse(value);
+                                      if (total == null) {
+                                        return 'Ingresa un número válido';
+                                      }
+                                      if (total <= 0) {
+                                        return 'El total debe ser mayor a 0';
+                                      }
+                                      return null;
+                                    },
                                   ),
-                                  const SizedBox(width: 12),
-                                  // Expanded(
-                                  //   child: Column(
-                                  //     crossAxisAlignment:
-                                  //         CrossAxisAlignment.start,
-                                  //     children: [
-                                  //       _buildSectionLabel('Pagado', isDark),
-                                  //       const SizedBox(height: 8),
-                                  //       TextFormField(
-                                  //         controller: _paidController,
-                                  //         keyboardType: TextInputType.number,
-                                  //         style: TextStyle(
-                                  //           color: textColor,
-                                  //           height: 1.0,
-                                  //         ),
-                                  //         decoration: InputDecoration(
-                                  //           hintText: '0',
-                                  //           hintStyle: TextStyle(
-                                  //             color: secondaryTextColor,
-                                  //           ),
-                                  //           prefixIcon: Padding(
-                                  //             padding: const EdgeInsets.only(
-                                  //               left: 16,
-                                  //               right: 8,
-                                  //             ),
-                                  //             child: Align(
-                                  //               widthFactor: 1.0,
-                                  //               heightFactor: 1.0,
-                                  //               child: Text(
-                                  //                 '₡',
-                                  //                 style: TextStyle(
-                                  //                   fontSize: 16,
-                                  //                   fontWeight: FontWeight.w600,
-                                  //                   color: const Color(
-                                  //                     0xFF00C896,
-                                  //                   ),
-                                  //                   height: 1.0,
-                                  //                 ),
-                                  //               ),
-                                  //             ),
-                                  //           ),
-                                  //           prefixIconConstraints:
-                                  //               const BoxConstraints(
-                                  //                 minWidth: 24,
-                                  //                 minHeight: 0,
-                                  //               ),
-                                  //           filled: true,
-                                  //           fillColor:
-                                  //               isDark
-                                  //                   ? const Color(0xFF0F172A)
-                                  //                   : const Color(0xFFF9FAFB),
-                                  //           border: OutlineInputBorder(
-                                  //             borderRadius:
-                                  //                 BorderRadius.circular(12),
-                                  //             borderSide: BorderSide.none,
-                                  //           ),
-                                  //           enabledBorder: OutlineInputBorder(
-                                  //             borderRadius:
-                                  //                 BorderRadius.circular(12),
-                                  //             borderSide: const BorderSide(
-                                  //               color: Color(0xFFE5E7EB),
-                                  //             ),
-                                  //           ),
-                                  //           focusedBorder: OutlineInputBorder(
-                                  //             borderRadius:
-                                  //                 BorderRadius.circular(12),
-                                  //             borderSide: const BorderSide(
-                                  //               color: Color(0xFF2D5BFF),
-                                  //               width: 2,
-                                  //             ),
-                                  //           ),
-                                  //           contentPadding:
-                                  //               const EdgeInsets.symmetric(
-                                  //                 horizontal: 16,
-                                  //                 vertical: 16,
-                                  //               ),
-                                  //           alignLabelWithHint: true,
-                                  //         ),
-                                  //         validator: (value) {
-                                  //           if (value == null ||
-                                  //               value.isEmpty) {
-                                  //             return 'Requerido';
-                                  //           }
-                                  //           final paid = double.tryParse(value);
-                                  //           if (paid == null) {
-                                  //             return 'Ingresa un número válido';
-                                  //           }
-                                  //           if (paid < 0) {
-                                  //             return 'El monto no puede ser negativo';
-                                  //           }
-
-                                  //           // NUEVA VALIDACIÓN: Pagado debe ser menor o igual al total
-                                  //           final totalText =
-                                  //               _totalController.text;
-                                  //           if (totalText.isNotEmpty) {
-                                  //             final total = double.tryParse(
-                                  //               totalText,
-                                  //             );
-                                  //             if (total != null &&
-                                  //                 paid > total) {
-                                  //               return 'No puede pagar más del total';
-                                  //             }
-                                  //           }
-
-                                  //           return null;
-                                  //         },
-                                  //         onChanged: (_) {
-                                  //           // Forzar validación cruzada cuando cambia lo pagado
-                                  //           if (_totalController
-                                  //               .text
-                                  //               .isNotEmpty) {
-                                  //             _formKey.currentState?.validate();
-                                  //           }
-                                  //         },
-                                  //       ),
-                                  //     ],
-                                  //   ),
-                                  // ),
                                 ],
                               ),
-
-                              // Mensaje informativo de validación
-                              if (_totalController.text.isNotEmpty &&
-                                  _paidController.text.isNotEmpty)
-                                Padding(
-                                  padding: const EdgeInsets.only(top: 12),
-                                  child: _buildValidationMessage(),
-                                ),
                             ],
                           ),
                         ),
@@ -637,7 +487,97 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
                               ),
                               const SizedBox(height: 16),
 
-                              // Botón de búsqueda de participantes (CON TEXTO)
+                              // Mostrar que el usuario actual siempre participa
+                              BlocBuilder<
+                                AuthenticationBloc,
+                                AuthenticationState
+                              >(
+                                builder: (context, state) {
+                                  final currentUser = state.user;
+                                  return Column(
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.all(12),
+                                        decoration: BoxDecoration(
+                                          color: const Color(
+                                            0xFF2D5BFF,
+                                          ).withOpacity(0.1),
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
+                                          border: Border.all(
+                                            color: const Color(
+                                              0xFF2D5BFF,
+                                            ).withOpacity(0.3),
+                                            width: 1,
+                                          ),
+                                        ),
+                                        child: Row(
+                                          children: [
+                                            Container(
+                                              width: 32,
+                                              height: 32,
+                                              decoration: BoxDecoration(
+                                                color: const Color(0xFF2D5BFF),
+                                                shape: BoxShape.circle,
+                                              ),
+                                              child: Center(
+                                                child: Text(
+                                                  currentUser.username[0]
+                                                      .toUpperCase(),
+                                                  style: const TextStyle(
+                                                    color: Colors.white,
+                                                    fontSize: 12,
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                            const SizedBox(width: 12),
+                                            Expanded(
+                                              child: Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  Text(
+                                                    '${currentUser.username} (Tú)',
+                                                    style: TextStyle(
+                                                      fontSize: 14,
+                                                      fontWeight:
+                                                          FontWeight.w600,
+                                                      color:
+                                                          isDark
+                                                              ? Colors.white
+                                                              : const Color(
+                                                                0xFF1F2937,
+                                                              ),
+                                                    ),
+                                                  ),
+                                                  Text(
+                                                    'Organizador',
+                                                    style: TextStyle(
+                                                      fontSize: 12,
+                                                      color: secondaryTextColor,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                            const Icon(
+                                              Icons.check_circle,
+                                              color: Color(0xFF2D5BFF),
+                                              size: 20,
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      const SizedBox(height: 16),
+                                    ],
+                                  );
+                                },
+                              ),
+
+                              // Botón de búsqueda de participantes
                               Container(
                                 decoration: BoxDecoration(
                                   color:
@@ -705,7 +645,7 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      'Participantes seleccionados:',
+                                      'Participantes agregados:',
                                       style: TextStyle(
                                         fontSize: 13,
                                         fontWeight: FontWeight.w500,
@@ -730,8 +670,7 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
                                                         as Color;
 
                                                 return _buildParticipantChip(
-                                                  participant['username'] ??
-                                                      'Usuario',
+                                                  participant,
                                                   index,
                                                   chipColor,
                                                   isDark,
@@ -771,7 +710,7 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
                                       ),
                                       const SizedBox(height: 12),
                                       Text(
-                                        'No hay participantes',
+                                        'No hay otros participantes',
                                         style: TextStyle(
                                           fontSize: 14,
                                           color: secondaryTextColor,
@@ -817,67 +756,6 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
     );
   }
 
-  Widget _buildValidationMessage() {
-    final totalText = _totalController.text;
-    final paidText = _paidController.text;
-
-    if (totalText.isEmpty || paidText.isEmpty) return const SizedBox();
-
-    final total = double.tryParse(totalText) ?? 0;
-    final paid = double.tryParse(paidText) ?? 0;
-    final remaining = total - paid;
-
-    Color getMessageColor() {
-      if (paid == 0) return const Color(0xFFF59E0B); // Amarillo/naranja
-      if (paid < total) return const Color(0xFF2D5BFF); // Azul
-      return const Color(0xFF10B981); // Verde
-    }
-
-    String getMessage() {
-      if (paid == 0) return 'Falta pagar: ₡${remaining.toStringAsFixed(2)}';
-      if (paid < total) return 'Restante: ₡${remaining.toStringAsFixed(2)}';
-      return '✓ Pago completo';
-    }
-
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: getMessageColor().withOpacity(0.1),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: getMessageColor().withOpacity(0.2), width: 1),
-      ),
-      child: Row(
-        children: [
-          Icon(
-            paid >= total ? Iconsax.tick_circle : Iconsax.info_circle,
-            size: 16,
-            color: getMessageColor(),
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              getMessage(),
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w500,
-                color: getMessageColor(),
-              ),
-            ),
-          ),
-          if (paid < total)
-            Text(
-              '${((paid / total) * 100).toStringAsFixed(0)}%',
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: getMessageColor(),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildParticipantSearchDialog(bool isDark) {
     return Dialog(
       backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
@@ -898,9 +776,19 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
             ),
             const SizedBox(height: 16),
 
-            // Aquí iría el SearchButton real
+            // SearchButton que devuelve AppUser
             SearchButton(
-              onUserSelected: (user) {
+              onUserSelected: (Map<String, dynamic> userData) {
+                // Convert map to AppUser
+                final user = AppUser(
+                  uid: userData['uid'] as String,
+                  username: userData['username'] as String,
+                  email: userData['email'] as String? ?? '',
+                  name: '',
+                  surname: '',
+                  phoneNumber: '',
+                  profilePictureUrl: '',
+                );
                 _addParticipant(user);
                 Navigator.pop(context);
               },
@@ -935,7 +823,7 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
   }
 
   Widget _buildParticipantChip(
-    String username,
+    AppUser user, // 👈 Cambiado a AppUser
     int index,
     Color color,
     bool isDark,
@@ -957,7 +845,7 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
             decoration: BoxDecoration(color: color, shape: BoxShape.circle),
             child: Center(
               child: Text(
-                username[0].toUpperCase(),
+                user.username[0].toUpperCase(), // 👈 Usa username del AppUser
                 style: const TextStyle(
                   color: Colors.white,
                   fontSize: 11,
@@ -969,7 +857,7 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
           const SizedBox(width: 8),
           // Nombre de usuario
           Text(
-            username,
+            user.username, // 👈 Usa username del AppUser
             style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w500,
@@ -1040,18 +928,15 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
   }
 
   void _saveExpense() {
-    final screenHeight = MediaQuery.of(context).size.height;
     if (_formKey.currentState!.validate() &&
         selectedCategory != null &&
         selectedParticipants.isNotEmpty) {
-      // VALIDACIÓN FINAL: Asegurar que pagado <= total
       final total = double.tryParse(_totalController.text) ?? 0;
-      final paid = double.tryParse(_paidController.text) ?? 0;
 
-      if (paid > total) {
+      if (total <= 0) {
         TopSnackBarOverlay.show(
           context: context,
-          message: 'El monto pagado no puede ser mayor al total',
+          message: 'El total debe ser mayor a 0',
           verticalOffset: 70.0,
           backgroundColor: const Color(0xFFFF6B6B),
         );
@@ -1062,20 +947,33 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
         (cat) => cat['name'] == selectedCategory,
       );
 
+      // Obtener el usuario actual
+      final currentUser = context.read<AuthenticationBloc>().state.user;
+
+      final paid = 0.0;
+
+      // Crear el SharedExpense con la estructura correcta
       final expense = SharedExpense(
         title: _titleController.text,
         total: total,
-        paid: paid,
-        participants:
-            selectedParticipants.map((p) => p['username'] as String).toList(),
+        paid: paid, // El creador paga todo
+        participants: [
+          currentUser, // 👈 El creador se incluye automáticamente
+          ...selectedParticipants, // 👈 Los otros participantes
+        ],
         category: selectedCategory!,
-        categoryIcon: category['icon'],
-        categoryColor: category['color'],
+        categoryIcon: category['icon'] as IconData,
+        categoryColor: category['color'] as Color,
+        createdBy: currentUser, // 👈 Referencia al creador
       );
 
-      final AppUser user = context.read<AuthenticationBloc>().state.user;
+      // Enviar al BLoC
       context.read<SharedExpenseBloc>().add(
-        AddSharedExpense(userId: user.uid, expense: expense),
+        AddSharedExpense(
+          expense: expense,
+          currentUser: currentUser,
+          userId: '',
+        ),
       );
 
       widget.onSave(expense);

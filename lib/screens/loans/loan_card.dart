@@ -3,7 +3,7 @@ import 'package:iconsax/iconsax.dart';
 import 'package:walleta/models/loan.dart';
 import 'package:walleta/screens/loans/details/details_content.dart';
 import 'package:walleta/screens/loans/payment/loan_payment_dialog.dart';
-import 'package:walleta/utils/formatters.dart'; // ← AGREGAR ESTA LÍNEA
+import 'package:walleta/utils/formatters.dart';
 
 class LoanCard extends StatefulWidget {
   const LoanCard({
@@ -60,55 +60,68 @@ class _LoanCardState extends State<LoanCard> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Row(
-                      children: [
-                        Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            color: widget.loan.color.withOpacity(0.1),
-                            shape: BoxShape.circle,
-                          ),
-                          child: Center(
-                            child: Text(
-                              _getInitial(_getDisplayName()), // ← CORREGIDO
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                                color: widget.loan.color,
+                    Expanded(
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: widget.loan.color.withOpacity(0.1),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Center(
+                              child: Text(
+                                _getInitial(_getDisplayName()),
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                  color: widget.loan.color,
+                                ),
                               ),
                             ),
                           ),
-                        ),
-                        const SizedBox(width: 12),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              _getDisplayName(), // ← FUNCIÓN NUEVA
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                                color:
-                                    widget.isDark
-                                        ? Colors.white
-                                        : const Color(0xFF1F2937),
-                              ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                // Nombre
+                                Text(
+                                  _getDisplayName(),
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                    color:
+                                        widget.isDark
+                                            ? Colors.white
+                                            : const Color(0xFF1F2937),
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                const SizedBox(height: 2),
+                                // Descripción responsive
+                                Text(
+                                  widget.loan.description,
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color:
+                                        widget.isDark
+                                            ? Colors.white70
+                                            : const Color(0xFF6B7280),
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  softWrap: false,
+                                ),
+                              ],
                             ),
-                            Text(
-                              widget.loan.description,
-                              style: TextStyle(
-                                fontSize: 12,
-                                color:
-                                    widget.isDark
-                                        ? Colors.white70
-                                        : const Color(0xFF6B7280),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
+                          ),
+                        ],
+                      ),
                     ),
+                    const SizedBox(width: 8),
                     Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 10,
@@ -143,7 +156,7 @@ class _LoanCardState extends State<LoanCard> {
                         Text(
                           Formatters.formatCurrencyNoDecimals(
                             widget.loan.amount,
-                          ), // ← CAMBIAR ESTA LÍNEA
+                          ),
                           style: TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.w700,
@@ -309,7 +322,7 @@ class _LoanCardState extends State<LoanCard> {
                             ),
                             const SizedBox(width: 4),
                             Text(
-                              'Faltante: ${Formatters.formatCurrencyNoDecimals(remainingBalance)}', // ← CAMBIAR ESTA LÍNEA
+                              'Faltante: ${Formatters.formatCurrencyNoDecimals(remainingBalance)}',
                               style: TextStyle(
                                 fontSize: 11,
                                 fontWeight: FontWeight.w600,

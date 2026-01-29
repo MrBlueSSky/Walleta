@@ -1,3 +1,5 @@
+// shared_expense_bloc.dart - MODIFICA ESTE ARCHIVO
+
 import 'package:bloc/bloc.dart';
 import 'package:walleta/blocs/sharedExpense/bloc/shared_expense_event.dart';
 import 'package:walleta/blocs/sharedExpense/bloc/shared_expense_state.dart';
@@ -5,6 +7,7 @@ import 'package:walleta/repository/sharedExpense/shared_expense_repository.dart'
 
 class SharedExpenseBloc extends Bloc<SharedExpenseEvent, SharedExpenseState> {
   final SharedExpenseRepository _repository;
+  String? _currentUserId; // 👈 Guardar el userId actual
 
   SharedExpenseBloc({required SharedExpenseRepository sharedExpenseRepository})
     : _repository = sharedExpenseRepository,
@@ -13,6 +16,11 @@ class SharedExpenseBloc extends Bloc<SharedExpenseEvent, SharedExpenseState> {
     on<AddSharedExpense>(_onAddSharedExpense);
     on<DeleteSharedExpense>(_onDeleteSharedExpense);
     on<UpdateSharedExpense>(_onUpdateSharedExpense);
+  }
+
+  // 👉 Método para establecer el userId actual
+  void setCurrentUserId(String userId) {
+    _currentUserId = userId;
   }
 
   Future<void> _onLoadSharedExpenses(
@@ -38,7 +46,7 @@ class SharedExpenseBloc extends Bloc<SharedExpenseEvent, SharedExpenseState> {
 
     try {
       await _repository.addSharedExpense(
-        userId: event.userId,
+        userId: event.userId, // 👈 Usar el userId del evento
         expense: event.expense,
       );
 
@@ -58,8 +66,23 @@ class SharedExpenseBloc extends Bloc<SharedExpenseEvent, SharedExpenseState> {
     emit(const SharedExpenseState.loading());
 
     try {
-      await _repository.deleteSharedExpense(event.expense);
-      emit(const SharedExpenseState.deleted());
+      // 👈 Necesitamos el userId actual para verificar permisos
+      if (_currentUserId == null) {
+        throw Exception('Usuario no autenticado');
+      }
+
+      await _repository.deleteSharedExpense(
+        event.expense,
+        _currentUserId!, // 👈 Pasar el userId actual
+      );
+
+      // Recargar la lista después de eliminar
+      if (_currentUserId != null) {
+        final expenses = await _repository.fetchSharedExpenses(_currentUserId!);
+        emit(SharedExpenseState.success(expenses));
+      } else {
+        emit(const SharedExpenseState.deleted());
+      }
     } catch (e) {
       emit(const SharedExpenseState.error());
       print('Error al eliminar SharedExpense ❌: $e');
