@@ -24,6 +24,8 @@ class _FinancialDashboardState extends State<FinancialDashboard> {
   double changeVsPrevious = 0; // porcentaje
 
   bool _isSearchActive = false;
+  final GlobalKey<RefreshIndicatorState> _refreshIndicatorKey =
+      GlobalKey<RefreshIndicatorState>();
 
   @override
   void initState() {
@@ -38,6 +40,13 @@ class _FinancialDashboardState extends State<FinancialDashboard> {
     setState(() {
       _isSearchActive = isActive;
     });
+  }
+
+  Future<void> _refreshData() async {
+    final user = context.read<AuthenticationBloc>().state.user;
+    context.read<FinancialSummaryBloc>().add(LoadFinancialSummary(user.uid));
+    // Esperar un momento para que la animación se vea bien
+    await Future.delayed(const Duration(milliseconds: 800));
   }
 
   // Método actualizado para quitar .00
@@ -195,164 +204,174 @@ class _FinancialDashboardState extends State<FinancialDashboard> {
               ];
             }
 
-            return SingleChildScrollView(
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Header
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Bienvenido,',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: textColor.withOpacity(0.6),
+            return RefreshIndicator(
+              key: _refreshIndicatorKey,
+              onRefresh: _refreshData,
+              color: isDark ? Colors.white : Theme.of(context).primaryColor,
+              backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+              strokeWidth: 2.5,
+              displacement: 40,
+              edgeOffset: 0,
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Header
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Bienvenido,',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  color: textColor.withOpacity(0.6),
+                                ),
                               ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              '${user.name} ${user.surname}',
-                              style: TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                                color: textColor,
+                              const SizedBox(height: 4),
+                              Text(
+                                '${user.name} ${user.surname}',
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                  color: textColor,
+                                ),
                               ),
-                            ),
-                          ],
-                        ),
-                        Row(
-                          children: [
-                            SearchButton(
-                              onSearchStateChanged: _onSearchStateChanged,
-                            ),
-                            const SizedBox(width: 5),
-                            AnimatedSwitcher(
-                              duration: const Duration(milliseconds: 200),
-                              switchInCurve: Curves.easeInOut,
-                              switchOutCurve: Curves.easeInOut,
-                              transitionBuilder: (child, animation) {
-                                return FadeTransition(
-                                  opacity: animation,
-                                  child: SizeTransition(
-                                    sizeFactor: animation,
-                                    axis: Axis.horizontal,
-                                    child: child,
-                                  ),
-                                );
-                              },
-                              child:
-                                  _isSearchActive
-                                      ? const SizedBox(width: 0, height: 48)
-                                      : Container(
-                                        key: const ValueKey('notification'),
-                                        decoration: BoxDecoration(
-                                          color: cardColor,
-                                          borderRadius: BorderRadius.circular(
-                                            12,
-                                          ),
-                                          boxShadow: [
-                                            BoxShadow(
-                                              color: Colors.black.withOpacity(
-                                                0.05,
-                                              ),
-                                              blurRadius: 8,
-                                              offset: const Offset(0, 2),
-                                            ),
-                                          ],
-                                        ),
-                                        padding: const EdgeInsets.all(12),
-                                        child: const Icon(
-                                          Iconsax.notification,
-                                          size: 24,
-                                        ),
-                                      ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 24),
-
-                    // Sección 1: Resumen Rápido
-                    Text(
-                      'Resumen Financiero',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                        color: textColor,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Grid de métricas
-                    GridView.count(
-                      crossAxisCount: 2,
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      mainAxisSpacing: 16,
-                      crossAxisSpacing: 16,
-                      childAspectRatio: 1.2,
-                      children: [
-                        _buildMetricCard(
-                          title: 'Gastos del Mes',
-                          amount: monthlyExpenses,
-                          icon: Iconsax.arrow_down_2,
-                          color: const Color(0xFFFF6B6B),
-                          cardColor: cardColor,
-                          isExpense: true,
-                          isLoading: isLoading,
-                        ),
-                        _buildChangeCard(
-                          cardColor,
-                          textColor,
-                          changeVsPrevious,
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-
-                    // Sección 2: Gráfico de Gastos
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Gastos por Categoría',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
-                            color: textColor,
+                            ],
                           ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    _buildChartSection(
-                      cardColor,
-                      textColor,
-                      chartData,
-                      isLoading,
-                      context,
-                    ),
-                    const SizedBox(height: 32),
-
-                    // Sección 3: Gastos Compartidos
-                    Text(
-                      'Préstamos',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w600,
-                        color: textColor,
+                          Row(
+                            children: [
+                              SearchButton(
+                                onSearchStateChanged: _onSearchStateChanged,
+                              ),
+                              const SizedBox(width: 5),
+                              AnimatedSwitcher(
+                                duration: const Duration(milliseconds: 200),
+                                switchInCurve: Curves.easeInOut,
+                                switchOutCurve: Curves.easeInOut,
+                                transitionBuilder: (child, animation) {
+                                  return FadeTransition(
+                                    opacity: animation,
+                                    child: SizeTransition(
+                                      sizeFactor: animation,
+                                      axis: Axis.horizontal,
+                                      child: child,
+                                    ),
+                                  );
+                                },
+                                child:
+                                    _isSearchActive
+                                        ? const SizedBox(width: 0, height: 48)
+                                        : Container(
+                                          key: const ValueKey('notification'),
+                                          decoration: BoxDecoration(
+                                            color: cardColor,
+                                            borderRadius: BorderRadius.circular(
+                                              12,
+                                            ),
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: Colors.black.withOpacity(
+                                                  0.05,
+                                                ),
+                                                blurRadius: 8,
+                                                offset: const Offset(0, 2),
+                                              ),
+                                            ],
+                                          ),
+                                          padding: const EdgeInsets.all(12),
+                                          child: const Icon(
+                                            Iconsax.notification,
+                                            size: 24,
+                                          ),
+                                        ),
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
-                    ),
-                    const SizedBox(height: 16),
-                    LoansSection(cardColor: cardColor, textColor: textColor),
-                  ],
+                      const SizedBox(height: 24),
+
+                      // Sección 1: Resumen Rápido
+                      Text(
+                        'Resumen Financiero',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                          color: textColor,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Grid de métricas
+                      GridView.count(
+                        crossAxisCount: 2,
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        mainAxisSpacing: 16,
+                        crossAxisSpacing: 16,
+                        childAspectRatio: 1.2,
+                        children: [
+                          _buildMetricCard(
+                            title: 'Gastos del Mes',
+                            amount: monthlyExpenses,
+                            icon: Iconsax.arrow_down_2,
+                            color: const Color(0xFFFF6B6B),
+                            cardColor: cardColor,
+                            isExpense: true,
+                            isLoading: isLoading,
+                          ),
+                          _buildChangeCard(
+                            cardColor,
+                            textColor,
+                            changeVsPrevious,
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Sección 2: Gráfico de Gastos
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Gastos por Categoría',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
+                              color: textColor,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      _buildChartSection(
+                        cardColor,
+                        textColor,
+                        chartData,
+                        isLoading,
+                        context,
+                      ),
+                      const SizedBox(height: 32),
+
+                      // Sección 3: Gastos Compartidos
+                      Text(
+                        'Préstamos',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                          color: textColor,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      LoansSection(cardColor: cardColor, textColor: textColor),
+                    ],
+                  ),
                 ),
               ),
             );
@@ -371,6 +390,9 @@ class _FinancialDashboardState extends State<FinancialDashboard> {
     bool isExpense = false,
     bool isLoading = false,
   }) {
+    final theme = Theme.of(context);
+    final primaryColor = theme.primaryColor;
+
     return Container(
       decoration: BoxDecoration(
         color: cardColor,
@@ -438,9 +460,7 @@ class _FinancialDashboardState extends State<FinancialDashboard> {
                       padding: const EdgeInsets.all(2),
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                          Theme.of(context).primaryColor,
-                        ),
+                        valueColor: AlwaysStoppedAnimation<Color>(primaryColor),
                         backgroundColor: Colors.grey[200],
                       ),
                     ),
@@ -627,47 +647,90 @@ class _FinancialDashboardState extends State<FinancialDashboard> {
       (sum, category) => sum + category.amount,
     );
 
+    final bool hasData = chartData.isNotEmpty && totalAmount > 0;
+    final theme = Theme.of(context);
+    final primaryColor = theme.primaryColor;
+    final primaryColorLight = primaryColor.withOpacity(0.1);
+    final primaryColorExtraLight = primaryColor.withOpacity(0.05);
+
     return Container(
       decoration: BoxDecoration(
         color: cardColor,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
+            color: Colors.black.withOpacity(0.08),
+            blurRadius: 16,
+            offset: const Offset(0, 6),
           ),
         ],
       ),
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(20),
       child: Column(
         children: [
           // Gráfico responsive
           SizedBox(
-            height: MediaQuery.of(context).size.width < 350 ? 180 : 220,
+            height: MediaQuery.of(context).size.width < 350 ? 200 : 240,
             child:
                 isLoading
                     ? Center(
                       child: CircularProgressIndicator(
-                        color: Theme.of(context).primaryColor,
+                        color: primaryColor,
+                        strokeWidth: 2.5,
                       ),
                     )
-                    : chartData.isEmpty || totalAmount == 0
+                    : !hasData
                     ? Center(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(
-                            Icons.pie_chart_outline,
-                            size: 48,
-                            color: Colors.grey[400],
+                          Container(
+                            width: 100,
+                            height: 100,
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                                colors: [
+                                  primaryColorLight,
+                                  primaryColorExtraLight,
+                                ],
+                              ),
+                              shape: BoxShape.circle,
+                            ),
+                            // child: Icon(
+                            //   Icons.pie_chart_outline_rounded,
+                            //   size: 56,
+                            //   color: primaryColor,
+                            // ),
+                            child: Icon(
+                              Icons.insights_outlined,
+                              size: 42,
+                              color: primaryColor,
+                            ),
                           ),
-                          const SizedBox(height: 16),
+                          const SizedBox(height: 24),
                           Text(
-                            'No hay gastos registrados',
+                            'Sin datos aún',
                             style: TextStyle(
-                              color: Colors.grey[600],
-                              fontSize: 16,
+                              color: textColor,
+                              fontSize: 20,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 20.0,
+                            ),
+                            child: Text(
+                              'Comienza a registrar tus gastos para ver un desglose detallado por categorías',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                color: textColor.withOpacity(0.6),
+                                fontSize: 14,
+                                height: 1.5,
+                              ),
                             ),
                           ),
                         ],
@@ -759,26 +822,13 @@ class _FinancialDashboardState extends State<FinancialDashboard> {
                       ],
                     ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
 
           // Lista de categorías - Responsive
           isLoading
               ? _buildLoadingCategories(context)
-              : chartData.isEmpty || totalAmount == 0
-              ? Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: Column(
-                  children: [
-                    Icon(Icons.data_array, size: 36, color: Colors.grey[400]),
-                    const SizedBox(height: 12),
-                    Text(
-                      'Agrega gastos para ver el desglose',
-                      style: TextStyle(color: Colors.grey[600], fontSize: 14),
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
-                ),
-              )
+              : !hasData
+              ? Container()
               : _buildCategoriesList(
                 chartData,
                 totalAmount,

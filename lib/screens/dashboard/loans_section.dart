@@ -352,7 +352,7 @@ class _LoansSectionState extends State<LoansSection> {
 
                 // Si no hay préstamos ni pagos
                 if (loanState.loans.isEmpty && paymentState.payments.isEmpty) {
-                  return _buildEmptyState();
+                  return _buildEmptyState(context);
                 }
 
                 // Combinar transacciones
@@ -412,7 +412,7 @@ class _LoansSectionState extends State<LoansSection> {
 
                       // Lista de movimientos
                       if (recentTransactions.isEmpty)
-                        _buildEmptyState()
+                        _buildEmptyState(context)
                       else
                         Column(
                           children:
@@ -844,36 +844,115 @@ class _LoansSectionState extends State<LoansSection> {
     );
   }
 
-  Widget _buildEmptyState() {
+  Widget _buildEmptyState(BuildContext context) {
+    final theme = Theme.of(context);
+    final primaryColor = theme.primaryColor;
+    final isDark = theme.brightness == Brightness.dark;
+    final isSmallScreen = MediaQuery.of(context).size.width < 350;
+
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 32),
+      width: double.infinity,
+      margin: EdgeInsets.symmetric(horizontal: isSmallScreen ? 8 : 0),
+      padding: EdgeInsets.symmetric(
+        horizontal: isSmallScreen ? 16 : 24,
+        vertical: isSmallScreen ? 24 : 32,
+      ),
       decoration: BoxDecoration(
         color: widget.cardColor,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+        border: Border.all(color: primaryColor.withOpacity(0.1), width: 1),
       ),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            Icons.account_balance_wallet_outlined,
-            size: 48,
-            color: widget.textColor.withOpacity(0.3),
+          // Contenedor circular para el ícono
+          Container(
+            width: isSmallScreen ? 80 : 100,
+            height: isSmallScreen ? 80 : 100,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  primaryColor.withOpacity(0.1),
+                  primaryColor.withOpacity(0.05),
+                ],
+              ),
+              shape: BoxShape.circle,
+            ),
+            child: Stack(
+              children: [
+                Center(
+                  child: Icon(
+                    Icons.account_balance_wallet_outlined,
+                    size: isSmallScreen ? 40 : 48,
+                    color: primaryColor.withOpacity(0.7),
+                  ),
+                ),
+                // Efecto sutil de puntos
+                Positioned(
+                  top: isSmallScreen ? 12 : 16,
+                  right: isSmallScreen ? 12 : 16,
+                  child: Container(
+                    width: isSmallScreen ? 8 : 10,
+                    height: isSmallScreen ? 8 : 10,
+                    decoration: BoxDecoration(
+                      color: primaryColor.withOpacity(0.3),
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                ),
+                Positioned(
+                  bottom: isSmallScreen ? 20 : 24,
+                  left: isSmallScreen ? 20 : 24,
+                  child: Container(
+                    width: isSmallScreen ? 6 : 8,
+                    height: isSmallScreen ? 6 : 8,
+                    decoration: BoxDecoration(
+                      color: primaryColor.withOpacity(0.2),
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: isSmallScreen ? 16 : 24),
+
+          // Título principal
           Text(
             'No hay movimientos',
+            textAlign: TextAlign.center,
             style: TextStyle(
-              fontSize: 14,
-              color: widget.textColor.withOpacity(0.6),
+              fontSize: isSmallScreen ? 16 : 18,
+              fontWeight: FontWeight.w700,
+              color: widget.textColor,
+              height: 1.3,
             ),
           ),
-          const SizedBox(height: 8),
-          Text(
-            'Los préstamos y pagos aparecerán aquí',
-            style: TextStyle(
-              fontSize: 12,
-              color: widget.textColor.withOpacity(0.4),
+          SizedBox(height: isSmallScreen ? 8 : 12),
+
+          // Descripción
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: isSmallScreen ? 8 : 16),
+            child: Text(
+              'Los préstamos activos y los pagos realizados aparecerán aquí automáticamente',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: isSmallScreen ? 12 : 14,
+                color: widget.textColor.withOpacity(0.6),
+                height: 1.4,
+              ),
             ),
           ),
+          SizedBox(height: isSmallScreen ? 16 : 20),
         ],
       ),
     );

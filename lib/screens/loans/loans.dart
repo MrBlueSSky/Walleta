@@ -460,7 +460,7 @@ class _LoansState extends State<Loans> {
     if (loans.isEmpty) {
       return RefreshIndicator(
         onRefresh: _refreshLoans,
-        color: isDark ? Colors.white : const Color(0xFF2D5BFF),
+        color: isDark ? Colors.white : Theme.of(context).primaryColor,
         backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
         child: EmptyLoanState(
           onAddLoanPressed: () => _showAddLoanDialog(isDark, null),
