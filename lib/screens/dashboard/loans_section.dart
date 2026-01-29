@@ -12,28 +12,6 @@ import 'package:walleta/models/loan.dart';
 import 'package:walleta/models/payment.dart';
 import 'package:walleta/utils/formatters.dart';
 
-// Formatters class
-// class Formatters {
-//   static String formatCurrencyNoDecimals(double amount, {String symbol = '₡'}) {
-//     return '$symbol${amount.toStringAsFixed(2).replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}';
-//   }
-
-//   // Opcional: Formato abreviado para números grandes
-//   static String formatCurrencyNoDecimalsCompact(double amount, {String symbol = '₡'}) {
-//     if (amount >= 1000000) {
-//       return '$symbol${(amount / 1000000).toStringAsFixed(1)}M';
-//     } else if (amount >= 1000) {
-//       return '$symbol${(amount / 1000).toStringAsFixed(1)}K';
-//     }
-//     return formatCurrencyNoDecimals(amount, symbol: symbol);
-//   }
-
-//   // Opcional: Formato sin decimales
-//   static String formatCurrencyNoDecimalsNoDecimals(double amount, {String symbol = '₡'}) {
-//     return '$symbol${amount.toInt().toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}';
-//   }
-// }
-
 // Clase para unificar todos los movimientos
 class Transaction {
   final String id;
@@ -156,125 +134,134 @@ class _LoansSectionState extends State<LoansSection> {
   ) {
     final transactions = <Transaction>[];
 
-    try {
-      // 1. Agregar préstamos creados (usando createdAt)
-      for (var loan in loans) {
-        try {
-          final isLender = loan.lenderUserId.uid == currentUserId;
-          final otherPerson =
-              isLender ? loan.borrowerUserId.name : loan.lenderUserId.name;
+    // 1. Procesar préstamos
+    _addLoanTransactions(transactions, loans, currentUserId);
 
-          // Usar createdAt o dueDate como fallback
-          final transactionDate = loan.createdAt ?? loan.dueDate;
+    // 2. Procesar pagos (con validación estricta)
+    _addPaymentTransactions(transactions, payments, loans, currentUserId);
 
-          transactions.add(
-            Transaction(
-              id: 'loan_${loan.id}',
-              date: transactionDate,
-              amount: loan.amount,
-              isOutgoing: !isLender,
-              description:
-                  loan.description.isNotEmpty
-                      ? loan.description
-                      : 'Préstamo ${isLender ? 'otorgado' : 'recibido'}',
-              otherPersonName: otherPerson,
-              type: TransactionType.loanCreated,
-              color: loan.color,
-            ),
-          );
-        } catch (e) {
-          print('   ⚠️  Error procesando préstamo ${loan.id}: $e');
-        }
-      }
-
-      // 2. Agregar pagos
-      for (var payment in payments) {
-        try {
-          // Buscar el préstamo asociado
-          Loan? associatedLoan;
-          try {
-            associatedLoan = loans.firstWhere(
-              (l) => l.id == payment.loanId,
-              orElse:
-                  () => Loan(
-                    id: '',
-                    lenderUserId: AppUser(
-                      uid: '',
-                      name: 'Desconocido',
-                      surname: '',
-                      email: '',
-                      username: '',
-                      phoneNumber: '',
-                      profilePictureUrl: '',
-                    ),
-                    borrowerUserId: AppUser(
-                      uid: '',
-                      name: 'Desconocido',
-                      surname: '',
-                      email: '',
-                      username: '',
-                      phoneNumber: '',
-                      profilePictureUrl: '',
-                    ),
-                    description: '',
-                    amount: 0,
-                    paidAmount: 0,
-                    dueDate: DateTime.now(),
-                    status: LoanStatus.pendiente,
-                    color: Colors.grey,
-                    createdAt: DateTime.now(),
-                  ),
-            );
-          } catch (e) {
-            print('   ⚠️  Préstamo no encontrado para pago ${payment.id}');
-            continue;
-          }
-
-          final isPaymentOutgoing = payment.userId == currentUserId;
-          final isUserLender = associatedLoan.lenderUserId.uid == currentUserId;
-
-          String description;
-          String otherPerson;
-
-          if (isPaymentOutgoing) {
-            description = 'Pago realizado';
-            otherPerson =
-                isUserLender
-                    ? associatedLoan.borrowerUserId.name
-                    : associatedLoan.lenderUserId.name;
-          } else {
-            description = 'Pago recibido';
-            otherPerson =
-                isUserLender
-                    ? associatedLoan.borrowerUserId.name
-                    : associatedLoan.lenderUserId.name;
-          }
-
-          transactions.add(
-            Transaction(
-              id: 'payment_${payment.id}',
-              date: payment.date,
-              amount: payment.amount,
-              isOutgoing: isPaymentOutgoing,
-              description: description,
-              otherPersonName: otherPerson,
-              type: TransactionType.payment,
-            ),
-          );
-        } catch (e) {
-          print('   ⚠️  Error procesando pago ${payment.id}: $e');
-        }
-      }
-
-      // 3. Ordenar por fecha (más recientes primero)
-      transactions.sort((a, b) => b.date.compareTo(a.date));
-
-      print('✅ Transacciones combinadas: ${transactions.length}');
-    } catch (e) {
-      print('❌ Error crítico en _combineTransactions: $e');
-    }
+    // 3. Ordenar
+    transactions.sort((a, b) => b.date.compareTo(a.date));
 
     return transactions;
+  }
+
+  void _addLoanTransactions(
+    List<Transaction> transactions,
+    List<Loan> loans,
+    String currentUserId,
+  ) {
+    for (var loan in loans) {
+      try {
+        // Validar que el usuario participa en el préstamo
+        final userParticipates =
+            loan.lenderUserId.uid == currentUserId ||
+            loan.borrowerUserId.uid == currentUserId;
+
+        if (!userParticipates) {
+          continue;
+        }
+
+        final isLender = loan.lenderUserId.uid == currentUserId;
+        final otherPerson =
+            isLender ? loan.borrowerUserId.name : loan.lenderUserId.name;
+        final transactionDate = loan.createdAt ?? loan.dueDate;
+
+        transactions.add(
+          Transaction(
+            id: 'loan_${loan.id}',
+            date: transactionDate,
+            amount: loan.amount,
+            isOutgoing: isLender, // Es salida si es prestamista
+            description:
+                loan.description.isNotEmpty
+                    ? loan.description
+                    : 'Préstamo ${isLender ? 'otorgado' : 'recibido'}',
+            otherPersonName: otherPerson,
+            type: TransactionType.loanCreated,
+            color: loan.color,
+          ),
+        );
+      } catch (e) {
+        print('Error procesando préstamo ${loan.id}: $e');
+      }
+    }
+  }
+
+  void _addPaymentTransactions(
+    List<Transaction> transactions,
+    List<Payment> payments,
+    List<Loan> loans,
+    String currentUserId,
+  ) {
+    // Crear mapa para búsqueda rápida de préstamos
+    final loanMap = {for (var loan in loans) loan.id: loan};
+
+    for (var payment in payments) {
+      // Validaciones antes de procesar
+      if (!_isValidPayment(payment, currentUserId, loanMap)) {
+        continue;
+      }
+
+      final associatedLoan = loanMap[payment.loanId]!;
+      final isUserLender = associatedLoan.lenderUserId.uid == currentUserId;
+
+      final otherPerson =
+          isUserLender
+              ? associatedLoan.borrowerUserId.name
+              : associatedLoan.lenderUserId.name;
+
+      transactions.add(
+        Transaction(
+          id: 'payment_${payment.id}',
+          date: payment.date,
+          amount: payment.amount,
+          isOutgoing: payment.userId == currentUserId,
+          description:
+              payment.userId == currentUserId
+                  ? 'Pago realizado'
+                  : 'Pago recibido',
+          otherPersonName: otherPerson,
+          type: TransactionType.payment,
+        ),
+      );
+    }
+  }
+
+  bool _isValidPayment(
+    Payment payment,
+    String currentUserId,
+    Map<String, Loan> loanMap,
+  ) {
+    // 1. El pago debe pertenecer al usuario actual
+    if (payment.userId != currentUserId) {
+      return false;
+    }
+
+    // 2. Debe tener un loanId válido
+    if (payment.loanId.isEmpty) {
+      return false;
+    }
+
+    // 3. Debe existir el préstamo asociado
+    if (!loanMap.containsKey(payment.loanId)) {
+      print('⚠️  Pago ${payment.id} sin préstamo válido: ${payment.loanId}');
+      return false;
+    }
+
+    final loan = loanMap[payment.loanId]!;
+
+    // 4. El usuario debe participar en el préstamo
+    final userParticipates =
+        loan.lenderUserId.uid == currentUserId ||
+        loan.borrowerUserId.uid == currentUserId;
+
+    if (!userParticipates) {
+      print('⚠️  Usuario no participa en préstamo ${loan.id}');
+      return false;
+    }
+
+    return true;
   }
 
   // Icono según tipo de transacción
@@ -296,8 +283,8 @@ class _LoansSectionState extends State<LoansSection> {
     switch (transaction.type) {
       case TransactionType.loanCreated:
         return transaction.isOutgoing
-            ? 'Préstamo recibido'
-            : 'Préstamo otorgado';
+            ? 'Préstamo otorgado'
+            : 'Préstamo recibido';
       case TransactionType.payment:
         return transaction.description;
     }
@@ -539,8 +526,8 @@ class _LoansSectionState extends State<LoansSection> {
                                                 ),
                                                 child: Text(
                                                   transaction.isOutgoing
-                                                      ? 'Recibido'
-                                                      : 'Otorgado',
+                                                      ? 'Otorgado'
+                                                      : 'Recibido',
                                                   style: TextStyle(
                                                     fontSize: 10,
                                                     color:
