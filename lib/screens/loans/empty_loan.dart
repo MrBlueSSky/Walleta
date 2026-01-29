@@ -66,7 +66,7 @@ class EmptyLoanState extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              'Cuando tengas $title, aparecerán aquí',
+              'Cuando tengas "$title", aparecerán aquí',
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 14,
@@ -74,7 +74,7 @@ class EmptyLoanState extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 24),
-            if (selectedTab == 1)
+            if (selectedTab == 0)
               ElevatedButton(
                 onPressed:
                     () => {

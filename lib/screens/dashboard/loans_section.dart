@@ -7,38 +7,10 @@ import 'package:walleta/blocs/loan/bloc/loan_state.dart';
 import 'package:walleta/blocs/payment/bloc/payment_bloc.dart';
 import 'package:walleta/blocs/payment/bloc/payment_event.dart';
 import 'package:walleta/blocs/payment/bloc/payment_state.dart';
-import 'package:walleta/models/appUser.dart';
 import 'package:walleta/models/loan.dart';
 import 'package:walleta/models/payment.dart';
+import 'package:walleta/models/transaction.dart';
 import 'package:walleta/utils/formatters.dart';
-
-// Clase para unificar todos los movimientos
-class Transaction {
-  final String id;
-  final DateTime date;
-  final double amount;
-  final bool isOutgoing; // true = salida, false = entrada
-  final String description;
-  final String otherPersonName;
-  final TransactionType type;
-  final Color? color;
-
-  Transaction({
-    required this.id,
-    required this.date,
-    required this.amount,
-    required this.isOutgoing,
-    required this.description,
-    required this.otherPersonName,
-    required this.type,
-    this.color,
-  });
-}
-
-enum TransactionType {
-  payment, // Pago realizado/recibido
-  loanCreated, // Préstamo creado
-}
 
 class LoansSection extends StatefulWidget {
   const LoansSection({
@@ -56,18 +28,12 @@ class LoansSection extends StatefulWidget {
 class _LoansSectionState extends State<LoansSection> {
   bool _initialLoadDone = false;
   bool _isLoading = false;
-  bool _paymentsLoaded =
-      false; // ✅ Nueva variable para controlar carga de pagos
+  bool _paymentsLoaded = false;
 
   // Método actualizado usando Formatters
   String _formatCurrencyNoDecimals(double amount) {
     return Formatters.formatCurrencyNoDecimals(amount);
   }
-
-  // Método para formato abreviado (opcional)
-  // String _formatCurrencyNoDecimalsCompact(double amount) {
-  //   return Formatters.formatCurrencyNoDecimalsCompact(amount);
-  // }
 
   @override
   void initState() {
@@ -89,10 +55,8 @@ class _LoansSectionState extends State<LoansSection> {
       final loanState = context.read<LoanBloc>().state;
       if (loanState.status == LoanStateStatus.initial ||
           loanState.status == LoanStateStatus.error) {
-        print('📋 Cargando préstamos...');
         context.read<LoanBloc>().add(LoadLoans(userId));
       } else {
-        print('📋 Préstamos ya cargados: ${loanState.loans.length}');
         // Si ya tenemos préstamos, cargar pagos
         _loadPaymentsBasedOnLoans(loanState.loans, userId);
       }
@@ -164,7 +128,9 @@ class _LoansSectionState extends State<LoansSection> {
 
         final isLender = loan.lenderUserId.uid == currentUserId;
         final otherPerson =
-            isLender ? loan.borrowerUserId.name : loan.lenderUserId.name;
+            isLender
+                ? '${loan.borrowerUserId.name} ${loan.borrowerUserId.surname}'
+                : '${loan.lenderUserId.name} ${loan.lenderUserId.surname}';
         final transactionDate = loan.createdAt ?? loan.dueDate;
 
         transactions.add(
@@ -208,8 +174,8 @@ class _LoansSectionState extends State<LoansSection> {
 
       final otherPerson =
           isUserLender
-              ? associatedLoan.borrowerUserId.name
-              : associatedLoan.lenderUserId.name;
+              ? '${associatedLoan.borrowerUserId.name} ${associatedLoan.borrowerUserId.surname}'
+              : '${associatedLoan.lenderUserId.name} ${associatedLoan.lenderUserId.surname}';
 
       transactions.add(
         Transaction(
@@ -582,7 +548,7 @@ class _LoansSectionState extends State<LoansSection> {
                             alignment: Alignment.center,
                             child: TextButton(
                               onPressed: () {
-                                // Navegar a historial completo
+                                //! Navegar a historial completo solo si user premium
                               },
                               style: TextButton.styleFrom(
                                 foregroundColor: widget.textColor.withOpacity(

@@ -261,7 +261,7 @@ class _CustomBottomNavBarState extends State<CustomBottomNavBar>
                                 ),
                                 _NavBarItem(
                                   icon: Iconsax.profile_circle,
-                                  label: 'Perfil',
+                                  label: 'Yo',
                                   isActive: widget.currentIndex == 3,
                                   onTap: () => widget.onTap(3),
                                   isDark: isDark,

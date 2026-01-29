@@ -17,7 +17,6 @@ import 'package:walleta/blocs/saving/bloc/saving_bloc.dart';
 import 'package:walleta/blocs/saving/bloc/saving_state.dart';
 import 'package:walleta/blocs/saving/bloc/saving_event.dart';
 
-
 class Profile extends StatefulWidget {
   const Profile({super.key});
 
@@ -404,29 +403,7 @@ class _ProfileState extends State<Profile> {
     return Scaffold(
       backgroundColor:
           isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFD),
-      floatingActionButton:
-          BlocBuilder<AuthenticationBloc, AuthenticationState>(
-            builder: (context, state) {
-              if (state.status != AuthenticationStatus.authenticated) {
-                return const SizedBox();
-              }
 
-              return FloatingActionButton.extended(
-                onPressed: () => _showAddPersonalExpenseSheet(state.user.uid),
-                backgroundColor: const Color(0xFF2D5BFF),
-                foregroundColor: Colors.white,
-                elevation: 4,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                icon: const Icon(Iconsax.add, size: 22),
-                label: const Text(
-                  'Agregar Gasto',
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-                ),
-              );
-            },
-          ),
       body: BlocBuilder<AuthenticationBloc, AuthenticationState>(
         builder: (context, state) {
           if (state.status == AuthenticationStatus.unauthenticated) {
