@@ -8,7 +8,6 @@ import 'package:walleta/blocs/sharedExpensePayment/bloc/shared_expense_payment_b
 import 'package:walleta/models/shared_expense.dart';
 import 'package:walleta/models/shared_expense_payment.dart';
 import 'package:walleta/screens/sharedExpenses/shared_expense_history.dart';
-import 'package:walleta/themes/app_colors.dart';
 import 'package:walleta/widgets/payment/register_payment_dialog.dart';
 import 'package:walleta/widgets/snackBar/snackBar.dart';
 import 'package:walleta/utils/formatters.dart';
@@ -124,77 +123,79 @@ class _ExpenseCardState extends State<ExpenseCard> {
                     ),
 
                     // Progreso
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      child: Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color:
-                              isDark
-                                  ? const Color(0xFF0F172A)
-                                  : const Color(0xFFF3F4F6),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'Pagado',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color:
-                                        isDark
-                                            ? Colors.white60
-                                            : const Color(0xFF9CA3AF),
-                                  ),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  Formatters.formatCurrencyNoDecimals(
-                                    widget.expense.paid,
-                                  ),
-                                  style: TextStyle(
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.w700,
-                                    color: widget.expense.categoryColor,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: [
-                                Text(
-                                  'Progreso',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color:
-                                        isDark
-                                            ? Colors.white60
-                                            : const Color(0xFF9CA3AF),
-                                  ),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  '${(progress * 100).toInt()}%',
-                                  style: TextStyle(
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.w700,
-                                    color:
-                                        isDark
-                                            ? Colors.white
-                                            : const Color(0xFF1F2937),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
+                    // Padding(
+                    //   padding: const EdgeInsets.symmetric(horizontal: 20),
+                    //   child: Container(
+                    //     padding: const EdgeInsets.all(16),
+                    //     decoration: BoxDecoration(
+                    //       color:
+                    //           isDark
+                    //               ? const Color(0xFF0F172A)
+                    //               : const Color(0xFFF3F4F6),
+                    //       borderRadius: BorderRadius.circular(12),
+                    //     ),
+                    //     child: Row(
+                    //       mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    //       children: [
+                    //         Column(
+                    //           crossAxisAlignment: CrossAxisAlignment.start,
+                    //           children: [
+                    //             Text(
+                    //               'Total pagado',
+                    //               style: TextStyle(
+                    //                 fontSize: 12,
+                    //                 color:
+                    //                     widget.isDark
+                    //                         ? Colors.white60
+                    //                         : const Color(0xFF9CA3AF),
+                    //               ),
+                    //             ),
+                    //             const SizedBox(height: 4),
+                    //             Text(
+                    //               Formatters.formatCurrencyNoDecimals(
+                    //                 totalPaid,
+                    //               ), // ← CAMBIADO
+                    //               style: TextStyle(
+                    //                 fontSize: 20,
+                    //                 fontWeight: FontWeight.w700,
+                    //                 color:
+                    //                     widget.isDark
+                    //                         ? Colors.white
+                    //                         : const Color(0xFF1F2937),
+                    //               ),
+                    //             ),
+                    //           ],
+                    //         ),
+                    //         Column(
+                    //           crossAxisAlignment: CrossAxisAlignment.end,
+                    //           children: [
+                    //             Text(
+                    //               'Restante',
+                    //               style: TextStyle(
+                    //                 fontSize: 12,
+                    //                 color:
+                    //                     widget.isDark
+                    //                         ? Colors.white60
+                    //                         : const Color(0xFF9CA3AF),
+                    //               ),
+                    //             ),
+                    //             const SizedBox(height: 4),
+                    //             Text(
+                    //               Formatters.formatCurrencyNoDecimals(
+                    //                 widget.expense.total - totalPaid,
+                    //               ), // ← CAMBIADO
+                    //               style: TextStyle(
+                    //                 fontSize: 16,
+                    //                 fontWeight: FontWeight.w600,
+                    //                 color: widget.expense.categoryColor,
+                    //               ),
+                    //             ),
+                    //           ],
+                    //         ),
+                    //       ],
+                    //     ),
+                    //   ),
+                    // ),
 
                     // Historial de pagos
                     Expanded(
@@ -219,6 +220,7 @@ class _ExpenseCardState extends State<ExpenseCard> {
     );
   }
 
+  //!Registar pago compartido
   void _showRegisterPaymentDialog(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final remainingBalance = widget.expense.total - widget.expense.paid;
@@ -254,7 +256,7 @@ class _ExpenseCardState extends State<ExpenseCard> {
             final payment = SharedExpensePayment(
               userId: currentUser.uid,
               expenseId: widget.expense.id!,
-              payerName: currentUser.username,
+              payerName: '${currentUser.name} ${currentUser.surname}',
               amount: amount,
               date: DateTime.now(),
               description: note,
@@ -319,6 +321,229 @@ class _ExpenseCardState extends State<ExpenseCard> {
     );
   }
 
+  // void _toggleParticipantsOverlay(BuildContext context) {
+  //   final RenderBox renderBox =
+  //       _participantsKey.currentContext?.findRenderObject() as RenderBox;
+  //   final position = renderBox.localToGlobal(Offset.zero);
+
+  //   setState(() {
+  //     _showParticipants = !_showParticipants;
+  //   });
+
+  //   // Si estamos mostrando el overlay, podemos configurar un listener para cerrarlo al tocar fuera
+  //   if (_showParticipants) {
+  //     WidgetsBinding.instance.addPostFrameCallback((_) {
+  //       // Cerrar al tocar fuera
+  //       Future.delayed(Duration.zero, () {
+  //         showDialog(
+  //           context: context,
+  //           barrierColor: Colors.transparent,
+  //           builder: (context) {
+  //             return GestureDetector(
+  //               onTap: () {
+  //                 setState(() {
+  //                   _showParticipants = false;
+  //                 });
+  //                 Navigator.of(context).pop();
+  //               },
+  //               child: Container(
+  //                 color: Colors.transparent,
+  //                 child: Stack(
+  //                   children: [
+  //                     // Overlay flotante de participantes
+  //                     Positioned(
+  //                       top: position.dy,
+  //                       right:
+  //                           MediaQuery.of(context).size.width -
+  //                           position.dx -
+  //                           renderBox.size.width,
+  //                       child: Material(
+  //                         elevation: 8,
+  //                         borderRadius: BorderRadius.circular(12),
+  //                         child: Container(
+  //                           width: 250,
+  //                           constraints: BoxConstraints(maxHeight: 200),
+  //                           decoration: BoxDecoration(
+  //                             color:
+  //                                 Theme.of(context).brightness ==
+  //                                         Brightness.dark
+  //                                     ? const Color(0xFF1E293B)
+  //                                     : Colors.white,
+  //                             borderRadius: BorderRadius.circular(12),
+  //                             boxShadow: [
+  //                               BoxShadow(
+  //                                 color: Colors.black.withOpacity(0.1),
+  //                                 blurRadius: 20,
+  //                                 spreadRadius: 2,
+  //                                 offset: const Offset(0, 4),
+  //                               ),
+  //                             ],
+  //                             border: Border.all(
+  //                               color:
+  //                                   Theme.of(context).brightness ==
+  //                                           Brightness.dark
+  //                                       ? const Color(0xFF334155)
+  //                                       : const Color(0xFFE5E7EB),
+  //                               width: 0.5,
+  //                             ),
+  //                           ),
+  //                           child: Column(
+  //                             crossAxisAlignment: CrossAxisAlignment.start,
+  //                             children: [
+  //                               // Header del overlay
+  //                               Container(
+  //                                 padding: const EdgeInsets.all(12),
+  //                                 decoration: BoxDecoration(
+  //                                   color:
+  //                                       Theme.of(context).brightness ==
+  //                                               Brightness.dark
+  //                                           ? const Color(0xFF0F172A)
+  //                                           : const Color(0xFFF3F4F6),
+  //                                   borderRadius: const BorderRadius.only(
+  //                                     topLeft: Radius.circular(12),
+  //                                     topRight: Radius.circular(12),
+  //                                   ),
+  //                                 ),
+  //                                 child: Row(
+  //                                   children: [
+  //                                     Icon(
+  //                                       Iconsax.people,
+  //                                       size: 16,
+  //                                       color: const Color(0xFF2D5BFF),
+  //                                     ),
+  //                                     const SizedBox(width: 8),
+  //                                     Text(
+  //                                       'Participantes (${widget.expense.participants.length})',
+  //                                       style: TextStyle(
+  //                                         fontSize: 14,
+  //                                         fontWeight: FontWeight.w600,
+  //                                         color:
+  //                                             Theme.of(context).brightness ==
+  //                                                     Brightness.dark
+  //                                                 ? Colors.white
+  //                                                 : const Color(0xFF1F2937),
+  //                                       ),
+  //                                     ),
+  //                                   ],
+  //                                 ),
+  //                               ),
+  //                               // Lista de participantes
+  //                               Expanded(
+  //                                 child: SingleChildScrollView(
+  //                                   padding: const EdgeInsets.all(12),
+  //                                   child: Wrap(
+  //                                     spacing: 8,
+  //                                     runSpacing: 8,
+  //                                     children:
+  //                                         widget.expense.participants.map((
+  //                                           participant,
+  //                                         ) {
+  //                                           return Container(
+  //                                             decoration: BoxDecoration(
+  //                                               color:
+  //                                                   Theme.of(
+  //                                                             context,
+  //                                                           ).brightness ==
+  //                                                           Brightness.dark
+  //                                                       ? const Color(
+  //                                                         0xFF0F172A,
+  //                                                       )
+  //                                                       : const Color(
+  //                                                         0xFFF9FAFB,
+  //                                                       ),
+  //                                               borderRadius:
+  //                                                   BorderRadius.circular(8),
+  //                                               border: Border.all(
+  //                                                 color:
+  //                                                     Theme.of(
+  //                                                               context,
+  //                                                             ).brightness ==
+  //                                                             Brightness.dark
+  //                                                         ? const Color(
+  //                                                           0xFF334155,
+  //                                                         )
+  //                                                         : const Color(
+  //                                                           0xFFE5E7EB,
+  //                                                         ),
+  //                                                 width: 0.5,
+  //                                               ),
+  //                                             ),
+  //                                             padding:
+  //                                                 const EdgeInsets.symmetric(
+  //                                                   horizontal: 10,
+  //                                                   vertical: 8,
+  //                                                 ),
+  //                                             child: Row(
+  //                                               mainAxisSize: MainAxisSize.min,
+  //                                               children: [
+  //                                                 Container(
+  //                                                   width: 24,
+  //                                                   height: 24,
+  //                                                   decoration: BoxDecoration(
+  //                                                     color: widget
+  //                                                         .expense
+  //                                                         .categoryColor
+  //                                                         .withOpacity(0.2),
+  //                                                     shape: BoxShape.circle,
+  //                                                   ),
+  //                                                   child: Center(
+  //                                                     child: Text(
+  //                                                       // Cambiado para usar username del AppUser
+  //                                                       participant.username[0]
+  //                                                           .toUpperCase(),
+  //                                                       style: TextStyle(
+  //                                                         fontSize: 11,
+  //                                                         fontWeight:
+  //                                                             FontWeight.w600,
+  //                                                         color:
+  //                                                             widget
+  //                                                                 .expense
+  //                                                                 .categoryColor,
+  //                                                       ),
+  //                                                     ),
+  //                                                   ),
+  //                                                 ),
+  //                                                 const SizedBox(width: 8),
+  //                                                 Text(
+  //                                                   // Cambiado para mostrar username del AppUser
+  //                                                   participant.username,
+  //                                                   style: TextStyle(
+  //                                                     fontSize: 13,
+  //                                                     color:
+  //                                                         Theme.of(
+  //                                                                   context,
+  //                                                                 ).brightness ==
+  //                                                                 Brightness
+  //                                                                     .dark
+  //                                                             ? Colors.white70
+  //                                                             : const Color(
+  //                                                               0xFF6B7280,
+  //                                                             ),
+  //                                                   ),
+  //                                                 ),
+  //                                               ],
+  //                                             ),
+  //                                           );
+  //                                         }).toList(),
+  //                                   ),
+  //                                 ),
+  //                               ),
+  //                             ],
+  //                           ),
+  //                         ),
+  //                       ),
+  //                     ),
+  //                   ],
+  //                 ),
+  //               ),
+  //             );
+  //           },
+  //         );
+  //       });
+  //     });
+  //   }
+  // }
+
   void _toggleParticipantsOverlay(BuildContext context) {
     final RenderBox renderBox =
         _participantsKey.currentContext?.findRenderObject() as RenderBox;
@@ -350,7 +575,7 @@ class _ExpenseCardState extends State<ExpenseCard> {
                     children: [
                       // Overlay flotante de participantes
                       Positioned(
-                        top: position.dy + renderBox.size.height + 8,
+                        top: position.dy,
                         right:
                             MediaQuery.of(context).size.width -
                             position.dx -
@@ -358,177 +583,7 @@ class _ExpenseCardState extends State<ExpenseCard> {
                         child: Material(
                           elevation: 8,
                           borderRadius: BorderRadius.circular(12),
-                          child: Container(
-                            width: 250,
-                            constraints: BoxConstraints(maxHeight: 200),
-                            decoration: BoxDecoration(
-                              color:
-                                  Theme.of(context).brightness ==
-                                          Brightness.dark
-                                      ? const Color(0xFF1E293B)
-                                      : Colors.white,
-                              borderRadius: BorderRadius.circular(12),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.1),
-                                  blurRadius: 20,
-                                  spreadRadius: 2,
-                                  offset: const Offset(0, 4),
-                                ),
-                              ],
-                              border: Border.all(
-                                color:
-                                    Theme.of(context).brightness ==
-                                            Brightness.dark
-                                        ? const Color(0xFF334155)
-                                        : const Color(0xFFE5E7EB),
-                                width: 0.5,
-                              ),
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                // Header del overlay
-                                Container(
-                                  padding: const EdgeInsets.all(12),
-                                  decoration: BoxDecoration(
-                                    color:
-                                        Theme.of(context).brightness ==
-                                                Brightness.dark
-                                            ? const Color(0xFF0F172A)
-                                            : const Color(0xFFF3F4F6),
-                                    borderRadius: const BorderRadius.only(
-                                      topLeft: Radius.circular(12),
-                                      topRight: Radius.circular(12),
-                                    ),
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      Icon(
-                                        Iconsax.people,
-                                        size: 16,
-                                        color: const Color(0xFF2D5BFF),
-                                      ),
-                                      const SizedBox(width: 8),
-                                      Text(
-                                        'Participantes (${widget.expense.participants.length})',
-                                        style: TextStyle(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w600,
-                                          color:
-                                              Theme.of(context).brightness ==
-                                                      Brightness.dark
-                                                  ? Colors.white
-                                                  : const Color(0xFF1F2937),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                // Lista de participantes
-                                Expanded(
-                                  child: SingleChildScrollView(
-                                    padding: const EdgeInsets.all(12),
-                                    child: Wrap(
-                                      spacing: 8,
-                                      runSpacing: 8,
-                                      children:
-                                          widget.expense.participants.map((
-                                            participant,
-                                          ) {
-                                            return Container(
-                                              decoration: BoxDecoration(
-                                                color:
-                                                    Theme.of(
-                                                              context,
-                                                            ).brightness ==
-                                                            Brightness.dark
-                                                        ? const Color(
-                                                          0xFF0F172A,
-                                                        )
-                                                        : const Color(
-                                                          0xFFF9FAFB,
-                                                        ),
-                                                borderRadius:
-                                                    BorderRadius.circular(8),
-                                                border: Border.all(
-                                                  color:
-                                                      Theme.of(
-                                                                context,
-                                                              ).brightness ==
-                                                              Brightness.dark
-                                                          ? const Color(
-                                                            0xFF334155,
-                                                          )
-                                                          : const Color(
-                                                            0xFFE5E7EB,
-                                                          ),
-                                                  width: 0.5,
-                                                ),
-                                              ),
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                    horizontal: 10,
-                                                    vertical: 8,
-                                                  ),
-                                              child: Row(
-                                                mainAxisSize: MainAxisSize.min,
-                                                children: [
-                                                  Container(
-                                                    width: 24,
-                                                    height: 24,
-                                                    decoration: BoxDecoration(
-                                                      color: widget
-                                                          .expense
-                                                          .categoryColor
-                                                          .withOpacity(0.2),
-                                                      shape: BoxShape.circle,
-                                                    ),
-                                                    child: Center(
-                                                      child: Text(
-                                                        // Cambiado para usar username del AppUser
-                                                        participant.username[0]
-                                                            .toUpperCase(),
-                                                        style: TextStyle(
-                                                          fontSize: 11,
-                                                          fontWeight:
-                                                              FontWeight.w600,
-                                                          color:
-                                                              widget
-                                                                  .expense
-                                                                  .categoryColor,
-                                                        ),
-                                                      ),
-                                                    ),
-                                                  ),
-                                                  const SizedBox(width: 8),
-                                                  Text(
-                                                    // Cambiado para mostrar username del AppUser
-                                                    participant.username,
-                                                    style: TextStyle(
-                                                      fontSize: 13,
-                                                      color:
-                                                          Theme.of(
-                                                                    context,
-                                                                  ).brightness ==
-                                                                  Brightness
-                                                                      .dark
-                                                              ? Colors.white70
-                                                              : const Color(
-                                                                0xFF6B7280,
-                                                              ),
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            );
-                                          }).toList(),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
+                          child: _buildParticipantsOverlay(context),
                         ),
                       ),
                     ],
@@ -540,6 +595,168 @@ class _ExpenseCardState extends State<ExpenseCard> {
         });
       });
     }
+  }
+
+  Widget _buildParticipantsOverlay(BuildContext context) {
+    final participantsCount = widget.expense.participants.length;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    // Calcular alto dinámico basado en la cantidad de participantes
+    double calculateHeight() {
+      if (participantsCount == 0) return 100;
+
+      // Altura base: header + padding
+      double baseHeight = 80;
+
+      // Altura por participante
+      const participantHeight = 40.0; // Altura aproximada de cada chip
+
+      // Calcular altura necesaria
+      double contentHeight =
+          baseHeight + (participantsCount * participantHeight);
+
+      // Altura máxima permitida (70% de la pantalla)
+      final maxScreenHeight = MediaQuery.of(context).size.height * 0.7;
+
+      // Si excede el máximo, usar altura máxima con scroll
+      if (contentHeight > maxScreenHeight) {
+        return maxScreenHeight;
+      }
+
+      return contentHeight;
+    }
+
+    final containerHeight = calculateHeight();
+    final needsScroll =
+        participantsCount > 4; // Si hay más de 4 participantes, activar scroll
+
+    return Container(
+      width: 150,
+      height: containerHeight,
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E293B) : Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 20,
+            spreadRadius: 2,
+            offset: const Offset(0, 4),
+          ),
+        ],
+        border: Border.all(
+          color: isDark ? const Color(0xFF334155) : const Color(0xFFE5E7EB),
+          width: 0.5,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header del overlay
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF0F172A) : const Color(0xFFF3F4F6),
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(12),
+                topRight: Radius.circular(12),
+              ),
+            ),
+            child: Row(
+              children: [
+                Icon(Iconsax.people, size: 16, color: const Color(0xFF2D5BFF)),
+                const SizedBox(width: 8),
+                Text(
+                  'Participantes ($participantsCount)',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: isDark ? Colors.white : const Color(0xFF1F2937),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // Lista de participantes
+          if (needsScroll)
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(12),
+                child: _buildParticipantsList(isDark),
+              ),
+            )
+          else
+            Padding(
+              padding: const EdgeInsets.all(12),
+              child: _buildParticipantsList(isDark),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildParticipantsList(bool isDark) {
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children:
+          widget.expense.participants.map((participant) {
+            return Container(
+              decoration: BoxDecoration(
+                color:
+                    isDark ? const Color(0xFF0F172A) : const Color(0xFFF9FAFB),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color:
+                      isDark
+                          ? const Color(0xFF334155)
+                          : const Color(0xFFE5E7EB),
+                  width: 0.5,
+                ),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 24,
+                    height: 24,
+                    decoration: BoxDecoration(
+                      color: widget.expense.categoryColor.withOpacity(0.2),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Center(
+                      child: Text(
+                        participant.username.isNotEmpty
+                            ? participant.username[0].toUpperCase()
+                            : '?',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: widget.expense.categoryColor,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      participant.username,
+                      style: TextStyle(
+                        fontSize: 13,
+                        color:
+                            isDark ? Colors.white70 : const Color(0xFF6B7280),
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }).toList(),
+    );
   }
 
   @override

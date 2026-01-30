@@ -7,7 +7,7 @@ import 'package:walleta/models/loan.dart';
 import 'package:walleta/models/payment.dart';
 import 'package:walleta/screens/loans/details/detail_row.dart';
 import 'package:intl/intl.dart';
-import 'package:walleta/screens/loans/details/receipt_image_dialog%20.dart';
+import 'package:walleta/screens/loans/details/receipt_image_dialog.dart';
 import 'package:walleta/utils/formatters.dart';
 
 class LoanDetailsContent extends StatefulWidget {

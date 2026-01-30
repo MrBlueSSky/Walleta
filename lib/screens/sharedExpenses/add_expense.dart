@@ -30,33 +30,32 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
     {
       'name': 'Comida',
       'icon': Icons.restaurant,
-      'color': const Color(0xFF2D5BFF),
+      'color': const Color(0xFF10B981),
     },
     {
       'name': 'Viajes',
       'icon': Icons.airplanemode_active,
-      'color': const Color(0xFF2D5BFF),
+      'color': const Color(0xFFEA580C),
     },
     {
       'name': 'Entretenimiento',
       'icon': Icons.sports_esports,
-      'color': const Color(0xFFFFA726),
+      'color': const Color(0xFF7C3AED),
     },
-    {'name': 'Hogar', 'icon': Icons.home, 'color': const Color(0xFFFF6B6B)},
+    {'name': 'Hogar', 'icon': Icons.home, 'color': const Color(0xFFDB2777)},
     {
       'name': 'Transporte',
       'icon': Icons.directions_car,
-      'color': const Color(0xFF00C896),
+      'color': const Color(0xFF0EA5E9),
     },
     {
       'name': 'Otros',
       'icon': Icons.more_horiz,
-      'color': const Color(0xFF9CA3AF),
+      'color': const Color(0xFF64748B),
     },
   ];
 
   void _addParticipant(AppUser user) {
-    // 👈 Cambiado el parámetro
     bool alreadyAdded = selectedParticipants.any(
       (participant) => participant.uid == user.uid,
     );
@@ -956,15 +955,12 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
       final expense = SharedExpense(
         title: _titleController.text,
         total: total,
-        paid: paid, // El creador paga todo
-        participants: [
-          currentUser, // 👈 El creador se incluye automáticamente
-          ...selectedParticipants, // 👈 Los otros participantes
-        ],
+        paid: paid,
+        participants: [currentUser, ...selectedParticipants],
         category: selectedCategory!,
         categoryIcon: category['icon'] as IconData,
         categoryColor: category['color'] as Color,
-        createdBy: currentUser, // 👈 Referencia al creador
+        createdBy: currentUser,
       );
 
       // Enviar al BLoC
