@@ -1,0 +1,282 @@
+// lib/services/voice_command_router.dart
+
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:walleta/blocs/authentication/bloc/authentication_bloc.dart';
+import 'package:walleta/blocs/personalExpense/bloc/personal_expense_bloc.dart';
+import 'package:walleta/blocs/personalExpense/bloc/personal_expense_event.dart';
+import 'package:walleta/blocs/sharedExpense/bloc/shared_expense_bloc.dart';
+import 'package:walleta/blocs/sharedExpense/bloc/shared_expense_event.dart';
+import 'package:walleta/models/appUser.dart';
+
+import 'package:walleta/models/personal_expense.dart';
+import 'package:walleta/models/shared_expense.dart';
+
+class VoiceCommandRouter {
+  final BuildContext context;
+
+  VoiceCommandRouter(this.context);
+
+  // Método principal para procesar y ejecutar comandos
+  Future<void> processAndExecute(Map<String, dynamic> result) async {
+    final user = context.read<AuthenticationBloc>().state.user;
+
+    if (result['success'] != true) {
+      _showErrorMessage(result['error']?.toString() ?? 'Comando no procesado');
+      return;
+    }
+
+    final data = result['data'];
+    if (data == null) {
+      _showErrorMessage('No se encontraron datos en el comando');
+      return;
+    }
+
+    print("📍📍📍📍📍📍");
+    print(data);
+
+    final type = data['transaction_type']?.toString() ?? '';
+
+    try {
+      switch (type) {
+        case 'personal_expense':
+          await _handlePersonalExpense(data, user);
+          break;
+        // case 'income':
+        //   await _handleIncome(data);
+        //   break;
+        case 'shared_expenses':
+        case 'split_bill':
+          await _handleSharedExpense(data, user);
+          break;
+        // case 'payment_to_person':
+        //   await _handlePaymentToPerson(data, user);
+        //   break;
+        // case 'loan':
+        //   await _handleLoan(data, user);
+        //   break;
+        case 'money_request':
+          await _handleMoneyRequest(data);
+          break;
+        // case 'balance_check':
+        //   await _handleBalanceCheck(data);
+        //   break;
+        // case 'budget_setting':
+        //   await _handleBudgetSetting(data);
+        //   break;
+        // default:
+        //   await _handleGenericTransaction(data);
+      }
+
+      _showSuccessMessage(_getSuccessMessage(type, data));
+    } catch (e) {
+      _showErrorMessage('Error ejecutando comando: $e');
+    }
+  }
+
+  // ==================== MANEJADORES ESPECÍFICOS ====================
+
+  Future<void> _handlePersonalExpense(
+    Map<String, dynamic> data,
+    AppUser user,
+  ) async {
+    final expense = PersonalExpense(
+      title: data['title']?.toString() ?? 'Gasto personal',
+      category: data['category']?.toString() ?? 'other',
+      total: (data['amount'] as num?)?.toDouble() ?? 0.0,
+      paid: data['paid'] ?? 0.0,
+      categoryIcon: Icons.category, //! revisar iconos y colores
+      categoryColor: Colors.grey,
+    );
+
+    context.read<PersonalExpenseBloc>().add(
+      AddPersonalExpense(userId: user.uid, expense: expense),
+    );
+  }
+
+  // Future<void> _handleIncome(Map<String, dynamic> data) async {
+  //   final income = TransactionModel(
+  //     id: '',
+  //     userId: '',
+  //     title: data['title']?.toString() ?? 'Ingreso',
+  //     description: data['description']?.toString() ?? '',
+  //     amount: (data['amount'] as num?)?.toDouble() ?? 0.0,
+  //     type: 'income',
+  //     category: data['category']?.toString() ?? 'salary',
+  //     subcategory: data['subcategory']?.toString(),
+  //     date: DateTime.parse(
+  //       data['date']?.toString() ?? DateTime.now().toIso8601String(),
+  //     ),
+  //     paymentMethod: data['payment_method']?.toString(),
+  //     payer: data['payer']?.toString(),
+  //     isRecurring: data['is_recurring'] ?? false,
+  //     recurrence: data['recurrence']?.toString(),
+  //     tags: (data['tags'] as List?)?.cast<String>() ?? [],
+  //     notes: data['notes']?.toString(),
+  //     location: data['location']?.toString(),
+  //     createdAt: DateTime.now(),
+  //     updatedAt: DateTime.now(),
+  //   );
+
+  //   context.read<IncomeBloc>().add(AddIncome(income));
+  // }
+
+  Future<void> _handleSharedExpense(
+    Map<String, dynamic> data,
+    AppUser user,
+  ) async {
+    final expense = SharedExpense(
+      title: data['title']?.toString() ?? 'Gasto personal',
+      category: data['category']?.toString() ?? 'other',
+      total: (data['amount'] as num?)?.toDouble() ?? 0.0,
+      paid: data['paid'] ?? 0.0,
+      createdBy: user,
+      participants: [], // Gasto personal, sin participantes
+      categoryIcon: Icons.category, // Icono por defecto
+      categoryColor: Colors.grey, // Color por defecto
+    );
+
+    context.read<SharedExpenseBloc>().add(
+      AddSharedExpense(
+        userId: user.uid,
+        expense: expense,
+        currentUser: user,
+      ), //!Verificar porque coloque dos user
+    );
+  }
+
+  // Future<void> _handlePaymentToPerson(
+  //   Map<String, dynamic> data,
+  //   AppUser user,
+  // ) async {
+  //   final payment = Payment(
+  //     userId: user.uid,
+  //     date:
+  //         data['date'] != null
+  //             ? DateTime.parse(data['date'].toString())
+  //             : DateTime.now(),
+
+  //     amount: data['amount']?.toDouble() ?? 0.0,
+  //   );
+
+  //   context.read<PaymentBloc>().add(AddPayment(payment: payment));
+  // }
+
+  // Future<void> _handleLoan(Map<String, dynamic> data) async {
+  //   final isGiven = data['transaction_type'] == 'loan_given';
+
+  //   final loan = Loan(
+  //     id: '',
+  //     lenderUserId: null,
+  //     borrowerUserId: null,
+  //     description: data['description']?.toString() ?? '',
+  //     amount: (data['amount'] as num?)?.toDouble() ?? 0.0,
+  //     paidAmount: 0.0,
+  //     dueDate:
+  //         data['due_date'] != null
+  //             ? DateTime.parse(data['due_date'].toString())
+  //             : null,
+  //     status: LoanStatus.pendiente,
+  //     color: Colors.blue,
+  //     createdAt: DateTime.now(),
+  //   );
+
+  //   context.read<LoanBloc>().add(AddLoan(loan));
+  // }
+
+  Future<void> _handleMoneyRequest(Map<String, dynamic> data) async {
+    // Para solicitudes de dinero, podrías crear una notificación o registro
+    final request = {
+      'title': data['title']?.toString() ?? 'Solicitud de pago',
+      'description': data['description']?.toString() ?? '',
+      'amount': (data['amount'] as num?)?.toDouble() ?? 0.0,
+      'currency': data['currency']?.toString() ?? 'MXN',
+      'person': data['target_person']?.toString(),
+      'dueDate':
+          data['due_date'] != null
+              ? DateTime.parse(data['due_date'].toString())
+              : null,
+      'status': 'pending',
+      'createdAt': DateTime.now(),
+    };
+
+    // Aquí podrías dispatchar un evento a un MoneyRequestBloc si lo tienes
+    // O guardarlo directamente en Firestore
+    _showInfoMessage('Solicitud de pago creada: ${request['title']}');
+  }
+
+  Future<void> _handleBalanceCheck(Map<String, dynamic> data) async {
+    // Navegar a la pantalla de balance
+    Navigator.of(context).pushNamed('/balance');
+
+    _showInfoMessage('Mostrando balance actual...');
+  }
+
+  // ==================== MENSAJES ====================
+
+  String _getSuccessMessage(String type, Map<String, dynamic> data) {
+    final amount = data['amount'];
+    final person = data['target_person'];
+    final amountStr =
+        amount != null ? ' de \$${(amount as num).toDouble()}' : '';
+
+    switch (type) {
+      case 'expense':
+        return '✅ Gasto$amountStr registrado';
+      case 'income':
+        return '💰 Ingreso$amountStr registrado';
+      case 'shared_expense':
+        return '👥 Gasto compartido$amountStr registrado';
+      case 'loan_given':
+        return '📤 Préstamo$amountStr a $person registrado';
+      case 'loan_received':
+        return '📥 Préstamo$amountStr de $person registrado';
+      case 'payment_to_person':
+        return '💸 Pago$amountStr a $person registrado';
+      case 'money_request':
+        return '📨 Solicitud de pago$amountStr a $person creada';
+      default:
+        return '✅ Transacción registrada';
+    }
+  }
+
+  void _showSuccessMessage(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.green,
+        duration: const Duration(seconds: 3),
+      ),
+    );
+  }
+
+  void _showInfoMessage(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.blue,
+        duration: const Duration(seconds: 3),
+      ),
+    );
+  }
+
+  void _showErrorMessage(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.red,
+        duration: const Duration(seconds: 3),
+      ),
+    );
+  }
+
+  // ==================== MÉTODO DE FÁCIL USO ====================
+
+  static Future<void> routeCommand(
+    BuildContext context,
+    Map<String, dynamic> result,
+  ) async {
+    final router = VoiceCommandRouter(context);
+    await router.processAndExecute(result);
+  }
+}

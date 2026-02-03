@@ -56,8 +56,9 @@ dependencies:
   image_picker: ^1.2.1
   firebase_storage: ^12.4.10
   uuid: ^4.5.2
-  # EL COLOR PICKER
   flutter_colorpicker: ^1.1.0
+  record: ^6.2.0
+  http: ^1.6.0
 
 dev_dependencies:
   flutter_test:
