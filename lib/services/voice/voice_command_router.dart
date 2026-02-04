@@ -11,6 +11,7 @@ import 'package:walleta/models/appUser.dart';
 
 import 'package:walleta/models/personal_expense.dart';
 import 'package:walleta/models/shared_expense.dart';
+import 'package:walleta/utils/category_mapper.dart';
 
 class VoiceCommandRouter {
   final BuildContext context;
@@ -80,13 +81,22 @@ class VoiceCommandRouter {
     Map<String, dynamic> data,
     AppUser user,
   ) async {
+    final String rawCategory = data['category']?.toString() ?? 'otros';
+    final String normalizedCategory = CategoryMapper.normalizeCategory(
+      rawCategory,
+    );
+
     final expense = PersonalExpense(
       title: data['title']?.toString() ?? 'Gasto personal',
-      category: data['category']?.toString() ?? 'other',
+      category: normalizedCategory, // Usar categoría normalizada
       total: (data['amount'] as num?)?.toDouble() ?? 0.0,
       paid: data['paid'] ?? 0.0,
-      categoryIcon: Icons.category, //! revisar iconos y colores
-      categoryColor: Colors.grey,
+      categoryIcon: CategoryMapper.getIconForCategory(
+        normalizedCategory,
+      ), // Icono según categoría
+      categoryColor: CategoryMapper.getColorForCategory(
+        normalizedCategory,
+      ), // Color según categoría
     );
 
     context.read<PersonalExpenseBloc>().add(
@@ -125,23 +135,28 @@ class VoiceCommandRouter {
     Map<String, dynamic> data,
     AppUser user,
   ) async {
+    final String rawCategory = data['category']?.toString() ?? 'otros';
+    final String normalizedCategory = CategoryMapper.normalizeCategory(
+      rawCategory,
+    );
+
     final expense = SharedExpense(
-      title: data['title']?.toString() ?? 'Gasto personal',
-      category: data['category']?.toString() ?? 'other',
+      title: data['title']?.toString() ?? 'Gasto compartido',
+      category: normalizedCategory, // Usar categoría normalizada
       total: (data['amount'] as num?)?.toDouble() ?? 0.0,
       paid: data['paid'] ?? 0.0,
       createdBy: user,
-      participants: [], // Gasto personal, sin participantes
-      categoryIcon: Icons.category, // Icono por defecto
-      categoryColor: Colors.grey, // Color por defecto
+      participants: [user], // Gasto personal, sin participantes
+      categoryIcon: CategoryMapper.getIconForCategory(
+        normalizedCategory,
+      ), // Icono según categoría
+      categoryColor: CategoryMapper.getColorForCategory(
+        normalizedCategory,
+      ), // Color según categoría
     );
 
     context.read<SharedExpenseBloc>().add(
-      AddSharedExpense(
-        userId: user.uid,
-        expense: expense,
-        currentUser: user,
-      ), //!Verificar porque coloque dos user
+      AddSharedExpense(userId: user.uid, expense: expense, currentUser: user),
     );
   }
 

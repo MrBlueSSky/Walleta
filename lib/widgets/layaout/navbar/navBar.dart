@@ -4,7 +4,7 @@ import 'package:iconsax/iconsax.dart';
 class CustomBottomNavBar extends StatefulWidget {
   final int currentIndex;
   final Function(int) onTap;
-  final Function() onMicPressed;
+  final Function(bool) onMicPressed; // Cambiado a Function(bool)
   final bool isRecording;
 
   const CustomBottomNavBar({
@@ -27,9 +27,9 @@ class _CustomBottomNavBarState extends State<CustomBottomNavBar>
   late Animation<double> _pulseAnimation;
   bool _isMicPressed = false;
 
-  // Para el gesto de slide
+  // Variables para el gesto de slide (se mantienen igual)
   double _dragStartX = 0.0;
-  double _dragThreshold = 30.0; // Sensibilidad del gesto
+  double _dragThreshold = 30.0;
 
   @override
   void initState() {
@@ -81,6 +81,7 @@ class _CustomBottomNavBarState extends State<CustomBottomNavBar>
       _isMicPressed = true;
     });
     _micController.forward();
+    widget.onMicPressed(true); // Iniciar grabación
   }
 
   void _onMicTapUp(TapUpDetails details) {
@@ -88,7 +89,7 @@ class _CustomBottomNavBarState extends State<CustomBottomNavBar>
       _isMicPressed = false;
     });
     _micController.reverse();
-    widget.onMicPressed();
+    widget.onMicPressed(false); // Detener grabación
   }
 
   void _onMicTapCancel() {
@@ -96,23 +97,24 @@ class _CustomBottomNavBarState extends State<CustomBottomNavBar>
       _isMicPressed = false;
     });
     _micController.reverse();
+    widget.onMicPressed(false); // Cancelar grabación
   }
 
-  // Manejo de gestos horizontales en el navbar
+  // Los métodos _handleHorizontalDragStart y _handleHorizontalDragUpdate
+  // se mantienen igual, no los modifiqué
+
   void _handleHorizontalDragStart(DragStartDetails details) {
     _dragStartX = details.globalPosition.dx;
   }
 
   void _handleHorizontalDragUpdate(DragUpdateDetails details) {
-    // Si el drag está sobre el micrófono, ignorar
     final screenWidth = MediaQuery.of(context).size.width;
     final dragX = details.globalPosition.dx;
     final micCenter = screenWidth / 2;
-    final micRadius = 35.0; // Radio aproximado del micrófono
+    final micRadius = 35.0;
 
-    // Verificar si el toque está cerca del micrófono
     if ((dragX - micCenter).abs() < micRadius) {
-      return; // Ignorar gestos cerca del micrófono
+      return;
     }
 
     final dragEndX = details.globalPosition.dx;
@@ -120,18 +122,16 @@ class _CustomBottomNavBarState extends State<CustomBottomNavBar>
 
     if (dragDistance.abs() > _dragThreshold) {
       if (dragDistance > 0) {
-        // Deslizó hacia la izquierda -> siguiente pantalla
         _changeToNextPage();
       } else {
-        // Deslizó hacia la derecha -> pantalla anterior
         _changeToPreviousPage();
       }
-      _dragStartX = dragEndX; // Reset para el siguiente gesto
+      _dragStartX = dragEndX;
     }
   }
 
   void _changeToNextPage() {
-    final nextIndex = (widget.currentIndex + 1) % 4; // 4 pantallas totales
+    final nextIndex = (widget.currentIndex + 1) % 4;
     if (nextIndex != widget.currentIndex) {
       widget.onTap(nextIndex);
     }
@@ -159,7 +159,7 @@ class _CustomBottomNavBarState extends State<CustomBottomNavBar>
         child: Stack(
           clipBehavior: Clip.none,
           children: [
-            // Navbar principal
+            // Navbar principal (se mantiene igual)
             Positioned(
               bottom: 0,
               left: 0,
@@ -221,7 +221,6 @@ class _CustomBottomNavBarState extends State<CustomBottomNavBar>
                       ),
                       child: Row(
                         children: [
-                          // Primera sección
                           Expanded(
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -244,10 +243,8 @@ class _CustomBottomNavBarState extends State<CustomBottomNavBar>
                             ),
                           ),
 
-                          // Espacio para el micrófono
                           SizedBox(width: 70),
 
-                          // Segunda sección
                           Expanded(
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -261,7 +258,7 @@ class _CustomBottomNavBarState extends State<CustomBottomNavBar>
                                 ),
                                 _NavBarItem(
                                   icon: Iconsax.profile_circle,
-                                  label: 'Yo',
+                                  label: 'Perfil',
                                   isActive: widget.currentIndex == 3,
                                   onTap: () => widget.onTap(3),
                                   isDark: isDark,

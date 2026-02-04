@@ -1,4 +1,6 @@
 // lib/screens/home.dart
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:walleta/screens/dashboard/dashbard.dart';
 import 'package:walleta/screens/loans/loans.dart';
@@ -7,6 +9,7 @@ import 'package:walleta/screens/sharedExpenses/shared_expenses.dart';
 import 'package:walleta/services/voice/voice_command_router.dart';
 import 'package:walleta/services/voice/voice_finance.dart';
 import 'package:walleta/widgets/layaout/navbar/navBar.dart';
+import 'package:walleta/widgets/popups/voice_result.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -24,6 +27,10 @@ class _HomeState extends State<Home> {
   // Para mostrar resultados
   Map<String, dynamic>? _lastVoiceResult;
   bool _showVoiceResult = false;
+
+  // Control del popup
+  OverlayEntry? _voiceResultOverlay;
+  bool _showVoicePopup = false;
 
   final List<Widget> _screens = [
     const FinancialDashboard(),
@@ -46,12 +53,13 @@ class _HomeState extends State<Home> {
   void dispose() {
     _pageController.dispose();
     _voiceService.dispose();
+    _hideVoiceResultPopup();
     super.dispose();
   }
 
-  Future<void> _onMicPressed() async {
+  Future<void> _onMicPressed(bool isRecordingStart) async {
     setState(() {
-      if (!_isRecording) {
+      if (isRecordingStart) {
         // Iniciar grabación
         _isRecording = true;
         _showVoiceResult = false;
@@ -68,9 +76,6 @@ class _HomeState extends State<Home> {
   Future<void> _startRecording() async {
     try {
       await _voiceService.startRecording();
-
-      // Mostrar indicador de grabación
-      _showRecordingSnackbar();
     } catch (e) {
       setState(() {
         _isRecording = false;
@@ -80,49 +85,52 @@ class _HomeState extends State<Home> {
   }
 
   Future<void> _processRecording() async {
-    // Mostrar indicador de procesamiento
     _showProcessingSnackbar();
 
     try {
       final result = await _voiceService.stopRecordingAndProcess();
 
-      setState(() {
-        _lastVoiceResult = result;
-        _showVoiceResult = true;
-      });
-
-      // Mostrar resultado
-      _showVoiceResultDialog(result);
+      if (result['data']['transaction_type'] != 'invalid') {
+        setState(() {
+          _lastVoiceResult = result;
+          _showVoiceResult = true;
+        });
+        _showVoiceResultPopup(result);
+      } else {
+        _showErrorSnackbar(
+          'No se pudo detectar una transacción válida. Intenta de nuevo.',
+        );
+      }
     } catch (e) {
       _showErrorSnackbar('Error procesando audio: $e');
     }
   }
 
-  void _showRecordingSnackbar() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            const Icon(Icons.mic, color: Colors.white),
-            const SizedBox(width: 10),
-            const Text('Grabando... Habla ahora'),
-          ],
-        ),
-        backgroundColor: Colors.red,
-        duration: const Duration(seconds: 10), // Largo porque es grabación
-        action: SnackBarAction(
-          label: 'Cancelar',
-          textColor: Colors.white,
-          onPressed: () {
-            setState(() {
-              _isRecording = false;
-            });
-            _voiceService.cancelRecording();
-          },
-        ),
-      ),
-    );
-  }
+  // void _showRecordingSnackbar() {
+  //   ScaffoldMessenger.of(context).showSnackBar(
+  //     SnackBar(
+  //       content: Row(
+  //         children: [
+  //           const Icon(Icons.mic, color: Colors.white),
+  //           const SizedBox(width: 10),
+  //           const Text('Grabando... Habla ahora'),
+  //         ],
+  //       ),
+  //       backgroundColor: const Color(0xFF4B39EF),
+  //       duration: const Duration(seconds: 10),
+  //       action: SnackBarAction(
+  //         label: 'Cancelar',
+  //         textColor: Colors.white,
+  //         onPressed: () {
+  //           setState(() {
+  //             _isRecording = false;
+  //           });
+  //           _voiceService.cancelRecording();
+  //         },
+  //       ),
+  //     ),
+  //   );
+  // }
 
   void _showProcessingSnackbar() {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -137,7 +145,7 @@ class _HomeState extends State<Home> {
             const Text('Procesando con IA...'),
           ],
         ),
-        backgroundColor: Colors.blue,
+        backgroundColor: Theme.of(context).primaryColor,
         duration: const Duration(seconds: 5),
       ),
     );
@@ -147,381 +155,66 @@ class _HomeState extends State<Home> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: Colors.red,
+        backgroundColor: const Color(0xFFF44336),
         duration: const Duration(seconds: 3),
       ),
     );
   }
 
-  void _showVoiceResultDialog(Map<String, dynamic> result) {
-    showDialog(
-      context: context,
-      barrierDismissible: true,
-      builder:
-          (context) => AlertDialog(
-            title: Row(
-              children: [
-                Icon(
-                  result['success'] == true ? Icons.check_circle : Icons.error,
-                  color: result['success'] == true ? Colors.green : Colors.red,
+  void _showVoiceResultPopup(Map<String, dynamic> result) {
+    _hideVoiceResultPopup();
+
+    _voiceResultOverlay = OverlayEntry(
+      builder: (context) {
+        return Stack(
+          children: [
+            GestureDetector(
+              onTap: _hideVoiceResultPopup,
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 4.0, sigmaY: 4.0),
+                child: Container(
+                  color: Colors.black.withOpacity(0.4),
+                  width: double.infinity,
+                  height: double.infinity,
                 ),
-                const SizedBox(width: 10),
-                Text(result['success'] == true ? 'Comando procesado' : 'Error'),
-              ],
-            ),
-            content: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Transcripción
-                  if (result['transcription'] != null &&
-                      result['transcription'].toString().isNotEmpty)
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'Dijiste:',
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        const SizedBox(height: 5),
-                        Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            color: Colors.grey[100],
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            '"${result['transcription']}"',
-                            style: const TextStyle(fontStyle: FontStyle.italic),
-                          ),
-                        ),
-                        const SizedBox(height: 15),
-                      ],
-                    ),
-
-                  // Datos procesados
-                  if (result['data'] != null && result['success'] == true)
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'Acción detectada:',
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        const SizedBox(height: 5),
-                        ListTile(
-                          leading: _getTransactionTypeIcon(
-                            result['data']['transaction_type']?.toString() ??
-                                '',
-                          ),
-                          title: Text(
-                            _getTransactionTypeText(
-                              result['data']['transaction_type']?.toString() ??
-                                  '',
-                            ),
-                            style: const TextStyle(fontWeight: FontWeight.w600),
-                          ),
-                          subtitle: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              if (result['data']['title'] != null &&
-                                  result['data']['title'].toString().isNotEmpty)
-                                Text('Título: ${result['data']['title']}'),
-                              if (result['data']['amount'] != null)
-                                Text(
-                                  'Monto: \$${result['data']['amount']} ${result['data']['currency']?.toString() ?? 'MXN'}',
-                                ),
-                              if (result['data']['category'] != null &&
-                                  result['data']['category'] != 'other')
-                                Text(
-                                  'Categoría: ${_getCategoryText(result['data']['category']?.toString() ?? '')}',
-                                ),
-                              if (result['data']['target_person'] != null &&
-                                  result['data']['target_person']
-                                      .toString()
-                                      .isNotEmpty)
-                                Text(
-                                  'Persona: ${result['data']['target_person']}',
-                                ),
-                              if (result['data']['is_shared'] == true)
-                                const Text('(Compartido)'),
-                              if (result['data']['is_loan'] == true)
-                                const Text('(Préstamo)'),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-
-                  // Mensaje del usuario
-                  if (result['message'] != null &&
-                      result['message'].toString().isNotEmpty)
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const SizedBox(height: 15),
-                        const Text(
-                          'Mensaje:',
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        const SizedBox(height: 5),
-                        Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            color: Colors.blue[50],
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(result['message'].toString()),
-                        ),
-                      ],
-                    ),
-
-                  // Información faltante
-                  if (result['data']?['missing_info'] is List &&
-                      (result['data']?['missing_info'] as List).isNotEmpty)
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const SizedBox(height: 15),
-                        const Text(
-                          'Información faltante:',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: Colors.orange,
-                          ),
-                        ),
-                        const SizedBox(height: 5),
-                        ...(result['data']?['missing_info'] as List)
-                            .map<Widget>(
-                              (item) => Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 2,
-                                ),
-                                child: Text(
-                                  '• ${_getMissingInfoText(item.toString())}',
-                                  style: TextStyle(color: Colors.orange[700]),
-                                ),
-                              ),
-                            )
-                            .toList(),
-                      ],
-                    ),
-
-                  // Acciones sugeridas
-                  if (result['data']?['suggested_actions'] is List &&
-                      (result['data']?['suggested_actions'] as List).isNotEmpty)
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const SizedBox(height: 15),
-                        const Text(
-                          'Sugerencias:',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: Colors.green,
-                          ),
-                        ),
-                        const SizedBox(height: 5),
-                        ...(result['data']?['suggested_actions'] as List)
-                            .map<Widget>(
-                              (action) => Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 2,
-                                ),
-                                child: Text(
-                                  '• ${_getActionText(action.toString())}',
-                                  style: TextStyle(color: Colors.green[700]),
-                                ),
-                              ),
-                            )
-                            .toList(),
-                      ],
-                    ),
-
-                  // Error
-                  if (result['error'] != null)
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const SizedBox(height: 15),
-                        const Text(
-                          'Error:',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: Colors.red,
-                          ),
-                        ),
-                        const SizedBox(height: 5),
-                        Text(
-                          result['error'].toString(),
-                          style: const TextStyle(color: Colors.red),
-                        ),
-                      ],
-                    ),
-                ],
               ),
             ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Cancelar'),
-              ),
-              if (result['success'] == true)
-                ElevatedButton(
-                  onPressed: () async {
-                    Navigator.pop(context); // Cerrar diálogo
-                    await VoiceCommandRouter.routeCommand(context, result);
-                  },
-                  child: const Text('Aceptar y Guardar'),
-                ),
-            ],
-          ),
+
+            VoiceResultPopup(
+              result: result,
+              onSave: () async {
+                _hideVoiceResultPopup();
+                await VoiceCommandRouter.routeCommand(context, result);
+              },
+              onCancel: () {
+                _hideVoiceResultPopup();
+                setState(() {
+                  _showVoiceResult = false;
+                });
+              },
+              onClose: () {
+                _hideVoiceResultPopup();
+              },
+            ),
+          ],
+        );
+      },
     );
+
+    Overlay.of(context).insert(_voiceResultOverlay!);
+    setState(() {
+      _showVoicePopup = true;
+    });
   }
 
-  // // Método para navegar basado en el tipo de transacción
-  // void _navigateBasedOnTransaction(Map<String, dynamic>? data) {
-  //   if (data == null) return;
-
-  //   final type = data['transaction_type']?.toString() ?? '';
-
-  //   switch (type) {
-  //     case 'shared_expense':
-  //     case 'split_bill':
-  //       _onTabTapped(2); // Navegar a gastos compartidos
-  //       break;
-  //     case 'loan_given':
-  //     case 'loan_received':
-  //       _onTabTapped(1); // Navegar a préstamos
-  //       break;
-  //     default:
-  //       // Mantenerse en el dashboard
-  //       _onTabTapped(0);
-  //   }
-  // }
-
-  Icon _getTransactionTypeIcon(String type) {
-    switch (type) {
-      case 'expense':
-        return const Icon(Icons.money_off, color: Colors.red);
-      case 'income':
-        return const Icon(Icons.attach_money, color: Colors.green);
-      case 'shared_expense':
-        return const Icon(Icons.people, color: Colors.blue);
-      case 'payment_to_person':
-        return const Icon(Icons.person, color: Colors.purple);
-      case 'loan_given':
-        return const Icon(Icons.arrow_upward, color: Colors.orange);
-      case 'loan_received':
-        return const Icon(Icons.arrow_downward, color: Colors.teal);
-      case 'money_request':
-        return const Icon(Icons.notifications_active, color: Colors.amber);
-      case 'split_bill':
-        return const Icon(Icons.restaurant, color: Colors.pink);
-      default:
-        return const Icon(Icons.help_outline, color: Colors.grey);
+  void _hideVoiceResultPopup() {
+    if (_voiceResultOverlay != null) {
+      _voiceResultOverlay!.remove();
+      _voiceResultOverlay = null;
     }
-  }
-
-  String _getTransactionTypeText(String type) {
-    switch (type) {
-      case 'expense':
-        return 'Gasto';
-      case 'income':
-        return 'Ingreso';
-      case 'shared_expense':
-        return 'Gasto compartido';
-      case 'payment_to_person':
-        return 'Pago a persona';
-      case 'loan_given':
-        return 'Préstamo otorgado';
-      case 'loan_received':
-        return 'Préstamo recibido';
-      case 'money_request':
-        return 'Solicitud de dinero';
-      case 'split_bill':
-        return 'Cuenta dividida';
-      case 'budget_setting':
-        return 'Configurar presupuesto';
-      case 'balance_check':
-        return 'Consultar saldo';
-      default:
-        return 'Transacción';
-    }
-  }
-
-  String _getCategoryText(String category) {
-    switch (category) {
-      case 'food':
-        return 'Comida';
-      case 'transport':
-        return 'Transporte';
-      case 'housing':
-        return 'Hogar';
-      case 'entertainment':
-        return 'Entretenimiento';
-      case 'shopping':
-        return 'Compras';
-      case 'health':
-        return 'Salud';
-      case 'education':
-        return 'Educación';
-      case 'salary':
-        return 'Salario';
-      case 'business':
-        return 'Negocios';
-      case 'investment':
-        return 'Inversión';
-      case 'savings':
-        return 'Ahorros';
-      case 'debt':
-        return 'Deudas';
-      default:
-        return 'Otros';
-    }
-  }
-
-  String _getMissingInfoText(String field) {
-    switch (field) {
-      case 'amount':
-        return 'Monto';
-      case 'currency':
-        return 'Moneda';
-      case 'category':
-        return 'Categoría';
-      case 'target_person':
-        return 'Persona';
-      case 'target_person_type':
-        return 'Tipo de persona';
-      case 'payment_method':
-        return 'Método de pago';
-      case 'title':
-        return 'Título';
-      default:
-        return field;
-    }
-  }
-
-  String _getActionText(String action) {
-    switch (action) {
-      case 'solicitar_monto':
-        return 'Especifica el monto';
-      case 'solicitar_persona':
-        return 'Indica a quién se refiere';
-      case 'solicitar_titulo':
-        return 'Proporciona un título';
-      case 'definir_participantes':
-        return 'Define los participantes';
-      case 'configurar_division':
-        return 'Configura la división';
-      case 'definir_plazo':
-        return 'Define el plazo del préstamo';
-      case 'establecer_interes':
-        return 'Establece la tasa de interés';
-      default:
-        return action;
-    }
+    setState(() {
+      _showVoicePopup = false;
+    });
   }
 
   void _onPageChanged(int index) {
@@ -545,8 +238,9 @@ class _HomeState extends State<Home> {
 
   @override
   Widget build(BuildContext context) {
+    final primaryColor = Theme.of(context).primaryColor;
+    final primaryWithOpacity = Theme.of(context).primaryColor.withOpacity(0.3);
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFD),
       extendBody: true,
       body: Container(
         color: const Color(0xFFF8FAFD),
@@ -568,17 +262,36 @@ class _HomeState extends State<Home> {
       bottomNavigationBar: CustomBottomNavBar(
         currentIndex: _currentIndex,
         onTap: _onTabTapped,
-        onMicPressed: _onMicPressed,
+        onMicPressed: _onMicPressed, // Ahora recibe bool
         isRecording: _isRecording,
       ),
 
-      // Mostrar floating button con resultado reciente
       floatingActionButton:
-          _showVoiceResult && _lastVoiceResult != null
+          _showVoiceResult && _lastVoiceResult != null && !_showVoicePopup
               ? FloatingActionButton(
-                onPressed: () => _showVoiceResultDialog(_lastVoiceResult!),
-                backgroundColor: Colors.deepPurple,
-                child: const Icon(Icons.voice_chat),
+                onPressed: () => _showVoiceResultPopup(_lastVoiceResult!),
+                backgroundColor: primaryColor,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                elevation: 4,
+                child: Container(
+                  width: 60,
+                  height: 60,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [primaryColor, primaryWithOpacity],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: const Icon(
+                    Icons.voice_chat,
+                    color: Colors.white,
+                    size: 24,
+                  ),
+                ),
               )
               : null,
       floatingActionButtonLocation: FloatingActionButtonLocation.startFloat,
@@ -586,6 +299,7 @@ class _HomeState extends State<Home> {
   }
 }
 
+//!Mover a otro archivo
 // Physics un poco más suave pero manteniendo restricciones
 class _SmoothNoOverscrollPhysics extends ScrollPhysics {
   const _SmoothNoOverscrollPhysics({super.parent});

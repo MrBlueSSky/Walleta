@@ -1,4 +1,3 @@
-// lib/utils/voice_text_parser.dart
 class VoiceTextParser {
   // En _validateStructuredData, agrega esta lógica ANTES de validar el tipo:
 
@@ -465,46 +464,46 @@ class VoiceTextParser {
   }
 
   // ==================== OBTENCIÓN DE ICONOS ====================
-  static String getIconForType(String type) {
-    switch (type) {
-      case 'personal_expense':
-        return '💰';
-      case 'income':
-        return '💵';
-      case 'shared_expenses':
-        return '👥';
-      case 'payment_to_person':
-        return '💸';
-      case 'loan':
-        return '📤';
-      case 'money_request':
-        return '📨';
-      case 'split_bill':
-        return '🍽️';
-      default:
-        return '📋';
-    }
-  }
+  // static String getIconForType(String type) {
+  //   switch (type) {
+  //     case 'personal_expense':
+  //       return '💰';
+  //     case 'income':
+  //       return '💵';
+  //     case 'shared_expenses':
+  //       return '👥';
+  //     case 'payment_to_person':
+  //       return '💸';
+  //     case 'loan':
+  //       return '📤';
+  //     case 'money_request':
+  //       return '📨';
+  //     case 'split_bill':
+  //       return '🍽️';
+  //     default:
+  //       return '📋';
+  //   }
+  // }
 
-  // ==================== OBTENCIÓN DE COLORES ====================
-  static String getColorForType(String type) {
-    switch (type) {
-      case 'expense':
-        return '#FF6B6B';
-      case 'income':
-        return '#4ECDC4';
-      case 'shared_expense':
-        return '#45B7D1';
-      case 'payment_to_person':
-        return '#96CEB4';
-      case 'loan_given':
-        return '#FFEAA7';
-      case 'loan_received':
-        return '#DDA0DD';
-      default:
-        return '#95A5A6';
-    }
-  }
+  // // ==================== OBTENCIÓN DE COLORES ====================
+  // static String getColorForType(String type) {
+  //   switch (type) {
+  //     case 'expense':
+  //       return '#FF6B6B';
+  //     case 'income':
+  //       return '#4ECDC4';
+  //     case 'shared_expense':
+  //       return '#45B7D1';
+  //     case 'payment_to_person':
+  //       return '#96CEB4';
+  //     case 'loan_given':
+  //       return '#FFEAA7';
+  //     case 'loan_received':
+  //       return '#DDA0DD';
+  //     default:
+  //       return '#95A5A6';
+  //   }
+  // }
 
   // ==================== ANÁLISIS DE FALLBACK ====================
   static Map<String, dynamic> createFallbackAnalysis(String text) {

@@ -7,6 +7,7 @@ import 'package:walleta/blocs/financialSummary/bloc/financial_summary_bloc.dart'
 import 'package:walleta/blocs/financialSummary/bloc/financial_summary_event.dart';
 import 'package:walleta/blocs/financialSummary/bloc/financial_summary_state.dart';
 import 'package:walleta/models/financial_summary.dart';
+import 'package:walleta/screens/dashboard/dashboardTest.dart';
 
 import 'package:walleta/screens/dashboard/loans_section.dart';
 import 'package:walleta/utils/formatters.dart';
@@ -1063,14 +1064,4 @@ class _FinancialDashboardState extends State<FinancialDashboard> {
           }).toList(),
     );
   }
-}
-
-// Clase auxiliar para mantener compatibilidad
-class CategoryData {
-  final String name;
-  final double amount;
-  final Color color;
-  final IconData icon;
-
-  CategoryData(this.name, this.amount, this.color, this.icon);
 }

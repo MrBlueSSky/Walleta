@@ -2,17 +2,13 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:record/record.dart';
 import 'package:walleta/utils/voice_text_parser.dart';
 
 class VoiceFinanceService {
   late final AudioRecorder _audioRecorder;
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  static const String _groqApiKey = 'API_KEY :)';
+  static const String _groqApiKey = 'API_key jeje';
   static const String _groqBaseUrl = 'https://api.groq.com/openai/v1';
   static const String _transcriptionModel = 'whisper-large-v3-turbo';
   static const String _chatModel = 'llama-3.3-70b-versatile';
@@ -28,7 +24,7 @@ class VoiceFinanceService {
     try {
       if (_isRecording) return;
 
-      final permission = await _audioRecorder.hasPermission();
+      // final permission = await _audioRecorder.hasPermission();
       // if (permission != RecordPermission.granted) {
       //   await _audioRecorder.requestPermission();
       // }
@@ -89,12 +85,12 @@ class VoiceFinanceService {
         transcription,
       );
 
-      // 4. Guardar en Firebase
-      final user = _auth.currentUser;
-      if (user != null) {
-        print('💾 Guardando datos...');
-        await _saveFinancialData(user.uid, validatedData);
-      }
+      // // 4. Guardar en Firebase
+      // final user = _auth.currentUser;
+      // if (user != null) {
+      //   print('💾 Guardando datos...');
+      //   await _saveFinancialData(user.uid, validatedData);
+      // }
 
       return {
         'success': true,
@@ -144,7 +140,8 @@ DEVUELVE SOLO UN OBJETO JSON con esta estructura:
 
   "description": "descripción detallada",
 
-  "category": "food|transport|housing|entertainment|shopping|health|education|salary|business|investment|savings|debt|other",
+"category": "compras|comida|restaurante|entretenimiento|hogar|transporte|servicios|salud|educación|ropa|deportes|viajes|regalos|mascotas|ingreso|negocios|inversiones|ahorro|seguros|impuestos|cuotas|deuda|otros",
+
 
   "date": "YYYY-MM-DD_o_null (solo si se menciona fecha específica)",
 
@@ -186,10 +183,10 @@ EJEMPLOS DE ANÁLISIS:
   "is_payment_to_person": true,
   "is_loan": true,
   "amount": 500,
-  "currency": "MXN",
+  "currency": "CRC",
   "title": "Préstamo a Juan",
   "description": "Préstamo para comida",
-  "category": "food",
+  "category": "comida",
   "target_person": "Juan",
   "target_person_type": "friend",
   "confidence": 0.95
@@ -200,10 +197,10 @@ EJEMPLOS DE ANÁLISIS:
   "transaction_type": "shared_expense",
   "is_shared": true,
   "amount": 300,
-  "currency": "MXN",
+  "currency": "CRC",
   "title": "Pago de luz compartido",
   "description": "Pago de servicio de luz",
-  "category": "housing",
+  "category": "hogar",
   "date": "${DateTime.now().year}-01-15",
   "split_type": "equal",
   "confidence": 0.9
@@ -216,7 +213,7 @@ EJEMPLOS DE ANÁLISIS:
   "amount": 800,
   "title": "Deuda de María por concierto",
   "description": "Pendiente de pago por entradas de concierto",
-  "category": "entertainment",
+  "category": "entretenimiento",
   "target_person": "María",
   "due_date": "fecha_del_viernes",
   "confidence": 0.85
@@ -229,7 +226,7 @@ EJEMPLOS DE ANÁLISIS:
   "amount": 150,
   "title": "Gasolina para carro",
   "description": "Recarga de combustible",
-  "category": "transport",
+  "category": "transporte",
   "confidence": 0.98
 }
 
@@ -240,7 +237,7 @@ EJEMPLOS DE ANÁLISIS:
   "amount": 1200,
   "title": "Cena compartida",
   "description": "División de cuenta de cena",
-  "category": "food",
+  "category": "comida",
   "confidence": 0.88
 }
 
@@ -250,7 +247,7 @@ EJEMPLOS DE ANÁLISIS:
   "amount": 5000,
   "title": "Salario mensual",
   "description": "Pago por trabajo",
-  "category": "salary",
+  "category": "ingreso",
   "date": "${DateTime.now().year}-${DateTime.now().month.toString().padLeft(2, '0')}-01",
   "is_recurring": true,
   "recurrence": "monthly",
@@ -264,7 +261,7 @@ EJEMPLOS DE ANÁLISIS:
   "amount": 3000,
   "title": "Copas con compañeros",
   "description": "Copas compartidas con compañeros",
-  "category": "entertainment",
+  "category": "entretenimiento",
   "confidence": 0.97
 }
 
@@ -303,14 +300,16 @@ ANALIZA ESTE TEXTO: "$text"
           return jsonResult;
         } catch (e) {
           print('❌ Error parseando JSON: $e');
-          return VoiceTextParser.createFallbackAnalysis(text);
+          // return VoiceTextParser.createFallbackAnalysis(text);
+          return {};
         }
       } else {
         throw Exception('Error API: ${response.statusCode}');
       }
     } catch (e) {
       print('❌ Error en análisis: $e');
-      return VoiceTextParser.createFallbackAnalysis(text);
+      // return VoiceTextParser.createFallbackAnalysis(text);
+      return {};
     }
   }
 
@@ -348,26 +347,38 @@ ANALIZA ESTE TEXTO: "$text"
       data['is_shared'] = true; // También actualizar el flag
     }
 
-    // Validar categorías
+    // Validar categorías (ACTUALIZAR a español)
     const validCategories = [
-      'food',
-      'transport',
-      'housing',
-      'entertainment',
-      'shopping',
-      'health',
-      'education',
-      'salary',
-      'business',
-      'investment',
-      'savings',
-      'debt',
-      'other',
+      'compras',
+      'comida',
+      'restaurante',
+      'entretenimiento',
+      'hogar',
+      'transporte',
+      'servicios',
+      'salud',
+      'educación',
+      'ropa',
+      'deportes',
+      'viajes',
+      'regalos',
+      'mascotas',
+      'ingreso',
+      'negocios',
+      'inversiones',
+      'ahorro',
+      'seguros',
+      'impuestos',
+      'cuotas',
+      'deuda',
+      'otros',
     ];
 
-    String category = data['category']?.toString().toLowerCase() ?? 'other';
+    String category = data['category']?.toString().toLowerCase() ?? 'otros';
+
+    // Si la categoría no es válida, usar 'otros'
     if (!validCategories.contains(category)) {
-      category = 'other';
+      category = 'otros';
     }
 
     // Extraer y validar monto
@@ -497,7 +508,7 @@ ANALIZA ESTE TEXTO: "$text"
       missingInfo.add('title');
     }
 
-    // Construir resultado final con valores seguros
+    //! Construir resultado final con valores seguros
     final result = {
       // Datos principales
       'transaction_type': type,
@@ -512,10 +523,10 @@ ANALIZA ESTE TEXTO: "$text"
 
       // Información financiera
       'amount': amount,
-      'currency': data['currency']?.toString() ?? 'MXN',
+      'currency': data['currency']?.toString() ?? 'CRC',
       'amount_currency':
           amount != null
-              ? '${amount.toStringAsFixed(2)} ${data['currency']?.toString() ?? 'MXN'}'
+              ? '${amount} ${data['currency']?.toString() ?? 'CRC'}'
               : null,
 
       // Detalles descriptivos
@@ -587,8 +598,6 @@ ANALIZA ESTE TEXTO: "$text"
       // Para la UI
       'user_message': userMessage,
       'action_required': missingInfo.isNotEmpty ? 'need_more_info' : 'none',
-      'icon': VoiceTextParser.getIconForType(type),
-      'color': VoiceTextParser.getColorForType(type),
     };
 
     print('✅ Datos validados:');
@@ -637,29 +646,6 @@ ANALIZA ESTE TEXTO: "$text"
     } catch (e) {
       print('⚠️ Error transcripción: $e');
       return '';
-    }
-  }
-
-  // ==================== GUARDAR EN FIRESTORE ====================
-  Future<void> _saveFinancialData(
-    String userId,
-    Map<String, dynamic> data,
-  ) async {
-    try {
-      final collection = _firestore.collection('financial_transactions');
-
-      final transactionData = {
-        'user_id': userId,
-        ...data,
-        'firebase_timestamp': FieldValue.serverTimestamp(),
-        'status': 'pending',
-        'synced': false,
-      };
-
-      await collection.add(transactionData);
-      print('✅ Datos guardados en Firestore');
-    } catch (e) {
-      print('❌ Error guardando: $e');
     }
   }
 
