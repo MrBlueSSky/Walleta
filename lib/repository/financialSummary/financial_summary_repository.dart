@@ -15,18 +15,14 @@ class FinancialSummaryRepository {
   // Método principal para obtener el resumen financiero completo
   Future<Map<String, dynamic>> getFinancialSummary(String userId) async {
     try {
-      print('=== INICIANDO RESUMEN FINANCIERO PARA: $userId ===');
-
       // 1. Obtener todos los pagos del usuario con sus detalles
-      print('💰 Obteniendo pagos del usuario...');
       final userPaymentsWithDetails = await _getUserPaymentsWithCategory(
         userId,
       );
 
       // 2. Obtener gastos personales
-      print('🛒 Obteniendo gastos personales...');
+
       final personalExpenses = await _fetchPersonalExpenses(userId);
-      print('Gastos personales encontrados: ${personalExpenses.length}');
 
       // 3. Procesar todo junto
       final categorySummaries = await _categorizeExpenses(
@@ -34,7 +30,6 @@ class FinancialSummaryRepository {
         personalExpenses,
       );
 
-      print('✅ Resumen completado. Categorías: ${categorySummaries.length}');
       return {'summaries': categorySummaries};
     } catch (e) {
       print('❌ Error en FinancialSummaryRepository: $e');
@@ -47,16 +42,12 @@ class FinancialSummaryRepository {
     String userId,
   ) async {
     try {
-      print('🔍 Buscando pagos para userId: $userId');
-
       // Primero, obtener todos los pagos del usuario
       final paymentsSnapshot =
           await _firestore
               .collection('shared_expenses_payments')
               .where('userId', isEqualTo: userId)
               .get();
-
-      print('📊 Pagos encontrados: ${paymentsSnapshot.docs.length}');
 
       final Map<String, Map<String, dynamic>> paymentsMap = {};
 
@@ -106,16 +97,11 @@ class FinancialSummaryRepository {
                   'categoryColor': categoryInfo['categoryColor'],
                 };
               }
-
-              print(
-                '✅ Pago agregado - Categoría: $category, Monto: \$${amount.toStringAsFixed(2)}',
-              );
             }
           }
         }
       }
 
-      print('📈 Pagos agrupados por ${paymentsMap.length} categorías');
       return paymentsMap;
     } catch (e) {
       print('❌ Error obteniendo pagos con categoría: $e');
@@ -181,8 +167,6 @@ class FinancialSummaryRepository {
   ) async {
     final Map<String, FinancialSummary> summaryMap = {};
 
-    print('🎯 Procesando pagos compartidos por categoría...');
-
     // Procesar pagos en gastos compartidos (ya están agrupados por categoría)
     sharedPaymentsByCategory.forEach((category, data) {
       final totalAmount = data['totalAmount'] as double;
@@ -211,19 +195,11 @@ class FinancialSummaryRepository {
         userPaidAmount:
             totalAmount, // En compartidos, userPaidAmount = lo que pagó
       );
-
-      print(
-        '   📍 $category: \$${totalAmount.toStringAsFixed(2)} ($count pagos)',
-      );
     });
-
-    print('🎯 Procesando ${personalExpenses.length} gastos personales...');
 
     // Procesar gastos personales
     for (final expense in personalExpenses) {
       final category = expense.category;
-
-      print('   ➤ Gasto personal: ${expense.title} - \$${expense.total}');
 
       if (summaryMap.containsKey(category)) {
         final current = summaryMap[category]!;
@@ -253,14 +229,6 @@ class FinancialSummaryRepository {
         summaryMap.values.toList()
           ..sort((a, b) => b.totalAmount.compareTo(a.totalAmount));
 
-    print('📊 Resumen final por categorías:');
-    for (final summary in summaries) {
-      print(
-        '   - ${summary.categoryName}: \$${summary.totalAmount.toStringAsFixed(2)} '
-        '(${summary.transactionCount} transacciones)',
-      );
-    }
-
     return summaries;
   }
 
@@ -277,28 +245,11 @@ class FinancialSummaryRepository {
               .limit(5)
               .get();
 
-      print('📄 Últimos 5 pagos del usuario:');
-      for (final doc in paymentsSnapshot.docs) {
-        print('  ID: ${doc.id}');
-        print('  Datos: ${doc.data()}');
-        print('  ---');
-      }
-
       // Ver gastos compartidos relacionados
       for (final doc in paymentsSnapshot.docs) {
         final expenseId = doc.data()['expenseId'];
         if (expenseId != null) {
-          final expenseDoc =
-              await _firestore
-                  .collection('shared_expenses')
-                  .doc(expenseId)
-                  .get();
-
-          if (expenseDoc.exists) {
-            print('🔗 Gasto compartido relacionado (ID: $expenseId):');
-            print('  Datos: ${expenseDoc.data()}');
-            print('  ---');
-          }
+          await _firestore.collection('shared_expenses').doc(expenseId).get();
         }
       }
     } catch (e) {

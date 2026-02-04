@@ -150,6 +150,8 @@ class _CustomBottomNavBarState extends State<CustomBottomNavBar>
     final isDark = theme.brightness == Brightness.dark;
     final screenWidth = MediaQuery.of(context).size.width;
 
+    final primaryColor = theme.primaryColor;
+
     return GestureDetector(
       onHorizontalDragStart: _handleHorizontalDragStart,
       onHorizontalDragUpdate: _handleHorizontalDragUpdate,
@@ -300,10 +302,10 @@ class _CustomBottomNavBarState extends State<CustomBottomNavBar>
                             decoration: BoxDecoration(
                               gradient:
                                   _isMicPressed || widget.isRecording
-                                      ? const LinearGradient(
+                                      ? LinearGradient(
                                         colors: [
-                                          Color(0xFF2D5BFF),
-                                          Color(0xFF6366F1),
+                                          primaryColor,
+                                          primaryColor.withOpacity(0.8),
                                         ],
                                         begin: Alignment.topLeft,
                                         end: Alignment.bottomRight,
@@ -320,7 +322,7 @@ class _CustomBottomNavBarState extends State<CustomBottomNavBar>
                               boxShadow: [
                                 BoxShadow(
                                   color: (_isMicPressed || widget.isRecording
-                                          ? const Color(0xFF2D5BFF)
+                                          ? primaryColor
                                           : Colors.black)
                                       .withOpacity(
                                         0.25 +

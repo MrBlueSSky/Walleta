@@ -9,7 +9,7 @@ import 'package:walleta/blocs/sharedExpensePayment/bloc/shared_expense_payment_b
 import 'package:walleta/screens/loans/filter_option.dart';
 
 import 'package:walleta/screens/sharedExpenses/add_expense.dart';
-import 'package:walleta/widgets/cards/expense_card.dart';
+import 'package:walleta/widgets/cards/shared_expense_card.dart';
 
 class SharedExpensesScreen extends StatefulWidget {
   const SharedExpensesScreen({Key? key}) : super(key: key);
@@ -236,7 +236,9 @@ class _SharedExpensesScreenState extends State<SharedExpensesScreen> {
                           return Padding(
                             // Padding entre cada card
                             padding: const EdgeInsets.only(bottom: 12),
-                            child: ExpenseCard(expense: state.expenses[index]),
+                            child: SharedExpenseCard(
+                              expense: state.expenses[index],
+                            ),
                           );
                         }, childCount: state.expenses.length),
                       ),

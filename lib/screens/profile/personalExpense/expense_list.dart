@@ -507,7 +507,7 @@ class _PersonalExpensesListScreenState
   }
 }
 
-// NUEVO WIDGET: Card para lista de gastos con estilo similar a LoanCard
+//!!! NUEVO WIDGET: Card para lista de gastos con estilo similar a LoanCard
 class PersonalExpenseListCard extends StatefulWidget {
   const PersonalExpenseListCard({
     super.key,
@@ -574,58 +574,68 @@ class _PersonalExpenseListCardState extends State<PersonalExpenseListCard> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Row(
-                      children: [
-                        Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            color: widget.expense.categoryColor.withOpacity(
-                              0.1,
+                    Expanded(
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: widget.expense.categoryColor.withOpacity(
+                                0.1,
+                              ),
+                              shape: BoxShape.circle,
                             ),
-                            shape: BoxShape.circle,
-                          ),
-                          child: Center(
-                            child: Icon(
-                              widget.expense.categoryIcon ?? Iconsax.category,
-                              size: 20,
-                              color: widget.expense.categoryColor,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              widget.expense.title.isNotEmpty
-                                  ? widget.expense.title
-                                  : 'Gasto sin título',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                                color:
-                                    widget.isDark
-                                        ? Colors.white
-                                        : const Color(0xFF1F2937),
+                            child: Center(
+                              child: Icon(
+                                widget.expense.categoryIcon ?? Iconsax.category,
+                                size: 20,
+                                color: widget.expense.categoryColor,
                               ),
                             ),
-                            Text(
-                              widget.expense.category.isNotEmpty
-                                  ? widget.expense.category
-                                  : 'Sin categoría',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color:
-                                    widget.isDark
-                                        ? Colors.white70
-                                        : const Color(0xFF6B7280),
-                              ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  widget.expense.title.isNotEmpty
+                                      ? widget.expense.title
+                                      : 'Gasto sin título',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                    color:
+                                        widget.isDark
+                                            ? Colors.white
+                                            : const Color(0xFF1F2937),
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: 1,
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  widget.expense.category.isNotEmpty
+                                      ? widget.expense.category
+                                      : 'Sin categoría',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color:
+                                        widget.isDark
+                                            ? Colors.white70
+                                            : const Color(0xFF6B7280),
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: 1,
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
-                      ],
+                          ),
+                        ],
+                      ),
                     ),
+                    const SizedBox(width: 8), // espacio entre texto y estado
                     Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 10,
@@ -662,7 +672,7 @@ class _PersonalExpenseListCardState extends State<PersonalExpenseListCard> {
                         Text(
                           Formatters.formatCurrencyNoDecimals(
                             widget.expense.total,
-                          ), // ← CAMBIADO
+                          ),
                           style: TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.w700,
@@ -825,7 +835,7 @@ class _PersonalExpenseListCardState extends State<PersonalExpenseListCard> {
                             ),
                             const SizedBox(width: 4),
                             Text(
-                              'Faltante: ${Formatters.formatCurrencyNoDecimals(remaining)}', // ← CAMBIADO
+                              'Faltante: ${Formatters.formatCurrencyNoDecimals(remaining)}',
                               style: TextStyle(
                                 fontSize: 11,
                                 fontWeight: FontWeight.w600,

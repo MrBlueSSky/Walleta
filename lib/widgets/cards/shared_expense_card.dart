@@ -12,15 +12,15 @@ import 'package:walleta/widgets/payment/register_payment_dialog.dart';
 import 'package:walleta/widgets/snackBar/snackBar.dart';
 import 'package:walleta/utils/formatters.dart';
 
-class ExpenseCard extends StatefulWidget {
+class SharedExpenseCard extends StatefulWidget {
   final SharedExpense expense;
-  const ExpenseCard({super.key, required this.expense});
+  const SharedExpenseCard({super.key, required this.expense});
 
   @override
-  State<ExpenseCard> createState() => _ExpenseCardState();
+  State<SharedExpenseCard> createState() => _SharedExpenseCardState();
 }
 
-class _ExpenseCardState extends State<ExpenseCard> {
+class _SharedExpenseCardState extends State<SharedExpenseCard> {
   bool _showParticipants = false;
   final _participantsKey = GlobalKey();
 
@@ -103,6 +103,8 @@ class _ExpenseCardState extends State<ExpenseCard> {
                                             ? Colors.white
                                             : const Color(0xFF1F2937),
                                   ),
+                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: 2,
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
@@ -816,51 +818,58 @@ class _ExpenseCardState extends State<ExpenseCard> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Row(
-                          children: [
-                            Container(
-                              decoration: BoxDecoration(
-                                color: widget.expense.categoryColor.withOpacity(
-                                  0.1,
-                                ),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              padding: const EdgeInsets.all(10),
-                              child: Icon(
-                                widget.expense.categoryIcon,
-                                color: widget.expense.categoryColor,
-                                size: 20,
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                        Expanded(
+                          child: Padding(
+                            padding: const EdgeInsets.only(right: 35),
+                            child: Row(
                               children: [
-                                Text(
-                                  widget.expense.category,
-                                  style: TextStyle(
-                                    fontSize: 12,
+                                Container(
+                                  decoration: BoxDecoration(
+                                    color: widget.expense.categoryColor
+                                        .withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  padding: const EdgeInsets.all(10),
+                                  child: Icon(
+                                    widget.expense.categoryIcon,
                                     color: widget.expense.categoryColor,
-                                    fontWeight: FontWeight.w600,
+                                    size: 20,
                                   ),
                                 ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  widget.expense.title,
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                    color:
-                                        isDark
-                                            ? Colors.white
-                                            : const Color(0xFF1F2937),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        widget.expense.category,
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: widget.expense.categoryColor,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 2),
+                                      Text(
+                                        widget.expense.title,
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w600,
+                                          color:
+                                              isDark
+                                                  ? Colors.white
+                                                  : const Color(0xFF1F2937),
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ],
                                   ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
                                 ),
                               ],
                             ),
-                          ],
+                          ),
                         ),
                       ],
                     ),

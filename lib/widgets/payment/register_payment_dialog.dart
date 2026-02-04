@@ -206,63 +206,72 @@ class _RegisterPaymentDialogState extends State<RegisterPaymentDialog> {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Saldo pendiente',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color:
-                                      widget.isDark
-                                          ? Colors.white70
-                                          : const Color(0xFF6B7280),
+                          Flexible(
+                            // ← Flexible en lugar de Column directo
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Saldo pendiente',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color:
+                                        widget.isDark
+                                            ? Colors.white70
+                                            : const Color(0xFF6B7280),
+                                  ),
                                 ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                Formatters.formatCurrencyNoDecimals(
-                                  remainingBalance,
+                                const SizedBox(height: 4),
+                                Text(
+                                  Formatters.formatCurrencyNoDecimals(
+                                    remainingBalance,
+                                  ),
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w700,
+                                    color:
+                                        widget.isDark
+                                            ? Colors.white
+                                            : const Color(0xFF1F2937),
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: 1,
                                 ),
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w700,
-                                  color:
-                                      widget.isDark
-                                          ? Colors.white
-                                          : const Color(0xFF1F2937),
-                                ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: [
-                              Text(
-                                'Monto total',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color:
-                                      widget.isDark
-                                          ? Colors.white70
-                                          : const Color(0xFF6B7280),
+                          Flexible(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                Text(
+                                  'Monto total',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color:
+                                        widget.isDark
+                                            ? Colors.white70
+                                            : const Color(0xFF6B7280),
+                                  ),
                                 ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                Formatters.formatCurrencyNoDecimals(
-                                  widget.totalAmount,
+                                const SizedBox(height: 4),
+                                Text(
+                                  Formatters.formatCurrencyNoDecimals(
+                                    widget.totalAmount,
+                                  ),
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                    color:
+                                        widget.isDark
+                                            ? Colors.white
+                                            : const Color(0xFF1F2937),
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: 1,
                                 ),
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600,
-                                  color:
-                                      widget.isDark
-                                          ? Colors.white70
-                                          : const Color(0xFF6B7280),
-                                ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                         ],
                       ),

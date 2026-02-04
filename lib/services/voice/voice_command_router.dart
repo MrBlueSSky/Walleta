@@ -56,7 +56,7 @@ class VoiceCommandRouter {
         // case 'loan':
         //   await _handleLoan(data, user);
         //   break;
-        case 'money_request':
+        case 'loan':
           await _handleMoneyRequest(data);
           break;
         // case 'balance_check':
@@ -205,7 +205,7 @@ class VoiceCommandRouter {
       'title': data['title']?.toString() ?? 'Solicitud de pago',
       'description': data['description']?.toString() ?? '',
       'amount': (data['amount'] as num?)?.toDouble() ?? 0.0,
-      'currency': data['currency']?.toString() ?? 'MXN',
+      'currency': data['currency']?.toString() ?? 'CRC',
       'person': data['target_person']?.toString(),
       'dueDate':
           data['due_date'] != null
@@ -218,13 +218,6 @@ class VoiceCommandRouter {
     // Aquí podrías dispatchar un evento a un MoneyRequestBloc si lo tienes
     // O guardarlo directamente en Firestore
     _showInfoMessage('Solicitud de pago creada: ${request['title']}');
-  }
-
-  Future<void> _handleBalanceCheck(Map<String, dynamic> data) async {
-    // Navegar a la pantalla de balance
-    Navigator.of(context).pushNamed('/balance');
-
-    _showInfoMessage('Mostrando balance actual...');
   }
 
   // ==================== MENSAJES ====================
