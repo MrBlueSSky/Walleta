@@ -3,13 +3,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:intl/intl.dart';
+import 'package:walleta/blocs/authentication/bloc/authentication_bloc.dart';
 import 'package:walleta/blocs/personalExpense/bloc/personal_expense_bloc.dart';
 import 'package:walleta/blocs/personalExpense/bloc/personal_expense_event.dart';
 import 'package:walleta/blocs/personalExpense/bloc/personal_expense_state.dart';
 import 'package:walleta/models/personal_expense.dart';
+import 'package:walleta/models/personal_expense_payment.dart';
 import 'package:walleta/screens/loans/filter_option.dart';
 import 'package:walleta/screens/profile/personalExpense/personal_expense.dart';
-import 'package:walleta/utils/formatters.dart'; // ← AGREGAR ESTA LÍNEA
+import 'package:walleta/utils/formatters.dart';
+import 'package:walleta/widgets/payment/register_payment_dialog.dart';
+import 'package:walleta/widgets/snackBar/snackBar.dart'; // ← AGREGAR ESTA LÍNEA
 
 class PersonalExpensesListScreen extends StatefulWidget {
   final String userId;
@@ -848,7 +852,7 @@ class _PersonalExpenseListCardState extends State<PersonalExpenseListCard> {
 
                       // Botón para registrar pago
                       GestureDetector(
-                        onTap: () => _showRegisterPaymentDialog(),
+                        onTap: () => _showRegisterPaymentDialog(context),
                         child: Container(
                           decoration: BoxDecoration(
                             color: const Color(0xFF2D5BFF).withOpacity(0.1),
@@ -1092,75 +1096,102 @@ class _PersonalExpenseListCardState extends State<PersonalExpenseListCard> {
     );
   }
 
-  void _showRegisterPaymentDialog() {
+  //!!!!!!!!!!!!!!!!!!!!!!!Registar pago compartido
+  void _showRegisterPaymentDialog(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final remainingBalance = widget.expense.total - widget.expense.paid;
+    final screenHeight = MediaQuery.of(context).size.height;
+
+    // Solo mostrar el diálogo si hay saldo pendiente
+    if (remainingBalance <= 0) {
+      TopSnackBarOverlay.show(
+        context: context,
+        message: 'Este gasto ya está completamente pagado',
+        verticalOffset: 70.0,
+        backgroundColor: Colors.orange,
+      );
+      return;
+    }
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) {
-        return Container(
-          color: Colors.black.withOpacity(0.5),
-          child: DraggableScrollableSheet(
-            initialChildSize: 0.4,
-            minChildSize: 0.3,
-            maxChildSize: 0.5,
-            builder: (context, scrollController) {
-              return Container(
-                decoration: BoxDecoration(
-                  color: widget.isDark ? const Color(0xFF1E293B) : Colors.white,
-                  borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(24),
-                  ),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Center(
-                        child: Container(
-                          width: 40,
-                          height: 4,
-                          decoration: BoxDecoration(
-                            color:
-                                widget.isDark
-                                    ? Colors.white70
-                                    : const Color(0xFF6B7280),
-                            borderRadius: BorderRadius.circular(2),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        'Registrar Pago',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w700,
-                          color:
-                              widget.isDark
-                                  ? Colors.white
-                                  : const Color(0xFF1F2937),
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-                      // Aquí podrías agregar un formulario para registrar pagos
-                      Center(
-                        child: Text(
-                          'Función en desarrollo',
-                          style: TextStyle(
-                            color:
-                                widget.isDark
-                                    ? Colors.white70
-                                    : const Color(0xFF6B7280),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+        return RegisterPaymentDialog(
+          title: 'Registrar Pago',
+          subtitle: widget.expense.title,
+          totalAmount: widget.expense.total,
+          paidAmount: widget.expense.paid,
+          isDark: isDark,
+          onPaymentConfirmed: (amount, note, image) async {
+            // Obtener el nombre del usuario actual
+            final currentUser = context.read<AuthenticationBloc>().state.user;
+
+            // Crear el pago
+            final payment = PersonalExpensePayment(
+              userId: currentUser.uid,
+              expenseId: widget.expense.id!,
+              payerName: '${currentUser.name} ${currentUser.surname}',
+              amount: amount,
+              date: DateTime.now(),
+              description: note,
+              receiptImageUrl: image?.path,
+            );
+
+            // Calcular nuevo monto pagado
+            final newPaidAmount = widget.expense.paid + amount;
+
+            try {
+              // // 1. Agregar el pago al BLoC
+              // context.read<ExpensePaymentBloc>().add(
+              //   AddExpensePayment(
+              //     payment: payment,
+              //     newPaidAmount: newPaidAmount,
+              //   ),
+              // );
+
+              // 2. Actualizar el gasto compartido
+              // final updatedExpense = SharedExpense(
+              //   id: widget.expense.id,
+              //   title: widget.expense.title,
+              //   total: widget.expense.total,
+              //   paid: newPaidAmount,
+              //   participants: widget.expense.participants,
+              //   category: widget.expense.category,
+              //   categoryIcon: widget.expense.categoryIcon,
+              //   categoryColor: widget.expense.categoryColor,
+              //   status:
+              //       newPaidAmount >= widget.expense.total
+              //           ? 'completado'
+              //           : 'pendiente',
+              //   createdAt: widget.expense.createdAt,
+              //   createdBy: currentUser,
+              // );
+
+              // // 3. Actualizar en el BLoC de gastos compartidos
+              // context.read<SharedExpenseBloc>().add(
+              //   UpdateSharedExpense(expense: updatedExpense),
+              // );
+
+              // 4. Mostrar confirmación
+              TopSnackBarOverlay.show(
+                context: context,
+                message:
+                    'Pago de ${Formatters.formatCurrencyNoDecimals(amount)} registrado exitosamente',
+                verticalOffset: 70.0,
+                backgroundColor: const Color(0xFF00C896),
               );
-            },
-          ),
+            } catch (e) {
+              TopSnackBarOverlay.show(
+                context: context,
+                message: 'Error: $e',
+                verticalOffset: 70.0,
+                backgroundColor: const Color(0xFFFF6B6B),
+              );
+              rethrow;
+            }
+          },
         );
       },
     );

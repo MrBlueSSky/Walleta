@@ -358,13 +358,14 @@ class _CustomBottomNavBarState extends State<CustomBottomNavBar>
                               child: Stack(
                                 children: [
                                   Icon(
-                                    widget.isRecording
-                                        ? Iconsax.microphone_slash5
-                                        : Iconsax.microphone_2,
+                                    Iconsax.microphone_2,
+                                    // widget.isRecording
+                                    //     ? Iconsax.microphone_slash5
+                                    //     : Iconsax.microphone_2,
                                     color:
                                         _isMicPressed || widget.isRecording
                                             ? Colors.white
-                                            : const Color(0xFF2D5BFF),
+                                            : Theme.of(context).primaryColor,
                                     size: 30,
                                   ),
                                 ],
