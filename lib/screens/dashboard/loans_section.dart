@@ -199,17 +199,12 @@ class _LoansSectionState extends State<LoansSection> {
     String currentUserId,
     Map<String, Loan> loanMap,
   ) {
-    // 1. El pago debe pertenecer al usuario actual
-    if (payment.userId != currentUserId) {
-      return false;
-    }
-
-    // 2. Debe tener un loanId válido
+    // 1. Debe tener un loanId válido
     if (payment.loanId.isEmpty) {
       return false;
     }
 
-    // 3. Debe existir el préstamo asociado
+    // 2. Debe existir el préstamo asociado
     if (!loanMap.containsKey(payment.loanId)) {
       print('⚠️  Pago ${payment.id} sin préstamo válido: ${payment.loanId}');
       return false;
@@ -217,7 +212,7 @@ class _LoansSectionState extends State<LoansSection> {
 
     final loan = loanMap[payment.loanId]!;
 
-    // 4. El usuario debe participar en el préstamo
+    // 3. El usuario debe participar en el préstamo como LENDER o BORROWER
     final userParticipates =
         loan.lenderUserId.uid == currentUserId ||
         loan.borrowerUserId.uid == currentUserId;
@@ -227,6 +222,8 @@ class _LoansSectionState extends State<LoansSection> {
       return false;
     }
 
+    // 4. ACEPTAR el pago sin importar quién lo hizo
+    // (antes solo aceptaba si payment.userId == currentUserId)
     return true;
   }
 

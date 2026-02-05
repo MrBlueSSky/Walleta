@@ -4,11 +4,12 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:record/record.dart';
 import 'package:walleta/utils/voice_text_parser.dart';
+import 'package:path_provider/path_provider.dart';
 
 class VoiceFinanceService {
   late final AudioRecorder _audioRecorder;
 
-  static const String _groqApiKey = 'api key';
+  static const String _groqApiKey = 'api key xd';
   static const String _groqBaseUrl = 'https://api.groq.com/openai/v1';
   static const String _transcriptionModel = 'whisper-large-v3-turbo';
   static const String _chatModel = 'llama-3.3-70b-versatile';
@@ -25,10 +26,10 @@ class VoiceFinanceService {
     try {
       if (_isRecording) return;
 
-      // final permission = await _audioRecorder.hasPermission();
-      // if (permission != RecordPermission.granted) {
-      //   await _audioRecorder.requestPermission();
-      // }
+      final hasPermission = await _audioRecorder.hasPermission();
+      if (!hasPermission) {
+        throw Exception('Sin permisos de micrófono');
+      }
 
       final config = RecordConfig(
         encoder: AudioEncoder.aacLc,
@@ -37,11 +38,12 @@ class VoiceFinanceService {
         numChannels: 1,
       );
 
-      final tempDir = Directory.systemTemp;
+      final dir = await getTemporaryDirectory();
       final filePath =
-          '${tempDir.path}/audio_${DateTime.now().millisecondsSinceEpoch}.m4a';
+          '${dir.path}/audio_${DateTime.now().millisecondsSinceEpoch}.m4a';
 
       await _audioRecorder.start(config, path: filePath);
+
       _isRecording = true;
     } catch (e) {
       print('❌ Error al grabar: $e');
@@ -551,9 +553,30 @@ ANALIZA: "$text"
   // ==================== TRANSCRIPCIÓN ====================
   Future<String> _transcribeAudio(String audioPath) async {
     try {
+      print('🎤 Intentando transcribir audio de: $audioPath');
+
+      // 1. Verificar si el archivo existe
       final audioFile = File(audioPath);
+      final fileExists = await audioFile.exists();
+
+      if (!fileExists) {
+        print('❌ Archivo de audio no encontrado en: $audioPath');
+        throw Exception('Archivo de audio no encontrado');
+      }
+
+      // 2. Verificar tamaño del archivo
+      final fileSize = await audioFile.length();
+      if (fileSize == 0) {
+        print('❌ Archivo de audio vacío (0 bytes)');
+        throw Exception('Archivo de audio vacío');
+      }
+
+      print('📁 Archivo encontrado, tamaño: ${fileSize} bytes');
+
+      // 3. Leer bytes
       final bytes = await audioFile.readAsBytes();
 
+      // 4. Crear request
       var request = http.MultipartRequest(
         'POST',
         Uri.parse('$_groqBaseUrl/audio/transcriptions'),
@@ -571,17 +594,25 @@ ANALIZA: "$text"
         'temperature': '0',
       });
 
+      print('🚀 Enviando audio a Groq API...');
       final response = await request.send();
       final responseBody = await response.stream.bytesToString();
 
+      print('📥 Respuesta recibida, status: ${response.statusCode}');
+
       if (response.statusCode == 200) {
         final data = jsonDecode(responseBody);
-        return data['text']?.toString().trim() ?? '';
+        final transcribedText = data['text']?.toString().trim() ?? '';
+
+        print('✅ Transcripción exitosa: ${transcribedText.length} caracteres');
+        return transcribedText;
       } else {
-        throw Exception('Error ${response.statusCode}');
+        print('❌ Error de API: ${response.statusCode} - $responseBody');
+        throw Exception('Error ${response.statusCode}: $responseBody');
       }
     } catch (e) {
-      print('⚠️ Error transcripción: $e');
+      print('⚠️ Error en transcripción: $e');
+      print('📌 Stack trace: ${e.toString()}');
       return '';
     }
   }
