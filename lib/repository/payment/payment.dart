@@ -14,7 +14,8 @@ class PaymentRepository {
   // Subir imagen a Firebase Storage
   Future<String> uploadReceiptImage(String userId, String filePath) async {
     try {
-      final fileName = 'receipt_${DateTime.now().millisecondsSinceEpoch}.jpg';
+      final fileName =
+          'receipt_${DateTime.now().millisecondsSinceEpoch}.jpg'; //!Ver si uso uuid.v4()
       final ref = _storage.ref().child('receipts/$userId/$fileName');
 
       await ref.putFile(File(filePath));

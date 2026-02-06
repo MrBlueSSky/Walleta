@@ -8,6 +8,7 @@ import 'package:walleta/blocs/personalExpense/bloc/personal_expense_event.dart';
 import 'package:walleta/blocs/sharedExpense/bloc/shared_expense_bloc.dart';
 import 'package:walleta/blocs/sharedExpense/bloc/shared_expense_event.dart';
 import 'package:walleta/models/appUser.dart';
+import 'package:walleta/utils/formatters.dart';
 
 import 'package:walleta/models/personal_expense.dart';
 import 'package:walleta/models/shared_expense.dart';
@@ -88,7 +89,7 @@ class VoiceCommandRouter {
 
     final expense = PersonalExpense(
       title: data['title']?.toString() ?? 'Gasto personal',
-      category: normalizedCategory, // Usar categoría normalizada
+      category: Formatters.capitalize(normalizedCategory),
       total: (data['amount'] as num?)?.toDouble() ?? 0.0,
       paid: data['paid'] ?? 0.0,
       categoryIcon: CategoryMapper.getIconForCategory(
@@ -142,7 +143,7 @@ class VoiceCommandRouter {
 
     final expense = SharedExpense(
       title: data['title']?.toString() ?? 'Gasto compartido',
-      category: normalizedCategory, // Usar categoría normalizada
+      category: Formatters.capitalize(normalizedCategory),
       total: (data['amount'] as num?)?.toDouble() ?? 0.0,
       paid: data['paid'] ?? 0.0,
       createdBy: user,

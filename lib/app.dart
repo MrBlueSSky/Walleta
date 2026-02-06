@@ -5,15 +5,17 @@ import 'package:walleta/blocs/financialSummary/bloc/financial_summary_bloc.dart'
 import 'package:walleta/blocs/loan/bloc/loan_bloc.dart';
 import 'package:walleta/blocs/payment/bloc/payment_bloc.dart';
 import 'package:walleta/blocs/personalExpense/bloc/personal_expense_bloc.dart';
+import 'package:walleta/blocs/personalExpensePayment/bloc/personal_expense_payment_bloc.dart';
 import 'package:walleta/blocs/sharedExpensePayment/bloc/shared_expense_payment_bloc.dart';
 import 'package:walleta/blocs/saving/bloc/saving_bloc.dart';
 import 'package:walleta/providers/auth_provider.dart';
 import 'package:walleta/providers/theme_provider.dart';
 import 'package:walleta/repository/FinancialSummary/financial_summary_repository.dart';
-import 'package:walleta/repository/SharedExpensePaymentRepository/shared_expense_payment_repository.dart';
+import 'package:walleta/repository/SharedExpensePayment/shared_expense_payment_repository.dart';
 import 'package:walleta/repository/loan/loan_repository.dart';
 import 'package:walleta/repository/payment/payment.dart';
 import 'package:walleta/repository/personalExpense/personal_expense.dart';
+import 'package:walleta/repository/personalExpensePayment/personal_expense_payment_repository.dart';
 import 'package:walleta/repository/repository.dart';
 import 'package:walleta/repository/saving/saving_repository.dart';
 import 'package:walleta/routes/routes.dart';
@@ -60,6 +62,12 @@ class App extends StatelessWidget {
             create:
                 (context) => ExpensePaymentBloc(
                   repository: SharedExpensePaymentRepository(),
+                ),
+          ),
+          BlocProvider(
+            create:
+                (context) => PersonalExpensePaymentBloc(
+                  repository: PersonalExpensePaymentRepository(),
                 ),
           ),
           BlocProvider<PersonalExpenseBloc>(

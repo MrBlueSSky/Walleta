@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:uuid/uuid.dart';
 import 'package:walleta/blocs/authentication/bloc/authentication_bloc.dart';
 import 'package:walleta/blocs/loan/bloc/loan_bloc.dart';
 import 'package:walleta/blocs/loan/bloc/loan_event.dart';
@@ -35,6 +36,7 @@ class _AddLoanFormState extends State<AddLoanForm> {
   late TextEditingController _personController;
   late TextEditingController _amountController;
   late TextEditingController _descriptionController;
+  final Uuid _uuid = Uuid();
 
   DateTime? _selectedDate;
   AppUser? _selectedUser;
@@ -450,7 +452,7 @@ class _AddLoanFormState extends State<AddLoanForm> {
 
   void _saveLoan(AppUser appUser) {
     final newLoan = Loan(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
+      id: _uuid.v4(), // Generar un ID único usando UUID
       lenderUserId: appUser, // Usuario real de autenticación
       borrowerUserId: _selectedUser!,
       description:

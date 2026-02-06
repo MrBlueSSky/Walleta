@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:walleta/utils/formatters.dart';
 
 // Widget para el popup personalizado
 class VoiceResultPopup extends StatefulWidget {
@@ -433,7 +434,7 @@ class _VoiceResultPopupState extends State<VoiceResultPopup>
                     ),
                     if (amount != null)
                       Text(
-                        '\$$amount $currency',
+                        '${Formatters.formatCurrencyNoDecimals(amount)} $currency',
                         style: const TextStyle(
                           color: Colors.green,
                           fontWeight: FontWeight.w700,

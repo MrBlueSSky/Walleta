@@ -21,6 +21,11 @@ class Formatters {
   static String formatCurrencyNoDecimals(double amount, {String symbol = '₡'}) {
     return '$symbol${amount.toInt().toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}';
   }
+
+  static String capitalize(String text) {
+    if (text.isEmpty) return text;
+    return text[0].toUpperCase() + text.substring(1).toLowerCase();
+  }
 }
 
 

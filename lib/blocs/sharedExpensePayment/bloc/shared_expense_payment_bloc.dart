@@ -2,7 +2,7 @@ import 'dart:async';
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:walleta/models/shared_expense_payment.dart';
-import 'package:walleta/repository/SharedExpensePaymentRepository/shared_expense_payment_repository.dart';
+import 'package:walleta/repository/SharedExpensePayment/shared_expense_payment_repository.dart';
 
 part 'shared_expense_payment_event.dart';
 part 'shared_expense_payment_state.dart';

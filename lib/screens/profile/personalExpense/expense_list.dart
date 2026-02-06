@@ -7,6 +7,7 @@ import 'package:walleta/blocs/authentication/bloc/authentication_bloc.dart';
 import 'package:walleta/blocs/personalExpense/bloc/personal_expense_bloc.dart';
 import 'package:walleta/blocs/personalExpense/bloc/personal_expense_event.dart';
 import 'package:walleta/blocs/personalExpense/bloc/personal_expense_state.dart';
+import 'package:walleta/blocs/personalExpensePayment/bloc/personal_expense_payment_bloc.dart';
 import 'package:walleta/models/personal_expense.dart';
 import 'package:walleta/models/personal_expense_payment.dart';
 import 'package:walleta/screens/loans/filter_option.dart';
@@ -1143,36 +1144,35 @@ class _PersonalExpenseListCardState extends State<PersonalExpenseListCard> {
             final newPaidAmount = widget.expense.paid + amount;
 
             try {
-              // // 1. Agregar el pago al BLoC
-              // context.read<ExpensePaymentBloc>().add(
-              //   AddExpensePayment(
-              //     payment: payment,
-              //     newPaidAmount: newPaidAmount,
-              //   ),
-              // );
+              // 1. Agregar el pago al BLoC
+              context.read<PersonalExpensePaymentBloc>().add(
+                AddPersonalExpensePayment(
+                  payment: payment,
+                  newPaidAmount: newPaidAmount,
+                ),
+              );
 
               // 2. Actualizar el gasto compartido
-              // final updatedExpense = SharedExpense(
-              //   id: widget.expense.id,
-              //   title: widget.expense.title,
-              //   total: widget.expense.total,
-              //   paid: newPaidAmount,
-              //   participants: widget.expense.participants,
-              //   category: widget.expense.category,
-              //   categoryIcon: widget.expense.categoryIcon,
-              //   categoryColor: widget.expense.categoryColor,
-              //   status:
-              //       newPaidAmount >= widget.expense.total
-              //           ? 'completado'
-              //           : 'pendiente',
-              //   createdAt: widget.expense.createdAt,
-              //   createdBy: currentUser,
-              // );
+              final updatedPersonalExpense = PersonalExpense(
+                id: widget.expense.id,
+                title: widget.expense.title,
+                total: widget.expense.total,
+                paid: newPaidAmount,
+                // participants: widget.expense.participants,
+                category: widget.expense.category,
+                categoryIcon: widget.expense.categoryIcon,
+                categoryColor: widget.expense.categoryColor,
+                status:
+                    newPaidAmount >= widget.expense.total
+                        ? 'completado'
+                        : 'pendiente',
+                createdAt: widget.expense.createdAt,
+              );
 
-              // // 3. Actualizar en el BLoC de gastos compartidos
-              // context.read<SharedExpenseBloc>().add(
-              //   UpdateSharedExpense(expense: updatedExpense),
-              // );
+              // 3. Actualizar en el BLoC de gastos compartidos
+              context.read<PersonalExpenseBloc>().add(
+                UpdatePersonalExpense(expense: updatedPersonalExpense),
+              );
 
               // 4. Mostrar confirmación
               TopSnackBarOverlay.show(
