@@ -8,8 +8,10 @@ import 'package:walleta/screens/profile/profile.dart';
 import 'package:walleta/screens/sharedExpenses/shared_expenses.dart';
 import 'package:walleta/services/voice/voice_command_router.dart';
 import 'package:walleta/services/voice/voice_finance.dart';
+import 'package:walleta/widgets/animations/robot_thinking.dart';
 import 'package:walleta/widgets/layaout/navbar/navBar.dart';
 import 'package:walleta/widgets/popups/voice_result.dart';
+import 'package:walleta/widgets/snackBar/snackBar.dart';
 
 class Home extends StatefulWidget {
   const Home({super.key});
@@ -31,6 +33,9 @@ class _HomeState extends State<Home> {
   // Control del popup
   OverlayEntry? _voiceResultOverlay;
   bool _showVoicePopup = false;
+
+  OverlayEntry? _processingOverlay;
+  bool _isProcessing = false;
 
   final List<Widget> _screens = [
     const FinancialDashboard(),
@@ -80,7 +85,7 @@ class _HomeState extends State<Home> {
       setState(() {
         _isRecording = false;
       });
-      _showErrorSnackbar('Error iniciando grabación: $e');
+      _showErrorSnackbar(context, 'Error iniciando grabación: $e');
     }
   }
 
@@ -90,6 +95,8 @@ class _HomeState extends State<Home> {
     try {
       final result = await _voiceService.stopRecordingAndProcess();
 
+      _hideProcessingOverlay();
+
       if (result['data']['transaction_type'] != 'invalid') {
         setState(() {
           _lastVoiceResult = result;
@@ -97,12 +104,15 @@ class _HomeState extends State<Home> {
         });
         _showVoiceResultPopup(result);
       } else {
+        _hideProcessingOverlay();
         _showErrorSnackbar(
+          context,
           'No se pudo detectar una transacción válida. Intenta de nuevo.',
         );
       }
     } catch (e) {
-      _showErrorSnackbar('Error procesando audio: $e');
+      _hideProcessingOverlay();
+      _showErrorSnackbar(context, 'Error procesando audio: $e');
     }
   }
 
@@ -133,31 +143,37 @@ class _HomeState extends State<Home> {
   // }
 
   void _showProcessingSnackbar() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            const CircularProgressIndicator(
-              color: Colors.white,
-              strokeWidth: 2,
-            ),
-            const SizedBox(width: 10),
-            const Text('Procesando con IA...'),
-          ],
-        ),
-        backgroundColor: Theme.of(context).primaryColor,
-        duration: const Duration(seconds: 5),
-      ),
+    setState(() {
+      _isProcessing = true;
+    });
+
+    _processingOverlay = OverlayEntry(
+      builder: (context) {
+        return RobotThinking();
+      },
     );
+
+    Overlay.of(context).insert(_processingOverlay!);
   }
 
-  void _showErrorSnackbar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: const Color(0xFFF44336),
-        duration: const Duration(seconds: 3),
-      ),
+  // Crea un método para ocultar el overlay
+  void _hideProcessingOverlay() {
+    if (_processingOverlay != null) {
+      _processingOverlay!.remove();
+      _processingOverlay = null;
+    }
+    setState(() {
+      _isProcessing = false;
+    });
+  }
+
+  void _showErrorSnackbar(BuildContext context, String message) {
+    // TopSnackBarOverlay(context, message, const Color(0xFFF44336));
+    TopSnackBarOverlay.show(
+      context: context,
+      message: message,
+      verticalOffset: 70.0,
+      backgroundColor: const Color(0xFFFF6B6B),
     );
   }
 

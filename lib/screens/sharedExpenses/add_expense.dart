@@ -316,8 +316,8 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
                                       if (total == null) {
                                         return 'Ingresa un número válido';
                                       }
-                                      if (total <= 0) {
-                                        return 'El total debe ser mayor a 0';
+                                      if (total < 0) {
+                                        return 'No se permiten números negativos';
                                       }
                                       return null;
                                     },
@@ -932,7 +932,7 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
         selectedParticipants.isNotEmpty) {
       final total = double.tryParse(_totalController.text) ?? 0;
 
-      if (total <= 0) {
+      if (total < 0) {
         TopSnackBarOverlay.show(
           context: context,
           message: 'El total debe ser mayor a 0',
@@ -963,6 +963,21 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
         createdBy: currentUser,
       );
 
+      // Mostrar loader mientras se guarda
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder:
+            (context) => Center(
+              child: CircularProgressIndicator(
+                color:
+                    Theme.of(context).brightness == Brightness.dark
+                        ? Colors.white
+                        : const Color(0xFF2D5BFF),
+              ),
+            ),
+      );
+
       // Enviar al BLoC
       context.read<SharedExpenseBloc>().add(
         AddSharedExpense(
@@ -972,8 +987,8 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
         ),
       );
 
-      widget.onSave(expense);
-      Navigator.pop(context);
+      // Escuchar el estado del BLoC para saber cuando se completó
+      _listenForExpenseSaved(expense);
     } else {
       String message = 'Por favor completa todos los campos';
       if (selectedParticipants.isEmpty) {
@@ -989,5 +1004,49 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
         backgroundColor: const Color(0xFFFF6B6B),
       );
     }
+  }
+
+  void _listenForExpenseSaved(SharedExpense expense) {
+    // Escuchar cambios en el BLoC
+    final stream = context.read<SharedExpenseBloc>().stream;
+
+    // Tomar solo el primer evento donde el gasto fue agregado exitosamente
+    stream
+        .where((state) => state.status == SharedExpenseStatus.success)
+        .take(1)
+        .listen((state) {
+          // Cerrar el loader
+          Navigator.pop(context);
+
+          // Cerrar el bottom sheet
+          Navigator.pop(context);
+
+          // Ejecutar el callback
+          widget.onSave(expense);
+
+          // Mostrar snackbar de éxito
+          TopSnackBarOverlay.show(
+            context: context,
+            message: 'Gasto compartido creado exitosamente',
+            verticalOffset: 70.0,
+            backgroundColor: const Color(0xFF00C896),
+          );
+        });
+
+    // También manejar errores
+    stream
+        .where((state) => state.status == SharedExpenseStatus.error)
+        .take(1)
+        .listen((state) {
+          // Cerrar el loader
+          Navigator.pop(context);
+
+          TopSnackBarOverlay.show(
+            context: context,
+            message: 'Error al crear el gasto compartido',
+            verticalOffset: 70.0,
+            backgroundColor: const Color(0xFFFF6B6B),
+          );
+        });
   }
 }

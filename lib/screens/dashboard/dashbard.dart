@@ -6,8 +6,8 @@ import 'package:walleta/blocs/authentication/bloc/authentication_bloc.dart';
 import 'package:walleta/blocs/financialSummary/bloc/financial_summary_bloc.dart';
 import 'package:walleta/blocs/financialSummary/bloc/financial_summary_event.dart';
 import 'package:walleta/blocs/financialSummary/bloc/financial_summary_state.dart';
+import 'package:walleta/models/category.dart';
 import 'package:walleta/models/financial_summary.dart';
-import 'package:walleta/screens/dashboard/dashboardTest.dart';
 
 import 'package:walleta/screens/dashboard/loans_section.dart';
 import 'package:walleta/utils/formatters.dart';
@@ -114,6 +114,7 @@ class _FinancialDashboardState extends State<FinancialDashboard> {
         summary.totalAmount,
         getColorForCategory(summary.category),
         getIconForCategory(summary.category),
+        summary.category,
       );
     }).toList();
   }
@@ -181,6 +182,7 @@ class _FinancialDashboardState extends State<FinancialDashboard> {
                   10000,
                   Colors.grey[300]!,
                   Icons.hourglass_empty,
+                  '',
                 ),
               ];
             } else if (hasError) {
@@ -191,6 +193,7 @@ class _FinancialDashboardState extends State<FinancialDashboard> {
                   10000,
                   Colors.grey[300]!,
                   Icons.error_outline,
+                  '',
                 ),
               ];
             } else {
@@ -201,6 +204,7 @@ class _FinancialDashboardState extends State<FinancialDashboard> {
                   10000,
                   Colors.grey[300]!,
                   Icons.pie_chart_outline,
+                  '',
                 ),
               ];
             }

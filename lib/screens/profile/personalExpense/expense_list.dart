@@ -840,7 +840,7 @@ class _PersonalExpenseListCardState extends State<PersonalExpenseListCard> {
                             ),
                             const SizedBox(width: 4),
                             Text(
-                              'Faltante: ${Formatters.formatCurrencyNoDecimals(remaining)}',
+                              'Pendiente: ${Formatters.formatCurrencyNoDecimals(remaining)}',
                               style: TextStyle(
                                 fontSize: 11,
                                 fontWeight: FontWeight.w600,
