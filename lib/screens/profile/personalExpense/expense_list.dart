@@ -1,4 +1,5 @@
 // personal_expenses_list_screen.dart
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:iconsax/iconsax.dart';
@@ -14,7 +15,9 @@ import 'package:walleta/screens/loans/filter_option.dart';
 import 'package:walleta/screens/profile/personalExpense/personal_expense.dart';
 import 'package:walleta/utils/formatters.dart';
 import 'package:walleta/widgets/payment/register_payment_dialog.dart';
-import 'package:walleta/widgets/snackBar/snackBar.dart'; // ← AGREGAR ESTA LÍNEA
+import 'package:walleta/widgets/snackBar/snackBar.dart';
+import 'package:walleta/widgets/common/draggable_to_delete_card.dart'; // NUEVO
+import 'package:walleta/widgets/common/trash_overlay.dart'; // NUEVO
 
 class PersonalExpensesListScreen extends StatefulWidget {
   final String userId;
@@ -29,7 +32,9 @@ class PersonalExpensesListScreen extends StatefulWidget {
 class _PersonalExpensesListScreenState
     extends State<PersonalExpensesListScreen> {
   final ScrollController _scrollController = ScrollController();
-  int _selectedFilter = 0; // 0: Todos, 1: Pagados, 2: Parciales, 3: Pendientes
+  int _selectedFilter = 0; // 0: Todos, 1: Pagados, 2: Pendientes
+  final TrashOverlayController _trashController =
+      TrashOverlayController(); // NUEVO
 
   @override
   void initState() {
@@ -44,6 +49,7 @@ class _PersonalExpensesListScreenState
   @override
   void dispose() {
     _scrollController.dispose();
+    _trashController.hideOverlay(); // CAMBIADO
     super.dispose();
   }
 
@@ -68,54 +74,10 @@ class _PersonalExpensesListScreenState
     });
   }
 
-  String _getStatusText(double paid, double total) {
-    if (paid >= total) return 'Pagado';
-    return 'Pendiente';
-  }
-
-  Color _getStatusColor(double paid, double total) {
-    if (paid >= total) return const Color(0xFF10B981);
-    if (paid > 0) return const Color(0xFF2D5BFF);
-    return const Color(0xFFF59E0B);
-  }
-
-  String _formatDate(DateTime? date) {
-    if (date == null) return 'Sin fecha';
-    return DateFormat('dd/MM/yyyy').format(date);
-  }
-
-  String _monthString(int month) {
-    const months = [
-      'Ene',
-      'Feb',
-      'Mar',
-      'Abr',
-      'May',
-      'Jun',
-      'Jul',
-      'Ago',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dic',
-    ];
-    if (month < 1 || month > 12) return 'Ene';
-    return months[month - 1];
-  }
-
-  // String _formatAmount(double amount) { // ← ELIMINAR ESTA FUNCIÓN
-  //   if (amount >= 1000) {
-  //     return '₡${(amount / 1000).toStringAsFixed(1)}k';
-  //   }
-  //   return '₡${amount.toInt()}';
-  // }
-
   List<PersonalExpense> _filterExpenses(List<PersonalExpense> expenses) {
     switch (_selectedFilter) {
       case 1: // Pagados
         return expenses.where((e) => e.paid >= e.total).toList();
-      // case 2: // Parciales
-      //   return expenses.where((e) => e.paid > 0 && e.paid < e.total).toList();
       case 2: // Pendientes
         return expenses.where((e) => e.paid >= 0 && e.paid < e.total).toList();
       default: // Todos
@@ -223,6 +185,15 @@ class _PersonalExpensesListScreenState
     );
   }
 
+  void _updateDragState(bool isDragging) {
+    // SIMPLIFICADO
+    if (isDragging) {
+      _trashController.showOverlay(context);
+    } else {
+      _trashController.hideOverlay();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -237,8 +208,6 @@ class _PersonalExpensesListScreenState
         builder: (context, state) {
           final expenses = state.expenses;
           final filteredExpenses = _filterExpenses(expenses);
-          final totalExpenses = expenses.fold(0.0, (sum, e) => sum + e.total);
-          final totalPaid = expenses.fold(0.0, (sum, e) => sum + e.paid);
 
           return NestedScrollView(
             controller: _scrollController,
@@ -270,14 +239,6 @@ class _PersonalExpensesListScreenState
                     ),
                   ],
                 ),
-                // SliverToBoxAdapter(
-                //   child: _buildHeaderStats(
-                //     isDark,
-                //     totalExpenses,
-                //     totalPaid,
-                //     expenses.length,
-                //   ),
-                // ),
                 SliverToBoxAdapter(child: _buildFilterTabs(isDark)),
               ];
             },
@@ -289,7 +250,6 @@ class _PersonalExpensesListScreenState
   }
 
   Widget _buildFilterTabs(bool isDark) {
-    // const filters = ['Todos', 'Pagados', 'Parciales', 'Pendientes'];
     const filters = ['Todos', 'Pagados', 'Pendientes'];
 
     return Container(
@@ -501,54 +461,64 @@ class _PersonalExpensesListScreenState
       color: isDark ? Colors.white : const Color(0xFF2D5BFF),
       backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
       child: ListView.builder(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         itemCount: filteredExpenses.length,
         itemBuilder: (context, index) {
           final expense = filteredExpenses[index];
-          return PersonalExpenseListCard(expense: expense, isDark: isDark);
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 16),
+            child: ExpenseCard(
+              expense: expense,
+              isDark: isDark,
+              userId: widget.userId,
+              key: ValueKey(expense.id),
+              onDragStateChanged: _updateDragState,
+            ),
+          );
         },
       ),
     );
   }
 }
 
-//!!! NUEVO WIDGET: Card para lista de gastos con estilo similar a LoanCard
-class PersonalExpenseListCard extends StatefulWidget {
-  const PersonalExpenseListCard({
+class ExpenseCard extends StatelessWidget {
+  final PersonalExpense expense;
+  final bool isDark;
+  final String userId;
+  final Function(bool) onDragStateChanged;
+
+  const ExpenseCard({
     super.key,
     required this.expense,
     required this.isDark,
+    required this.userId,
+    required this.onDragStateChanged,
   });
 
-  final PersonalExpense expense;
-  final bool isDark;
-
-  @override
-  State<PersonalExpenseListCard> createState() =>
-      _PersonalExpenseListCardState();
-}
-
-class _PersonalExpenseListCardState extends State<PersonalExpenseListCard> {
   @override
   Widget build(BuildContext context) {
-    final remaining = widget.expense.total - widget.expense.paid;
-    final progress =
-        widget.expense.total > 0
-            ? widget.expense.paid / widget.expense.total
-            : 0;
-    final statusText = _getStatusText(
-      widget.expense.paid,
-      widget.expense.total,
+    return DraggableToDeleteCard(
+      isDark: isDark,
+      onDeleteConfirmed: () => _handleDelete(context),
+      onCardTap: () => _showExpenseDetails(context),
+      onDragStateChanged: onDragStateChanged,
+      deleteDialogTitle: '¿Eliminar gasto?',
+      deleteDialogMessage:
+          'Esta acción no se puede deshacer. '
+          'Se eliminará el gasto "${expense.title}" y todos sus pagos asociados.',
+      child: _buildCardContent(context),
     );
-    final statusColor = _getStatusColor(
-      widget.expense.paid,
-      widget.expense.total,
-    );
+  }
+
+  Widget _buildCardContent(BuildContext context) {
+    final remaining = expense.total - expense.paid;
+    final progress = expense.total > 0 ? expense.paid / expense.total : 0;
+    final statusText = _getStatusText(expense.paid, expense.total);
+    final statusColor = _getStatusColor(expense.paid, expense.total);
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: widget.isDark ? const Color(0xFF1E293B) : Colors.white,
+        color: isDark ? const Color(0xFF1E293B) : Colors.white,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -559,7 +529,7 @@ class _PersonalExpenseListCardState extends State<PersonalExpenseListCard> {
         ],
         border: Border.all(
           color:
-              widget.isDark
+              isDark
                   ? const Color(0xFF334155).withOpacity(0.3)
                   : const Color(0xFFE5E7EB).withOpacity(0.8),
           width: 0.5,
@@ -569,13 +539,12 @@ class _PersonalExpenseListCardState extends State<PersonalExpenseListCard> {
         color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(16),
-          onTap: () => _showExpenseDetails(),
+          onTap: () => _showExpenseDetails(context),
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Header con título y estado
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -586,16 +555,14 @@ class _PersonalExpenseListCardState extends State<PersonalExpenseListCard> {
                             width: 40,
                             height: 40,
                             decoration: BoxDecoration(
-                              color: widget.expense.categoryColor.withOpacity(
-                                0.1,
-                              ),
+                              color: expense.categoryColor.withOpacity(0.1),
                               shape: BoxShape.circle,
                             ),
                             child: Center(
                               child: Icon(
-                                widget.expense.categoryIcon ?? Iconsax.category,
+                                expense.categoryIcon ?? Iconsax.category,
                                 size: 20,
-                                color: widget.expense.categoryColor,
+                                color: expense.categoryColor,
                               ),
                             ),
                           ),
@@ -605,14 +572,14 @@ class _PersonalExpenseListCardState extends State<PersonalExpenseListCard> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  widget.expense.title.isNotEmpty
-                                      ? widget.expense.title
+                                  expense.title.isNotEmpty
+                                      ? expense.title
                                       : 'Gasto sin título',
                                   style: TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.w600,
                                     color:
-                                        widget.isDark
+                                        isDark
                                             ? Colors.white
                                             : const Color(0xFF1F2937),
                                   ),
@@ -621,13 +588,13 @@ class _PersonalExpenseListCardState extends State<PersonalExpenseListCard> {
                                 ),
                                 const SizedBox(height: 2),
                                 Text(
-                                  widget.expense.category.isNotEmpty
-                                      ? widget.expense.category
+                                  expense.category.isNotEmpty
+                                      ? expense.category
                                       : 'Sin categoría',
                                   style: TextStyle(
                                     fontSize: 12,
                                     color:
-                                        widget.isDark
+                                        isDark
                                             ? Colors.white70
                                             : const Color(0xFF6B7280),
                                   ),
@@ -640,7 +607,7 @@ class _PersonalExpenseListCardState extends State<PersonalExpenseListCard> {
                         ],
                       ),
                     ),
-                    const SizedBox(width: 8), // espacio entre texto y estado
+                    const SizedBox(width: 8),
                     Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 10,
@@ -667,7 +634,6 @@ class _PersonalExpenseListCardState extends State<PersonalExpenseListCard> {
                 ),
                 const SizedBox(height: 16),
 
-                // Montos y fecha
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -675,16 +641,12 @@ class _PersonalExpenseListCardState extends State<PersonalExpenseListCard> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          Formatters.formatCurrencyNoDecimals(
-                            widget.expense.total,
-                          ),
+                          Formatters.formatCurrencyNoDecimals(expense.total),
                           style: TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.w700,
                             color:
-                                widget.isDark
-                                    ? Colors.white
-                                    : const Color(0xFF1F2937),
+                                isDark ? Colors.white : const Color(0xFF1F2937),
                           ),
                         ),
                         Text(
@@ -692,7 +654,7 @@ class _PersonalExpenseListCardState extends State<PersonalExpenseListCard> {
                           style: TextStyle(
                             fontSize: 11,
                             color:
-                                widget.isDark
+                                isDark
                                     ? Colors.white70
                                     : const Color(0xFF6B7280),
                           ),
@@ -703,12 +665,12 @@ class _PersonalExpenseListCardState extends State<PersonalExpenseListCard> {
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
                         Text(
-                          _formatDate(widget.expense.createdAt),
+                          _formatDate(expense.createdAt),
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
                             color:
-                                widget.isDark
+                                isDark
                                     ? Colors.white70
                                     : const Color(0xFF6B7280),
                           ),
@@ -718,7 +680,7 @@ class _PersonalExpenseListCardState extends State<PersonalExpenseListCard> {
                           style: TextStyle(
                             fontSize: 11,
                             color:
-                                widget.isDark
+                                isDark
                                     ? Colors.white60
                                     : const Color(0xFF9CA3AF),
                           ),
@@ -729,7 +691,6 @@ class _PersonalExpenseListCardState extends State<PersonalExpenseListCard> {
                 ),
                 const SizedBox(height: 16),
 
-                // BARRA DE PROGRESO ANIMADA
                 TweenAnimationBuilder<double>(
                   duration: const Duration(milliseconds: 1500),
                   curve: Curves.easeOutQuart,
@@ -740,30 +701,21 @@ class _PersonalExpenseListCardState extends State<PersonalExpenseListCard> {
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(4),
                         color:
-                            widget.isDark
+                            isDark
                                 ? const Color(0xFF334155)
                                 : const Color(0xFFF3F4F6),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.05),
-                            blurRadius: 2,
-                            offset: const Offset(0, 1),
-                          ),
-                        ],
                       ),
                       child: Stack(
                         children: [
-                          // Fondo
                           Container(
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(4),
                               color:
-                                  widget.isDark
+                                  isDark
                                       ? const Color(0xFF334155)
                                       : const Color(0xFFF3F4F6),
                             ),
                           ),
-                          // Barra de progreso animada
                           FractionallySizedBox(
                             widthFactor: value,
                             child: Container(
@@ -777,30 +729,6 @@ class _PersonalExpenseListCardState extends State<PersonalExpenseListCard> {
                                   begin: Alignment.centerLeft,
                                   end: Alignment.centerRight,
                                 ),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: statusColor.withOpacity(0.3),
-                                    blurRadius: 4,
-                                    offset: const Offset(0, 1),
-                                  ),
-                                ],
-                              ),
-                              child: Stack(
-                                children: [
-                                  // Efecto de brillo
-                                  Container(
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(4),
-                                      gradient: LinearGradient(
-                                        colors: [
-                                          Colors.white.withOpacity(0.2),
-                                          Colors.transparent,
-                                        ],
-                                        stops: const [0.0, 0.3],
-                                      ),
-                                    ),
-                                  ),
-                                ],
                               ),
                             ),
                           ),
@@ -811,13 +739,11 @@ class _PersonalExpenseListCardState extends State<PersonalExpenseListCard> {
                 ),
                 const SizedBox(height: 12),
 
-                // Información de progreso
                 Padding(
                   padding: const EdgeInsets.only(top: 8),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      // FALTANTE
                       Container(
                         decoration: BoxDecoration(
                           color: statusColor.withOpacity(0.1),
@@ -851,7 +777,6 @@ class _PersonalExpenseListCardState extends State<PersonalExpenseListCard> {
                         ),
                       ),
 
-                      // Botón para registrar pago
                       GestureDetector(
                         onTap: () => _showRegisterPaymentDialog(context),
                         child: Container(
@@ -898,9 +823,30 @@ class _PersonalExpenseListCardState extends State<PersonalExpenseListCard> {
     );
   }
 
+  void _handleDelete(BuildContext context) {
+    try {
+      context.read<PersonalExpenseBloc>().add(
+        DeletePersonalExpense(expense.id!),
+      );
+
+      TopSnackBarOverlay.show(
+        context: context,
+        message: 'Gasto eliminado exitosamente',
+        verticalOffset: 70.0,
+        backgroundColor: const Color(0xFF00C896),
+      );
+    } catch (e) {
+      TopSnackBarOverlay.show(
+        context: context,
+        message: 'Error al eliminar el gasto',
+        verticalOffset: 70.0,
+        backgroundColor: const Color(0xFFFF6B6B),
+      );
+    }
+  }
+
   String _getStatusText(double paid, double total) {
     if (paid >= total) return 'Pagado';
-    // if (paid > 0) return 'Parcial';
     return 'Pendiente';
   }
 
@@ -915,7 +861,7 @@ class _PersonalExpenseListCardState extends State<PersonalExpenseListCard> {
     return DateFormat('dd MMM yyyy').format(date);
   }
 
-  void _showExpenseDetails() {
+  void _showExpenseDetails(BuildContext context) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -933,8 +879,7 @@ class _PersonalExpenseListCardState extends State<PersonalExpenseListCard> {
               builder: (context, scrollController) {
                 return Container(
                   decoration: BoxDecoration(
-                    color:
-                        widget.isDark ? const Color(0xFF1E293B) : Colors.white,
+                    color: isDark ? const Color(0xFF1E293B) : Colors.white,
                     borderRadius: const BorderRadius.vertical(
                       top: Radius.circular(24),
                     ),
@@ -955,56 +900,49 @@ class _PersonalExpenseListCardState extends State<PersonalExpenseListCard> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Handle bar
           Center(
             child: Container(
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: widget.isDark ? Colors.white70 : const Color(0xFF6B7280),
+                color: isDark ? Colors.white70 : const Color(0xFF6B7280),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
           ),
           const SizedBox(height: 16),
 
-          // Título
           Text(
-            widget.expense.title.isNotEmpty
-                ? widget.expense.title
-                : 'Gasto sin título',
+            expense.title.isNotEmpty ? expense.title : 'Gasto sin título',
             style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.w700,
-              color: widget.isDark ? Colors.white : const Color(0xFF1F2937),
+              color: isDark ? Colors.white : const Color(0xFF1F2937),
             ),
           ),
           const SizedBox(height: 8),
 
-          // Categoría
           Row(
             children: [
               Icon(
-                widget.expense.categoryIcon ?? Iconsax.category,
+                expense.categoryIcon ?? Iconsax.category,
                 size: 16,
-                color: widget.expense.categoryColor,
+                color: expense.categoryColor,
               ),
               const SizedBox(width: 8),
               Text(
-                widget.expense.category.isNotEmpty
-                    ? widget.expense.category
+                expense.category.isNotEmpty
+                    ? expense.category
                     : 'Sin categoría',
                 style: TextStyle(
                   fontSize: 14,
-                  color:
-                      widget.isDark ? Colors.white70 : const Color(0xFF6B7280),
+                  color: isDark ? Colors.white70 : const Color(0xFF6B7280),
                 ),
               ),
             ],
           ),
           const SizedBox(height: 24),
 
-          // Detalles
           Expanded(
             child: SingleChildScrollView(
               controller: scrollController,
@@ -1013,53 +951,21 @@ class _PersonalExpenseListCardState extends State<PersonalExpenseListCard> {
                 children: [
                   _buildDetailRow(
                     'Total del gasto',
-                    Formatters.formatCurrencyNoDecimals(
-                      widget.expense.total,
-                    ), // ← CAMBIADO
+                    Formatters.formatCurrencyNoDecimals(expense.total),
                   ),
                   _buildDetailRow(
                     'Pagado',
-                    Formatters.formatCurrencyNoDecimals(
-                      widget.expense.paid,
-                    ), // ← CAMBIADO
+                    Formatters.formatCurrencyNoDecimals(expense.paid),
                     color: const Color(0xFF10B981),
                   ),
                   _buildDetailRow(
                     'Pendiente',
                     Formatters.formatCurrencyNoDecimals(
-                      widget.expense.total - widget.expense.paid,
-                    ), // ← CAMBIADO
+                      expense.total - expense.paid,
+                    ),
                     color: const Color(0xFFF59E0B),
                   ),
-                  _buildDetailRow(
-                    'Fecha',
-                    _formatDate(widget.expense.createdAt),
-                  ),
-                  // if (widget.expense.description?.isNotEmpty == true) ...[
-                  //   const SizedBox(height: 16),
-                  //   Text(
-                  //     'Descripción',
-                  //     style: TextStyle(
-                  //       fontSize: 14,
-                  //       fontWeight: FontWeight.w600,
-                  //       color:
-                  //           widget.isDark
-                  //               ? Colors.white70
-                  //               : const Color(0xFF6B7280),
-                  //     ),
-                  //   ),
-                  //   const SizedBox(height: 8),
-                  //   Text(
-                  //     widget.expense.description!,
-                  //     style: TextStyle(
-                  //       fontSize: 14,
-                  //       color:
-                  //           widget.isDark
-                  //               ? Colors.white
-                  //               : const Color(0xFF1F2937),
-                  //     ),
-                  //   ),
-                  // ],
+                  _buildDetailRow('Fecha', _formatDate(expense.createdAt)),
                 ],
               ),
             ),
@@ -1079,7 +985,7 @@ class _PersonalExpenseListCardState extends State<PersonalExpenseListCard> {
             label,
             style: TextStyle(
               fontSize: 14,
-              color: widget.isDark ? Colors.white70 : const Color(0xFF6B7280),
+              color: isDark ? Colors.white70 : const Color(0xFF6B7280),
             ),
           ),
           Text(
@@ -1087,9 +993,7 @@ class _PersonalExpenseListCardState extends State<PersonalExpenseListCard> {
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w600,
-              color:
-                  color ??
-                  (widget.isDark ? Colors.white : const Color(0xFF1F2937)),
+              color: color ?? (isDark ? Colors.white : const Color(0xFF1F2937)),
             ),
           ),
         ],
@@ -1097,13 +1001,10 @@ class _PersonalExpenseListCardState extends State<PersonalExpenseListCard> {
     );
   }
 
-  //!!!!!!!!!!!!!!!!!!!!!!!Registar pago compartido
   void _showRegisterPaymentDialog(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final remainingBalance = widget.expense.total - widget.expense.paid;
-    final screenHeight = MediaQuery.of(context).size.height;
+    final remainingBalance = expense.total - expense.paid;
 
-    // Solo mostrar el diálogo si hay saldo pendiente
     if (remainingBalance <= 0) {
       TopSnackBarOverlay.show(
         context: context,
@@ -1121,18 +1022,16 @@ class _PersonalExpenseListCardState extends State<PersonalExpenseListCard> {
       builder: (context) {
         return RegisterPaymentDialog(
           title: 'Registrar Pago',
-          subtitle: widget.expense.title,
-          totalAmount: widget.expense.total,
-          paidAmount: widget.expense.paid,
+          subtitle: expense.title,
+          totalAmount: expense.total,
+          paidAmount: expense.paid,
           isDark: isDark,
           onPaymentConfirmed: (amount, note, image) async {
-            // Obtener el nombre del usuario actual
             final currentUser = context.read<AuthenticationBloc>().state.user;
 
-            // Crear el pago
             final payment = PersonalExpensePayment(
               userId: currentUser.uid,
-              expenseId: widget.expense.id!,
+              expenseId: expense.id!,
               payerName: '${currentUser.name} ${currentUser.surname}',
               amount: amount,
               date: DateTime.now(),
@@ -1140,11 +1039,9 @@ class _PersonalExpenseListCardState extends State<PersonalExpenseListCard> {
               receiptImageUrl: image?.path,
             );
 
-            // Calcular nuevo monto pagado
-            final newPaidAmount = widget.expense.paid + amount;
+            final newPaidAmount = expense.paid + amount;
 
             try {
-              // 1. Agregar el pago al BLoC
               context.read<PersonalExpensePaymentBloc>().add(
                 AddPersonalExpensePayment(
                   payment: payment,
@@ -1152,29 +1049,23 @@ class _PersonalExpenseListCardState extends State<PersonalExpenseListCard> {
                 ),
               );
 
-              // 2. Actualizar el gasto compartido
               final updatedPersonalExpense = PersonalExpense(
-                id: widget.expense.id,
-                title: widget.expense.title,
-                total: widget.expense.total,
+                id: expense.id,
+                title: expense.title,
+                total: expense.total,
                 paid: newPaidAmount,
-                // participants: widget.expense.participants,
-                category: widget.expense.category,
-                categoryIcon: widget.expense.categoryIcon,
-                categoryColor: widget.expense.categoryColor,
+                category: expense.category,
+                categoryIcon: expense.categoryIcon,
+                categoryColor: expense.categoryColor,
                 status:
-                    newPaidAmount >= widget.expense.total
-                        ? 'completado'
-                        : 'pendiente',
-                createdAt: widget.expense.createdAt,
+                    newPaidAmount >= expense.total ? 'completado' : 'pendiente',
+                createdAt: expense.createdAt,
               );
 
-              // 3. Actualizar en el BLoC de gastos compartidos
               context.read<PersonalExpenseBloc>().add(
                 UpdatePersonalExpense(expense: updatedPersonalExpense),
               );
 
-              // 4. Mostrar confirmación
               TopSnackBarOverlay.show(
                 context: context,
                 message:
