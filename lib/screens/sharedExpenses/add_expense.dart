@@ -316,8 +316,8 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
                                       if (total == null) {
                                         return 'Ingresa un número válido';
                                       }
-                                      if (total < 0) {
-                                        return 'No se permiten números negativos';
+                                      if (total <= 0) {
+                                        return 'No se permiten números negativos o cero';
                                       }
                                       return null;
                                     },

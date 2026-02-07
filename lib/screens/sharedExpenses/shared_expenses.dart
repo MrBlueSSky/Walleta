@@ -177,6 +177,36 @@ class _SharedExpensesScreenState extends State<SharedExpensesScreen> {
             ? Theme.of(context).scaffoldBackgroundColor
             : const Color(0xFFF8FAFD);
 
+    // Widget del AppBar común para todos los estados
+    Widget _buildAppBar() {
+      return SliverAppBar(
+        floating: true,
+        pinned: true,
+        backgroundColor: backgroundColor,
+        elevation: 0,
+        title: Text(
+          'Gastos Compartidos',
+          style: TextStyle(
+            color: isDark ? Colors.white : const Color(0xFF1F2937),
+            fontWeight: FontWeight.w700,
+            fontSize: 22,
+          ),
+        ),
+        actions: [
+          IconButton(
+            icon: Icon(Iconsax.add, color: iconsColor, size: 24),
+            onPressed: () {
+              _showAddExpenseSheet();
+            },
+          ),
+          IconButton(
+            icon: Icon(Iconsax.filter, color: iconsColor, size: 24),
+            onPressed: () => _showFilterDialog(isDark),
+          ),
+        ],
+      );
+    }
+
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
@@ -199,7 +229,92 @@ class _SharedExpensesScreenState extends State<SharedExpensesScreen> {
               }
 
               if (state.status == SharedExpenseStatus.error) {
-                return _buildErrorState(isDark);
+                return RefreshIndicator(
+                  onRefresh: _refreshExpenses,
+                  color: isDark ? Colors.white : const Color(0xFF2D5BFF),
+                  backgroundColor:
+                      isDark ? const Color(0xFF1E293B) : Colors.white,
+                  child: CustomScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    slivers: [
+                      _buildAppBar(),
+                      SliverToBoxAdapter(
+                        child: SizedBox(
+                          height: MediaQuery.of(context).size.height,
+                          child: Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Iconsax.warning_2,
+                                  size: 48,
+                                  color:
+                                      isDark
+                                          ? Colors.white70
+                                          : const Color(0xFF6B7280),
+                                ),
+                                const SizedBox(height: 16),
+                                Text(
+                                  'Error al cargar gastos compartidos',
+                                  style: TextStyle(
+                                    color:
+                                        isDark
+                                            ? Colors.white
+                                            : const Color(0xFF1F2937),
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  'Intenta de nuevo más tarde',
+                                  style: TextStyle(
+                                    color:
+                                        isDark
+                                            ? Colors.white70
+                                            : const Color(0xFF6B7280),
+                                  ),
+                                ),
+                                const SizedBox(height: 16),
+                                ElevatedButton(
+                                  onPressed: () {
+                                    final userId =
+                                        context
+                                            .read<AuthenticationBloc>()
+                                            .state
+                                            .user
+                                            .uid;
+                                    context.read<SharedExpenseBloc>().add(
+                                      LoadSharedExpenses(userId: userId),
+                                    );
+                                  },
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: const Color(0xFF2D5BFF),
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                  ),
+                                  child: const Text('Reintentar'),
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  'o desliza hacia abajo para recargar',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color:
+                                        isDark
+                                            ? Colors.white60
+                                            : const Color(0xFF9CA3AF),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
               }
 
               if (state.expenses.isEmpty) {
@@ -208,9 +323,12 @@ class _SharedExpensesScreenState extends State<SharedExpensesScreen> {
                   color: isDark ? Colors.white : const Color(0xFF2D5BFF),
                   backgroundColor:
                       isDark ? const Color(0xFF1E293B) : Colors.white,
-                  child: SingleChildScrollView(
+                  child: CustomScrollView(
                     physics: const AlwaysScrollableScrollPhysics(),
-                    child: _buildEmptyState(isDark),
+                    slivers: [
+                      _buildAppBar(),
+                      SliverToBoxAdapter(child: _buildEmptyState(isDark)),
+                    ],
                   ),
                 );
               }
@@ -224,37 +342,7 @@ class _SharedExpensesScreenState extends State<SharedExpensesScreen> {
                   controller: _scrollController,
                   physics: const AlwaysScrollableScrollPhysics(),
                   slivers: [
-                    SliverAppBar(
-                      floating: true,
-                      pinned: true,
-                      backgroundColor: backgroundColor,
-                      elevation: 0,
-                      title: Text(
-                        'Gastos Compartidos',
-                        style: TextStyle(
-                          color:
-                              isDark ? Colors.white : const Color(0xFF1F2937),
-                          fontWeight: FontWeight.w700,
-                          fontSize: 22,
-                        ),
-                      ),
-                      actions: [
-                        IconButton(
-                          icon: Icon(Iconsax.add, color: iconsColor, size: 24),
-                          onPressed: () {
-                            _showAddExpenseSheet();
-                          },
-                        ),
-                        IconButton(
-                          icon: Icon(
-                            Iconsax.filter,
-                            color: iconsColor,
-                            size: 24,
-                          ),
-                          onPressed: () => _showFilterDialog(isDark),
-                        ),
-                      ],
-                    ),
+                    _buildAppBar(),
                     // Padding general para todas las cards
                     SliverPadding(
                       padding: const EdgeInsets.symmetric(
@@ -263,12 +351,8 @@ class _SharedExpensesScreenState extends State<SharedExpensesScreen> {
                       ),
                       sliver: SliverList(
                         delegate: SliverChildBuilderDelegate((context, index) {
-                          return Padding(
-                            // Padding entre cada card
-                            padding: const EdgeInsets.only(bottom: 12),
-                            child: SharedExpenseCard(
-                              expense: state.expenses[index],
-                            ),
+                          return SharedExpenseCard(
+                            expense: state.expenses[index],
                           );
                         }, childCount: state.expenses.length),
                       ),
@@ -284,87 +368,68 @@ class _SharedExpensesScreenState extends State<SharedExpensesScreen> {
   }
 
   Widget _buildLoadingState(bool isDark) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          CircularProgressIndicator(
-            color: isDark ? Colors.white : const Color(0xFF2D5BFF),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'Cargando gastos compartidos...',
-            style: TextStyle(
-              color: isDark ? Colors.white70 : const Color(0xFF6B7280),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildErrorState(bool isDark) {
-    return RefreshIndicator(
-      onRefresh: _refreshExpenses,
-      color: isDark ? Colors.white : const Color(0xFF2D5BFF),
-      backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
-      child: SingleChildScrollView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        child: SizedBox(
-          height: MediaQuery.of(context).size.height,
-          child: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Iconsax.warning_2,
-                  size: 48,
-                  color: isDark ? Colors.white70 : const Color(0xFF6B7280),
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  'Error al cargar gastos compartidos',
-                  style: TextStyle(
-                    color: isDark ? Colors.white : const Color(0xFF1F2937),
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Intenta de nuevo más tarde',
-                  style: TextStyle(
-                    color: isDark ? Colors.white70 : const Color(0xFF6B7280),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                ElevatedButton(
-                  onPressed: () {
-                    final userId =
-                        context.read<AuthenticationBloc>().state.user.uid;
-                    context.read<SharedExpenseBloc>().add(
-                      LoadSharedExpenses(userId: userId),
-                    );
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF2D5BFF),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
+    Color iconsColor = Theme.of(context).primaryColor;
+    return Scaffold(
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      body: SafeArea(
+        child: Column(
+          children: [
+            // AppBar fijo para el estado de loading
+            Container(
+              color:
+                  isDark
+                      ? Theme.of(context).scaffoldBackgroundColor
+                      : const Color(0xFFF8FAFD),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Gastos Compartidos',
+                    style: TextStyle(
+                      color: isDark ? Colors.white : const Color(0xFF1F2937),
+                      fontWeight: FontWeight.w700,
+                      fontSize: 22,
                     ),
                   ),
-                  child: const Text('Reintentar'),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'o desliza hacia abajo para recargar',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: isDark ? Colors.white60 : const Color(0xFF9CA3AF),
+                  Row(
+                    children: [
+                      IconButton(
+                        icon: Icon(Iconsax.add, color: iconsColor, size: 24),
+                        onPressed: () {
+                          _showAddExpenseSheet();
+                        },
+                      ),
+                      IconButton(
+                        icon: Icon(Iconsax.filter, color: iconsColor, size: 24),
+                        onPressed: () => _showFilterDialog(isDark),
+                      ),
+                    ],
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
+            Expanded(
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    CircularProgressIndicator(
+                      color: isDark ? Colors.white : const Color(0xFF2D5BFF),
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Cargando gastos compartidos...',
+                      style: TextStyle(
+                        color:
+                            isDark ? Colors.white70 : const Color(0xFF6B7280),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

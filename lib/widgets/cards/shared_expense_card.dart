@@ -124,81 +124,6 @@ class _SharedExpenseCardState extends State<SharedExpenseCard> {
                       ),
                     ),
 
-                    // Progreso
-                    // Padding(
-                    //   padding: const EdgeInsets.symmetric(horizontal: 20),
-                    //   child: Container(
-                    //     padding: const EdgeInsets.all(16),
-                    //     decoration: BoxDecoration(
-                    //       color:
-                    //           isDark
-                    //               ? const Color(0xFF0F172A)
-                    //               : const Color(0xFFF3F4F6),
-                    //       borderRadius: BorderRadius.circular(12),
-                    //     ),
-                    //     child: Row(
-                    //       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    //       children: [
-                    //         Column(
-                    //           crossAxisAlignment: CrossAxisAlignment.start,
-                    //           children: [
-                    //             Text(
-                    //               'Total pagado',
-                    //               style: TextStyle(
-                    //                 fontSize: 12,
-                    //                 color:
-                    //                     widget.isDark
-                    //                         ? Colors.white60
-                    //                         : const Color(0xFF9CA3AF),
-                    //               ),
-                    //             ),
-                    //             const SizedBox(height: 4),
-                    //             Text(
-                    //               Formatters.formatCurrencyNoDecimals(
-                    //                 totalPaid,
-                    //               ), // ← CAMBIADO
-                    //               style: TextStyle(
-                    //                 fontSize: 20,
-                    //                 fontWeight: FontWeight.w700,
-                    //                 color:
-                    //                     widget.isDark
-                    //                         ? Colors.white
-                    //                         : const Color(0xFF1F2937),
-                    //               ),
-                    //             ),
-                    //           ],
-                    //         ),
-                    //         Column(
-                    //           crossAxisAlignment: CrossAxisAlignment.end,
-                    //           children: [
-                    //             Text(
-                    //               'Restante',
-                    //               style: TextStyle(
-                    //                 fontSize: 12,
-                    //                 color:
-                    //                     widget.isDark
-                    //                         ? Colors.white60
-                    //                         : const Color(0xFF9CA3AF),
-                    //               ),
-                    //             ),
-                    //             const SizedBox(height: 4),
-                    //             Text(
-                    //               Formatters.formatCurrencyNoDecimals(
-                    //                 widget.expense.total - totalPaid,
-                    //               ), // ← CAMBIADO
-                    //               style: TextStyle(
-                    //                 fontSize: 16,
-                    //                 fontWeight: FontWeight.w600,
-                    //                 color: widget.expense.categoryColor,
-                    //               ),
-                    //             ),
-                    //           ],
-                    //         ),
-                    //       ],
-                    //     ),
-                    //   ),
-                    // ),
-
                     // Historial de pagos
                     Expanded(
                       child: SingleChildScrollView(
@@ -323,229 +248,6 @@ class _SharedExpenseCardState extends State<SharedExpenseCard> {
     );
   }
 
-  // void _toggleParticipantsOverlay(BuildContext context) {
-  //   final RenderBox renderBox =
-  //       _participantsKey.currentContext?.findRenderObject() as RenderBox;
-  //   final position = renderBox.localToGlobal(Offset.zero);
-
-  //   setState(() {
-  //     _showParticipants = !_showParticipants;
-  //   });
-
-  //   // Si estamos mostrando el overlay, podemos configurar un listener para cerrarlo al tocar fuera
-  //   if (_showParticipants) {
-  //     WidgetsBinding.instance.addPostFrameCallback((_) {
-  //       // Cerrar al tocar fuera
-  //       Future.delayed(Duration.zero, () {
-  //         showDialog(
-  //           context: context,
-  //           barrierColor: Colors.transparent,
-  //           builder: (context) {
-  //             return GestureDetector(
-  //               onTap: () {
-  //                 setState(() {
-  //                   _showParticipants = false;
-  //                 });
-  //                 Navigator.of(context).pop();
-  //               },
-  //               child: Container(
-  //                 color: Colors.transparent,
-  //                 child: Stack(
-  //                   children: [
-  //                     // Overlay flotante de participantes
-  //                     Positioned(
-  //                       top: position.dy,
-  //                       right:
-  //                           MediaQuery.of(context).size.width -
-  //                           position.dx -
-  //                           renderBox.size.width,
-  //                       child: Material(
-  //                         elevation: 8,
-  //                         borderRadius: BorderRadius.circular(12),
-  //                         child: Container(
-  //                           width: 250,
-  //                           constraints: BoxConstraints(maxHeight: 200),
-  //                           decoration: BoxDecoration(
-  //                             color:
-  //                                 Theme.of(context).brightness ==
-  //                                         Brightness.dark
-  //                                     ? const Color(0xFF1E293B)
-  //                                     : Colors.white,
-  //                             borderRadius: BorderRadius.circular(12),
-  //                             boxShadow: [
-  //                               BoxShadow(
-  //                                 color: Colors.black.withOpacity(0.1),
-  //                                 blurRadius: 20,
-  //                                 spreadRadius: 2,
-  //                                 offset: const Offset(0, 4),
-  //                               ),
-  //                             ],
-  //                             border: Border.all(
-  //                               color:
-  //                                   Theme.of(context).brightness ==
-  //                                           Brightness.dark
-  //                                       ? const Color(0xFF334155)
-  //                                       : const Color(0xFFE5E7EB),
-  //                               width: 0.5,
-  //                             ),
-  //                           ),
-  //                           child: Column(
-  //                             crossAxisAlignment: CrossAxisAlignment.start,
-  //                             children: [
-  //                               // Header del overlay
-  //                               Container(
-  //                                 padding: const EdgeInsets.all(12),
-  //                                 decoration: BoxDecoration(
-  //                                   color:
-  //                                       Theme.of(context).brightness ==
-  //                                               Brightness.dark
-  //                                           ? const Color(0xFF0F172A)
-  //                                           : const Color(0xFFF3F4F6),
-  //                                   borderRadius: const BorderRadius.only(
-  //                                     topLeft: Radius.circular(12),
-  //                                     topRight: Radius.circular(12),
-  //                                   ),
-  //                                 ),
-  //                                 child: Row(
-  //                                   children: [
-  //                                     Icon(
-  //                                       Iconsax.people,
-  //                                       size: 16,
-  //                                       color: const Color(0xFF2D5BFF),
-  //                                     ),
-  //                                     const SizedBox(width: 8),
-  //                                     Text(
-  //                                       'Participantes (${widget.expense.participants.length})',
-  //                                       style: TextStyle(
-  //                                         fontSize: 14,
-  //                                         fontWeight: FontWeight.w600,
-  //                                         color:
-  //                                             Theme.of(context).brightness ==
-  //                                                     Brightness.dark
-  //                                                 ? Colors.white
-  //                                                 : const Color(0xFF1F2937),
-  //                                       ),
-  //                                     ),
-  //                                   ],
-  //                                 ),
-  //                               ),
-  //                               // Lista de participantes
-  //                               Expanded(
-  //                                 child: SingleChildScrollView(
-  //                                   padding: const EdgeInsets.all(12),
-  //                                   child: Wrap(
-  //                                     spacing: 8,
-  //                                     runSpacing: 8,
-  //                                     children:
-  //                                         widget.expense.participants.map((
-  //                                           participant,
-  //                                         ) {
-  //                                           return Container(
-  //                                             decoration: BoxDecoration(
-  //                                               color:
-  //                                                   Theme.of(
-  //                                                             context,
-  //                                                           ).brightness ==
-  //                                                           Brightness.dark
-  //                                                       ? const Color(
-  //                                                         0xFF0F172A,
-  //                                                       )
-  //                                                       : const Color(
-  //                                                         0xFFF9FAFB,
-  //                                                       ),
-  //                                               borderRadius:
-  //                                                   BorderRadius.circular(8),
-  //                                               border: Border.all(
-  //                                                 color:
-  //                                                     Theme.of(
-  //                                                               context,
-  //                                                             ).brightness ==
-  //                                                             Brightness.dark
-  //                                                         ? const Color(
-  //                                                           0xFF334155,
-  //                                                         )
-  //                                                         : const Color(
-  //                                                           0xFFE5E7EB,
-  //                                                         ),
-  //                                                 width: 0.5,
-  //                                               ),
-  //                                             ),
-  //                                             padding:
-  //                                                 const EdgeInsets.symmetric(
-  //                                                   horizontal: 10,
-  //                                                   vertical: 8,
-  //                                                 ),
-  //                                             child: Row(
-  //                                               mainAxisSize: MainAxisSize.min,
-  //                                               children: [
-  //                                                 Container(
-  //                                                   width: 24,
-  //                                                   height: 24,
-  //                                                   decoration: BoxDecoration(
-  //                                                     color: widget
-  //                                                         .expense
-  //                                                         .categoryColor
-  //                                                         .withOpacity(0.2),
-  //                                                     shape: BoxShape.circle,
-  //                                                   ),
-  //                                                   child: Center(
-  //                                                     child: Text(
-  //                                                       // Cambiado para usar username del AppUser
-  //                                                       participant.username[0]
-  //                                                           .toUpperCase(),
-  //                                                       style: TextStyle(
-  //                                                         fontSize: 11,
-  //                                                         fontWeight:
-  //                                                             FontWeight.w600,
-  //                                                         color:
-  //                                                             widget
-  //                                                                 .expense
-  //                                                                 .categoryColor,
-  //                                                       ),
-  //                                                     ),
-  //                                                   ),
-  //                                                 ),
-  //                                                 const SizedBox(width: 8),
-  //                                                 Text(
-  //                                                   // Cambiado para mostrar username del AppUser
-  //                                                   participant.username,
-  //                                                   style: TextStyle(
-  //                                                     fontSize: 13,
-  //                                                     color:
-  //                                                         Theme.of(
-  //                                                                   context,
-  //                                                                 ).brightness ==
-  //                                                                 Brightness
-  //                                                                     .dark
-  //                                                             ? Colors.white70
-  //                                                             : const Color(
-  //                                                               0xFF6B7280,
-  //                                                             ),
-  //                                                   ),
-  //                                                 ),
-  //                                               ],
-  //                                             ),
-  //                                           );
-  //                                         }).toList(),
-  //                                   ),
-  //                                 ),
-  //                               ),
-  //                             ],
-  //                           ),
-  //                         ),
-  //                       ),
-  //                     ),
-  //                   ],
-  //                 ),
-  //               ),
-  //             );
-  //           },
-  //         );
-  //       });
-  //     });
-  //   }
-  // }
-
   void _toggleParticipantsOverlay(BuildContext context) {
     final RenderBox renderBox =
         _participantsKey.currentContext?.findRenderObject() as RenderBox;
@@ -630,7 +332,7 @@ class _SharedExpenseCardState extends State<SharedExpenseCard> {
 
     final containerHeight = calculateHeight();
     final needsScroll =
-        participantsCount > 4; // Si hay más de 4 participantes, activar scroll
+        participantsCount > 2; // Si hay más de 4 participantes, activar scroll
 
     return Container(
       width: 150,
@@ -814,7 +516,7 @@ class _SharedExpenseCardState extends State<SharedExpenseCard> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Encabezado
+                    // Encabezado - MODIFICADO para coincidir con LoanCard
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -824,16 +526,21 @@ class _SharedExpenseCardState extends State<SharedExpenseCard> {
                             child: Row(
                               children: [
                                 Container(
+                                  width: 40, // Tamaño igual que LoanCard
+                                  height: 40, // Tamaño igual que LoanCard
                                   decoration: BoxDecoration(
                                     color: widget.expense.categoryColor
                                         .withOpacity(0.1),
-                                    borderRadius: BorderRadius.circular(12),
+                                    shape:
+                                        BoxShape
+                                            .circle, // Círculo como LoanCard
                                   ),
-                                  padding: const EdgeInsets.all(10),
-                                  child: Icon(
-                                    widget.expense.categoryIcon,
-                                    color: widget.expense.categoryColor,
-                                    size: 20,
+                                  child: Center(
+                                    child: Icon(
+                                      widget.expense.categoryIcon,
+                                      color: widget.expense.categoryColor,
+                                      size: 20, // Tamaño ajustado
+                                    ),
                                   ),
                                 ),
                                 const SizedBox(width: 12),
@@ -842,19 +549,22 @@ class _SharedExpenseCardState extends State<SharedExpenseCard> {
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: [
+                                      // Categoría
                                       Text(
                                         widget.expense.category,
                                         style: TextStyle(
-                                          fontSize: 12,
+                                          fontSize: 12, // Igual que LoanCard
                                           color: widget.expense.categoryColor,
                                           fontWeight: FontWeight.w600,
                                         ),
                                       ),
                                       const SizedBox(height: 2),
+                                      // Título
                                       Text(
                                         widget.expense.title,
                                         style: TextStyle(
-                                          fontSize: 16,
+                                          fontSize:
+                                              16, // Igual que LoanCard (16px)
                                           fontWeight: FontWeight.w600,
                                           color:
                                               isDark
@@ -876,216 +586,258 @@ class _SharedExpenseCardState extends State<SharedExpenseCard> {
 
                     const SizedBox(height: 16),
 
-                    // Barra de progreso
+                    // Información de montos - REORGANIZADO como LoanCard
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              Formatters.formatCurrencyNoDecimals(
+                                widget.expense.paid,
+                              ),
+                              style: TextStyle(
+                                fontSize: 20, // Igual que LoanCard
+                                fontWeight: FontWeight.w700,
+                                color: progressColor,
+                              ),
+                            ),
+                            Text(
+                              'Pagado',
+                              style: TextStyle(
+                                fontSize: 11, // Igual que LoanCard
+                                color:
+                                    isDark
+                                        ? Colors.white70
+                                        : const Color(0xFF6B7280),
+                              ),
+                            ),
+                          ],
+                        ),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Text(
+                              Formatters.formatCurrencyNoDecimals(
+                                widget.expense.total,
+                              ),
+                              style: TextStyle(
+                                fontSize: 14, // Igual que LoanCard para fecha
+                                fontWeight: FontWeight.w600,
+                                color:
+                                    isDark
+                                        ? Colors.white70
+                                        : const Color(0xFF6B7280),
+                              ),
+                            ),
+                            Text(
+                              'Total',
+                              style: TextStyle(
+                                fontSize: 11, // Igual que LoanCard
+                                color:
+                                    isDark
+                                        ? Colors.white60
+                                        : const Color(0xFF9CA3AF),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    // Barra de progreso - MODIFICADO para coincidir con LoanCard
                     TweenAnimationBuilder<double>(
                       tween: Tween<double>(
                         begin: 0,
                         end: progress.clamp(0.0, 1.0),
                       ),
-                      duration: const Duration(milliseconds: 1000),
-                      curve: Curves.easeOutCubic,
+                      duration: const Duration(
+                        milliseconds: 1500,
+                      ), // Igual que LoanCard
+                      curve: Curves.easeOutQuart, // Igual que LoanCard
                       builder: (context, value, _) {
-                        return Column(
-                          children: [
-                            // Labels de monto
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                TweenAnimationBuilder<double>(
-                                  tween: Tween<double>(
-                                    begin: 0,
-                                    end: widget.expense.paid,
-                                  ),
-                                  duration: const Duration(milliseconds: 1000),
-                                  curve: Curves.easeOutCubic,
-                                  builder: (context, paidValue, _) {
-                                    return Text(
-                                      Formatters.formatCurrencyNoDecimals(
-                                        paidValue,
-                                      ),
-                                      style: TextStyle(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.w700,
-                                        color: progressColor,
-                                      ),
-                                    );
-                                  },
-                                ),
-                                Text(
-                                  Formatters.formatCurrencyNoDecimals(
-                                    widget.expense.total,
-                                  ),
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w500,
-                                    color:
-                                        isDark
-                                            ? Colors.white70
-                                            : const Color(0xFF6B7280),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 8),
-
-                            // Barra de progreso
-                            Container(
-                              height: 6,
-                              decoration: BoxDecoration(
-                                color:
-                                    isDark
-                                        ? const Color(0xFF334155)
-                                        : const Color(0xFFF3F4F6),
-                                borderRadius: BorderRadius.circular(3),
+                        return Container(
+                          height: 8, // Igual que LoanCard
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(
+                              4,
+                            ), // Igual que LoanCard
+                            color:
+                                isDark
+                                    ? const Color(0xFF334155)
+                                    : const Color(0xFFF3F4F6),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.05),
+                                blurRadius: 2,
+                                offset: const Offset(0, 1),
                               ),
-                              child: Stack(
-                                children: [
-                                  Container(
-                                    width: double.infinity,
-                                    decoration: BoxDecoration(
-                                      color:
-                                          isDark
-                                              ? const Color(0xFF334155)
-                                              : const Color(0xFFF3F4F6),
-                                      borderRadius: BorderRadius.circular(3),
-                                    ),
-                                  ),
-                                  AnimatedContainer(
-                                    duration: const Duration(milliseconds: 500),
-                                    curve: Curves.easeOutCubic,
-                                    width:
-                                        MediaQuery.of(context).size.width *
-                                        0.7 *
-                                        value,
-                                    decoration: BoxDecoration(
-                                      gradient: LinearGradient(
-                                        colors:
-                                            isComplete
-                                                ? const [
-                                                  Color(0xFF00C896),
-                                                  Color(0xFF10B981),
-                                                ]
-                                                : [
+                            ],
+                          ),
+                          child: Stack(
+                            children: [
+                              // Fondo
+                              Container(
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(4),
+                                  color:
+                                      isDark
+                                          ? const Color(0xFF334155)
+                                          : const Color(0xFFF3F4F6),
+                                ),
+                              ),
+                              // Barra de progreso animada
+                              FractionallySizedBox(
+                                widthFactor: value,
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(4),
+                                    gradient: LinearGradient(
+                                      colors:
+                                          isComplete
+                                              ? const [
+                                                Color(0xFF00C896),
+                                                Color(0xFF10B981),
+                                              ]
+                                              : [
+                                                progressColor,
+                                                Color.lerp(
                                                   progressColor,
-                                                  progressColor.withOpacity(
-                                                    0.8,
-                                                  ),
-                                                ],
-                                        begin: Alignment.centerLeft,
-                                        end: Alignment.centerRight,
-                                      ),
-                                      borderRadius: BorderRadius.circular(3),
+                                                  Colors.white,
+                                                  0.2,
+                                                )!,
+                                              ],
+                                      begin: Alignment.centerLeft,
+                                      end: Alignment.centerRight,
                                     ),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: progressColor.withOpacity(0.3),
+                                        blurRadius: 4,
+                                        offset: const Offset(0, 1),
+                                      ),
+                                    ],
                                   ),
-                                ],
-                              ),
-                            ),
-
-                            // Información de progreso
-                            Padding(
-                              padding: const EdgeInsets.only(top: 8),
-                              child: Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  // FALTANTE - AL INICIO (IZQUIERDA)
-                                  if (!isComplete)
-                                    Container(
-                                      decoration: BoxDecoration(
-                                        color: progressColor.withOpacity(0.1),
-                                        borderRadius: BorderRadius.circular(8),
-                                        border: Border.all(
-                                          color: progressColor.withOpacity(0.3),
-                                          width: 0.5,
-                                        ),
-                                      ),
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 8,
-                                        vertical: 4,
-                                      ),
-                                      child: Row(
-                                        children: [
-                                          Icon(
-                                            Iconsax.money_send,
-                                            size: 10,
-                                            color: progressColor,
-                                          ),
-                                          const SizedBox(width: 4),
-                                          Text(
-                                            'Faltante: ${Formatters.formatCurrencyNoDecimals(remaining)}',
-                                            style: TextStyle(
-                                              fontSize: 11,
-                                              fontWeight: FontWeight.w600,
-                                              color: progressColor,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-
-                                  // REGISTRAR PAGO - AL FINAL (DERECHA)
-                                  if (!isComplete && remainingBalance > 0)
-                                    GestureDetector(
-                                      onTap:
-                                          () => _showRegisterPaymentDialog(
-                                            context,
-                                          ),
-                                      child: Container(
+                                  child: Stack(
+                                    children: [
+                                      // Efecto de brillo (opcional)
+                                      Container(
                                         decoration: BoxDecoration(
-                                          color: Theme.of(
-                                            context,
-                                          ).primaryColor.withOpacity(0.1),
                                           borderRadius: BorderRadius.circular(
-                                            8,
+                                            4,
                                           ),
-                                          border: Border.all(
-                                            color: Theme.of(
-                                              context,
-                                            ).primaryColor.withOpacity(0.3),
-                                            width: 0.5,
+                                          gradient: LinearGradient(
+                                            colors: [
+                                              Colors.white.withOpacity(0.2),
+                                              Colors.transparent,
+                                            ],
+                                            stops: const [0.0, 0.3],
                                           ),
-                                        ),
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 8,
-                                          vertical: 4,
-                                        ),
-                                        child: Row(
-                                          children: [
-                                            Icon(
-                                              Iconsax.add_circle,
-                                              size: 10,
-                                              color:
-                                                  Theme.of(
-                                                    context,
-                                                  ).primaryColor,
-                                            ),
-                                            const SizedBox(width: 4),
-                                            Text(
-                                              'Registrar Pago',
-                                              style: TextStyle(
-                                                fontSize: 11,
-                                                fontWeight: FontWeight.w600,
-                                                color:
-                                                    Theme.of(
-                                                      context,
-                                                    ).primaryColor,
-                                              ),
-                                            ),
-                                          ],
                                         ),
                                       ),
-                                    ),
-                                ],
+                                    ],
+                                  ),
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         );
                       },
+                    ),
+                    const SizedBox(height: 12),
+
+                    // Información de progreso - MANTENIDO igual
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          // FALTANTE - AL INICIO (IZQUIERDA)
+                          if (!isComplete)
+                            Container(
+                              decoration: BoxDecoration(
+                                color: progressColor.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(
+                                  color: progressColor.withOpacity(0.3),
+                                  width: 0.5,
+                                ),
+                              ),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 4,
+                              ),
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    Iconsax.money_send,
+                                    size: 10, // Igual que LoanCard
+                                    color: progressColor,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    'Faltante: ${Formatters.formatCurrencyNoDecimals(remaining)}',
+                                    style: TextStyle(
+                                      fontSize: 11, // Igual que LoanCard
+                                      fontWeight: FontWeight.w600,
+                                      color: progressColor,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+
+                          // REGISTRAR PAGO - AL FINAL (DERECHA)
+                          if (!isComplete && remainingBalance > 0)
+                            GestureDetector(
+                              onTap: () => _showRegisterPaymentDialog(context),
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: Theme.of(
+                                    context,
+                                  ).primaryColor.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(
+                                    color: Theme.of(
+                                      context,
+                                    ).primaryColor.withOpacity(0.3),
+                                    width: 0.5,
+                                  ),
+                                ),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 4,
+                                ),
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      Iconsax.add_circle,
+                                      size: 10, // Igual que LoanCard
+                                      color: Theme.of(context).primaryColor,
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      'Registrar Pago',
+                                      style: TextStyle(
+                                        fontSize: 11, // Igual que LoanCard
+                                        fontWeight: FontWeight.w600,
+                                        color: Theme.of(context).primaryColor,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
                     ),
                   ],
                 ),
 
-                // Botón de participantes en la esquina superior derecha
+                // Botón de participantes en la esquina superior derecha - MANTENIDO
                 Positioned(
                   top: 0,
                   right: 0,
