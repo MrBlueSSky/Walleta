@@ -6,10 +6,12 @@ enum SharedExpenseStatus { initial, deleted, updated, success, loading, error }
 class SharedExpenseState extends Equatable {
   final SharedExpenseStatus status;
   final List<SharedExpense> expenses;
+  final String? errorMessage;
 
   const SharedExpenseState({
     this.status = SharedExpenseStatus.initial,
     this.expenses = const [],
+    this.errorMessage,
   });
 
   const SharedExpenseState.initial()
@@ -27,8 +29,9 @@ class SharedExpenseState extends Equatable {
   const SharedExpenseState.loading()
     : this(status: SharedExpenseStatus.loading);
 
-  const SharedExpenseState.error() : this(status: SharedExpenseStatus.error);
+  const SharedExpenseState.error(String errorMessage)
+    : this(status: SharedExpenseStatus.error, errorMessage: errorMessage);
 
   @override
-  List<Object?> get props => [status, expenses];
+  List<Object?> get props => [status, expenses, errorMessage];
 }

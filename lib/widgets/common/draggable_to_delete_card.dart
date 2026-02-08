@@ -203,7 +203,10 @@ class _DraggableToDeleteCardState extends State<DraggableToDeleteCard> {
                 ),
                 child: const Text(
                   'Eliminar',
-                  style: TextStyle(fontWeight: FontWeight.w600),
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                  ),
                 ),
               ),
             ],

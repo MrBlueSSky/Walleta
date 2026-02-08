@@ -152,7 +152,8 @@ class _FinancialDashboardState extends State<FinancialDashboard> {
 
             // Datos para el gráfico
             List<CategoryData> chartData = [];
-            double monthlyExpenses = 0;
+            double monthlyExpenses =
+                0; //!Importante para el cálculo del cambio vs mes anterior
             double totalUserPaid = 0;
 
             if (hasData) {

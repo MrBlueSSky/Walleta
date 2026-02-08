@@ -16,6 +16,7 @@ import 'package:walleta/utils/formatters.dart';
 import 'package:walleta/models/personal_expense.dart';
 import 'package:walleta/models/shared_expense.dart';
 import 'package:walleta/utils/category_mapper.dart';
+import 'package:walleta/widgets/snackBar/snackBar.dart';
 
 class VoiceCommandRouter {
   final BuildContext context;
@@ -232,51 +233,48 @@ class VoiceCommandRouter {
 
     switch (type) {
       case 'expense':
-        return '✅ Gasto$amountStr registrado';
+        return 'Gasto$amountStr registrado';
       case 'income':
-        return '💰 Ingreso$amountStr registrado';
+        return 'Ingreso$amountStr registrado';
       case 'shared_expense':
-        return '👥 Gasto compartido$amountStr registrado';
+        return 'Gasto compartido$amountStr registrado';
       case 'loan_given':
-        return '📤 Préstamo$amountStr a $person registrado';
+        return 'Préstamo$amountStr a $person registrado';
       case 'loan_received':
-        return '📥 Préstamo$amountStr de $person registrado';
+        return 'Préstamo$amountStr de $person registrado';
       case 'payment_to_person':
-        return '💸 Pago$amountStr a $person registrado';
+        return 'Pago$amountStr a $person registrado';
       case 'money_request':
-        return '📨 Solicitud de pago$amountStr a $person creada';
+        return 'Solicitud de pago$amountStr a $person creada';
       default:
-        return '✅ Transacción registrada';
+        return 'Transacción registrada';
     }
   }
 
   void _showSuccessMessage(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.green,
-        duration: const Duration(seconds: 3),
-      ),
+    TopSnackBarOverlay.show(
+      context: context,
+      message: message,
+      verticalOffset: 70.0,
+      backgroundColor: Colors.green,
     );
   }
 
   void _showInfoMessage(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.blue,
-        duration: const Duration(seconds: 3),
-      ),
+    TopSnackBarOverlay.show(
+      context: context,
+      message: message,
+      verticalOffset: 70.0,
+      backgroundColor: Colors.blue,
     );
   }
 
   void _showErrorMessage(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.red,
-        duration: const Duration(seconds: 3),
-      ),
+    TopSnackBarOverlay.show(
+      context: context,
+      message: message,
+      verticalOffset: 70.0,
+      backgroundColor: Colors.red,
     );
   }
 

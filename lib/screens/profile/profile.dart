@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:walleta/blocs/authentication/bloc/authentication_bloc.dart';
 import 'package:walleta/blocs/income/bloc/incomes_bloc.dart';
+import 'package:walleta/blocs/income/bloc/incomes_event.dart';
 import 'package:walleta/blocs/income/bloc/incomes_state.dart';
 import 'package:walleta/blocs/personalExpense/bloc/personal_expense_bloc.dart';
 import 'package:walleta/blocs/personalExpense/bloc/personal_expense_event.dart';
@@ -36,8 +37,11 @@ class _ProfileState extends State<Profile> {
   void initState() {
     super.initState();
     _scrollController.addListener(_onScroll);
-    _loadExpenses();
-    _loadSavings();
+
+    // Cargar datos inmediatamente
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadInitialData();
+    });
   }
 
   @override
@@ -55,24 +59,31 @@ class _ProfileState extends State<Profile> {
     }
   }
 
-  void _loadExpenses() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final authState = context.read<AuthenticationBloc>().state;
-      if (authState.status == AuthenticationStatus.authenticated) {
-        context.read<PersonalExpenseBloc>().add(
-          LoadPersonalExpenses(authState.user.uid),
-        );
-      }
-    });
+  void _loadInitialData() {
+    final authState = context.read<AuthenticationBloc>().state;
+    if (authState.status == AuthenticationStatus.authenticated) {
+      // Cargar todos los datos al iniciar
+      context.read<PersonalExpenseBloc>().add(
+        LoadPersonalExpenses(authState.user.uid),
+      );
+      context.read<IncomesBloc>().add(LoadIncomes(authState.user.uid));
+      context.read<SavingBloc>().add(LoadSavingGoals(authState.user.uid));
+    }
   }
 
-  void _loadSavings() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final authState = context.read<AuthenticationBloc>().state;
-      if (authState.status == AuthenticationStatus.authenticated) {
-        context.read<SavingBloc>().add(LoadSavingGoals(authState.user.uid));
-      }
-    });
+  Future<void> _refreshData() async {
+    final authState = context.read<AuthenticationBloc>().state;
+    if (authState.status == AuthenticationStatus.authenticated) {
+      final userId = authState.user.uid;
+
+      // Disparar eventos para refrescar todos los datos
+      context.read<PersonalExpenseBloc>().add(LoadPersonalExpenses(userId));
+      context.read<IncomesBloc>().add(LoadIncomes(userId));
+      context.read<SavingBloc>().add(LoadSavingGoals(userId));
+
+      // Esperar un momento para que se complete la carga
+      await Future.delayed(const Duration(milliseconds: 500));
+    }
   }
 
   void _openDrawer() {
@@ -291,41 +302,6 @@ class _ProfileState extends State<Profile> {
     );
   }
 
-  // O con una animación de zoom/modal:
-  // void _openSavingsScreenWithModalAnimation(BuildContext context) {
-  //   showModalBottomSheet(
-  //     context: context,
-  //     isScrollControlled: true,
-  //     backgroundColor: Colors.transparent,
-  //     builder: (context) {
-  //       return GestureDetector(
-  //         onTap: () => Navigator.pop(context),
-  //         behavior: HitTestBehavior.opaque,
-  //         child: Container(
-  //           color: Colors.black.withOpacity(0.5),
-  //           child: DraggableScrollableSheet(
-  //             initialChildSize: 0.9,
-  //             minChildSize: 0.5,
-  //             maxChildSize: 0.95,
-  //             builder: (context, scrollController) {
-  //               return Container(
-  //                 decoration: BoxDecoration(
-  //                   color: Theme.of(context).scaffoldBackgroundColor,
-  //                   borderRadius: const BorderRadius.vertical(
-  //                     top: Radius.circular(24),
-  //                   ),
-  //                 ),
-  //                 child: SavingsScreen(), // Reemplaza con tu pantalla
-  //               );
-  //             },
-  //           ),
-  //         ),
-  //       );
-  //     },
-  //   );
-  // }
-
-  // O con una animación personalizada tipo "hero":
   void _openSavingsScreenWithHeroAnimation(
     BuildContext context,
     String userId,
@@ -440,152 +416,204 @@ class _ProfileState extends State<Profile> {
           }
 
           final user = state.user;
-          return CustomScrollView(
-            controller: _scrollController,
-            physics: const BouncingScrollPhysics(),
-            slivers: [
-              SliverAppBar(
-                expandedHeight: screenHeight * 0.25,
-                floating: false,
-                pinned: true,
-                snap: false,
-                stretch: true,
-                backgroundColor:
-                    isDark
-                        ? const Color(
-                          0xFF1E293B,
-                        ).withOpacity(_isScrolled ? 0.95 : 0)
-                        : Colors.white.withOpacity(_isScrolled ? 0.95 : 0),
-                elevation: _isScrolled ? 4 : 0,
-                shadowColor: Colors.black.withOpacity(0.1),
-                surfaceTintColor: Colors.transparent,
-                automaticallyImplyLeading: false,
-                actions: [
-                  IconButton(
-                    icon: Icon(
-                      Iconsax.menu_1,
-                      color:
-                          _isScrolled
-                              ? (isDark
-                                  ? Colors.white
-                                  : const Color(0xFF1F2937))
-                              : Colors.white,
-                    ),
-                    onPressed: _openDrawer,
-                  ),
-                ],
-                flexibleSpace: FlexibleSpaceBar(
-                  collapseMode: CollapseMode.pin,
-                  centerTitle: false,
-                  titlePadding: const EdgeInsets.only(left: 20, bottom: 16),
-                  title:
-                      _isScrolled
-                          ? Text(
-                            'Mi Perfil',
-                            style: TextStyle(
-                              color:
-                                  isDark
-                                      ? Colors.white
-                                      : const Color(0xFF1F2937),
-                              fontSize: 18,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          )
-                          : null,
-                  background: Container(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          const Color(0xFF0F172A),
-                          const Color(0xFF1E293B),
-                        ],
-                      ),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.only(bottom: 20),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          _buildProfileImage(user.profilePictureUrl),
-                          const SizedBox(height: 12),
-                          _buildUserName(user.name, user.surname),
-                          const SizedBox(height: 4),
-                          _buildUserEmail(user.email),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              SliverToBoxAdapter(child: SizedBox(height: 8)),
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 6,
-                  ),
-                  child: _buildPersonalExpensesCard(user.uid),
-                ),
-              ),
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 6,
-                  ),
-                  child: _buildIncomingsCard(user.uid),
-                ),
-              ),
-              // SliverToBoxAdapter(child: const SizedBox(height: 5)),
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 6,
-                  ),
-                  child: BlocBuilder<SavingBloc, SavingState>(
-                    builder: (context, state) {
-                      if (state.status == SavingStateStatus.success &&
-                          state.goals.isNotEmpty) {
-                        final totalSaved = state.goals.fold(
-                          0.0,
-                          (sum, goal) => sum + goal.saved,
-                        );
 
-                        final totalGoal = state.goals.fold(
-                          0.0,
-                          (sum, goal) => sum + goal.goal,
-                        );
-
-                        return SavingsCard(
-                          onTap:
-                              () => _openSavingsScreenWithHeroAnimation(
-                                context,
-                                user.uid,
+          // Widget para el contenido principal con RefreshIndicator
+          Widget buildContent() {
+            return CustomScrollView(
+              controller: _scrollController,
+              physics: const AlwaysScrollableScrollPhysics(),
+              slivers: [
+                SliverAppBar(
+                  expandedHeight: screenHeight * 0.25,
+                  floating: false,
+                  pinned: true,
+                  snap: false,
+                  stretch: true,
+                  backgroundColor:
+                      isDark
+                          ? const Color(
+                            0xFF1E293B,
+                          ).withOpacity(_isScrolled ? 0.95 : 0)
+                          : Colors.white.withOpacity(_isScrolled ? 0.95 : 0),
+                  elevation: _isScrolled ? 4 : 0,
+                  shadowColor: Colors.black.withOpacity(0.1),
+                  surfaceTintColor: Colors.transparent,
+                  automaticallyImplyLeading: false,
+                  actions: [
+                    IconButton(
+                      icon: Icon(
+                        Iconsax.menu_1,
+                        color:
+                            _isScrolled
+                                ? (isDark
+                                    ? Colors.white
+                                    : const Color(0xFF1F2937))
+                                : Colors.white,
+                      ),
+                      onPressed: _openDrawer,
+                    ),
+                  ],
+                  flexibleSpace: FlexibleSpaceBar(
+                    collapseMode: CollapseMode.pin,
+                    centerTitle: false,
+                    titlePadding: const EdgeInsets.only(left: 20, bottom: 16),
+                    title:
+                        _isScrolled
+                            ? Text(
+                              'Mi Perfil',
+                              style: TextStyle(
+                                color:
+                                    isDark
+                                        ? Colors.white
+                                        : const Color(0xFF1F2937),
+                                fontSize: 18,
+                                fontWeight: FontWeight.w600,
                               ),
-                          currentSavings: totalSaved,
-                          monthlyGoal: totalGoal,
-                        );
-                      }
-
-                      return const SizedBox();
-                    },
+                            )
+                            : null,
+                    background: Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            const Color(0xFF0F172A),
+                            const Color(0xFF1E293B),
+                          ],
+                        ),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.only(bottom: 20),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            _buildProfileImage(user.profilePictureUrl),
+                            const SizedBox(height: 12),
+                            _buildUserName(user.name, user.surname),
+                            const SizedBox(height: 4),
+                            _buildUserEmail(user.email),
+                          ],
+                        ),
+                      ),
+                    ),
                   ),
                 ),
-              ),
-            ],
+                SliverToBoxAdapter(child: SizedBox(height: 8)),
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 6,
+                    ),
+                    child: _buildPersonalExpensesCard(user.uid),
+                  ),
+                ),
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 6,
+                    ),
+                    child: _buildIncomingsCard(user.uid),
+                  ),
+                ),
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 6,
+                    ),
+                    child: BlocBuilder<SavingBloc, SavingState>(
+                      builder: (context, state) {
+                        if (state.status == SavingStateStatus.loading) {
+                          return Container(
+                            height: 160,
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).cardColor,
+                              borderRadius: BorderRadius.circular(20),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.05),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            child: const Center(
+                              child: CircularProgressIndicator(),
+                            ),
+                          );
+                        }
+
+                        if (state.status == SavingStateStatus.success &&
+                            state.goals.isNotEmpty) {
+                          final totalSaved = state.goals.fold(
+                            0.0,
+                            (sum, goal) => sum + goal.saved,
+                          );
+
+                          final totalGoal = state.goals.fold(
+                            0.0,
+                            (sum, goal) => sum + goal.goal,
+                          );
+
+                          return SavingsCard(
+                            onTap:
+                                () => _openSavingsScreenWithHeroAnimation(
+                                  context,
+                                  user.uid,
+                                ),
+                            currentSavings: totalSaved,
+                            monthlyGoal: totalGoal,
+                          );
+                        }
+
+                        return const SizedBox();
+                      },
+                    ),
+                  ),
+                ),
+                // Espacio extra al final para mejor scroll
+                SliverToBoxAdapter(child: SizedBox(height: 100)),
+              ],
+            );
+          }
+
+          return RefreshIndicator(
+            onRefresh: _refreshData,
+            color: isDark ? Colors.white : const Color(0xFF2D5BFF),
+            backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
+            displacement: 40,
+            edgeOffset: 0,
+            child: buildContent(),
           );
         },
       ),
     );
   }
 
-  //!Por hacer
   Widget _buildIncomingsCard(String userId) {
     return BlocBuilder<IncomesBloc, IncomesState>(
       builder: (context, state) {
+        // Mostrar indicador de carga
+        if (state.status == IncomesStateStatus.loading) {
+          return Container(
+            height: 160,
+            decoration: BoxDecoration(
+              color: Theme.of(context).cardColor,
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: const Center(child: CircularProgressIndicator()),
+          );
+        }
+
         // Calcular totales
         final totalIncomes = state.incomes.fold(
           0.0,
@@ -613,6 +641,25 @@ class _ProfileState extends State<Profile> {
   Widget _buildPersonalExpensesCard(String userId) {
     return BlocBuilder<PersonalExpenseBloc, PersonalExpenseState>(
       builder: (context, state) {
+        // Mostrar indicador de carga
+        if (state.status == PersonalExpenseStateStatus.loading) {
+          return Container(
+            height: 160,
+            decoration: BoxDecoration(
+              color: Theme.of(context).cardColor,
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: const Center(child: CircularProgressIndicator()),
+          );
+        }
+
         // Calcular totales
         final totalExpenses = state.expenses.fold(
           0.0,

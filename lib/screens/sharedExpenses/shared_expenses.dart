@@ -9,7 +9,8 @@ import 'package:walleta/blocs/sharedExpensePayment/bloc/shared_expense_payment_b
 import 'package:walleta/screens/loans/filter_option.dart';
 import 'package:walleta/screens/sharedExpenses/add_expense.dart';
 import 'package:walleta/widgets/cards/shared_expense_card.dart';
-import 'package:walleta/widgets/common/trash_overlay.dart'; // AÑADIR
+import 'package:walleta/widgets/common/trash_overlay.dart';
+import 'package:walleta/widgets/snackBar/snackBar.dart';
 
 class SharedExpensesScreen extends StatefulWidget {
   const SharedExpensesScreen({Key? key}) : super(key: key);
@@ -20,8 +21,7 @@ class SharedExpensesScreen extends StatefulWidget {
 
 class _SharedExpensesScreenState extends State<SharedExpensesScreen> {
   final ScrollController _scrollController = ScrollController();
-  final TrashOverlayController _trashController =
-      TrashOverlayController(); // AÑADIR
+  final TrashOverlayController _trashController = TrashOverlayController();
 
   @override
   void initState() {
@@ -32,7 +32,7 @@ class _SharedExpensesScreenState extends State<SharedExpensesScreen> {
   @override
   void dispose() {
     _scrollController.dispose();
-    _trashController.hideOverlay(); // AÑADIR
+    _trashController.hideOverlay();
     super.dispose();
   }
 
@@ -167,12 +167,25 @@ class _SharedExpensesScreenState extends State<SharedExpensesScreen> {
   }
 
   void _updateDragState(bool isDragging) {
-    // AÑADIR
     if (isDragging) {
       _trashController.showOverlay(context);
     } else {
       _trashController.hideOverlay();
     }
+  }
+
+  // FUNCIÓN PARA MOSTRAR SNACKBAR DE ERROR
+  void _showDeleteErrorSnackBar(BuildContext context, String message) {
+    // Ocultar cualquier snackbar existente primero
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+    TopSnackBarOverlay.show(
+      context: context,
+      message: message,
+      backgroundColor: Colors.redAccent,
+    );
+
+    _loadExpenses();
   }
 
   @override
@@ -225,6 +238,28 @@ class _SharedExpensesScreenState extends State<SharedExpensesScreen> {
                 }
               },
             ),
+            // LISTENER PARA CAPTURAR ERRORES DE ELIMINACIÓN
+            BlocListener<SharedExpenseBloc, SharedExpenseState>(
+              listener: (context, state) {
+                // Solo mostrar snackbar cuando hay un error específico de permisos
+                if (state.status == SharedExpenseStatus.error &&
+                    state.errorMessage != null) {
+                  final errorMessage = state.errorMessage!;
+
+                  // Verificar si es el error de permisos
+                  // if (errorMessage.contains('Solo el organizador') ||
+                  //     errorMessage.contains('permiso') ||
+                  //     errorMessage.contains('no puede eliminar') ||
+                  //     errorMessage.contains('creador')) {
+                  // Mostrar snackbar con el mensaje de error
+                  _showDeleteErrorSnackBar(context, errorMessage);
+
+                  // También puedes registrar el error
+                  print('❌ Error de permisos: $errorMessage');
+                  // }
+                }
+              },
+            ),
           ],
           child: BlocBuilder<SharedExpenseBloc, SharedExpenseState>(
             builder: (context, state) {
@@ -233,92 +268,98 @@ class _SharedExpensesScreenState extends State<SharedExpensesScreen> {
               }
 
               if (state.status == SharedExpenseStatus.error) {
-                return RefreshIndicator(
-                  onRefresh: _refreshExpenses,
-                  color: isDark ? Colors.white : const Color(0xFF2D5BFF),
-                  backgroundColor:
-                      isDark ? const Color(0xFF1E293B) : Colors.white,
-                  child: CustomScrollView(
-                    physics: const AlwaysScrollableScrollPhysics(),
-                    slivers: [
-                      _buildAppBar(),
-                      SliverToBoxAdapter(
-                        child: SizedBox(
-                          height: MediaQuery.of(context).size.height,
-                          child: Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  Iconsax.warning_2,
-                                  size: 48,
-                                  color:
-                                      isDark
-                                          ? Colors.white70
-                                          : const Color(0xFF6B7280),
-                                ),
-                                const SizedBox(height: 16),
-                                Text(
-                                  'Error al cargar gastos compartidos',
-                                  style: TextStyle(
-                                    color:
-                                        isDark
-                                            ? Colors.white
-                                            : const Color(0xFF1F2937),
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  'Intenta de nuevo más tarde',
-                                  style: TextStyle(
+                // Solo mostrar pantalla de error si no es un error de permisos
+                final errorMessage = state.errorMessage ?? '';
+                if (!errorMessage.contains('Solo el organizador') &&
+                    !errorMessage.contains('permiso')) {
+                  return RefreshIndicator(
+                    onRefresh: _refreshExpenses,
+                    color: isDark ? Colors.white : const Color(0xFF2D5BFF),
+                    backgroundColor:
+                        isDark ? const Color(0xFF1E293B) : Colors.white,
+                    child: CustomScrollView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      slivers: [
+                        _buildAppBar(),
+                        SliverToBoxAdapter(
+                          child: SizedBox(
+                            height: MediaQuery.of(context).size.height,
+                            child: Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Iconsax.warning_2,
+                                    size: 48,
                                     color:
                                         isDark
                                             ? Colors.white70
                                             : const Color(0xFF6B7280),
                                   ),
-                                ),
-                                const SizedBox(height: 16),
-                                ElevatedButton(
-                                  onPressed: () {
-                                    final userId =
-                                        context
-                                            .read<AuthenticationBloc>()
-                                            .state
-                                            .user
-                                            .uid;
-                                    context.read<SharedExpenseBloc>().add(
-                                      LoadSharedExpenses(userId: userId),
-                                    );
-                                  },
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: const Color(0xFF2D5BFF),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(8),
+                                  const SizedBox(height: 16),
+                                  Text(
+                                    'Error al cargar gastos compartidos',
+                                    style: TextStyle(
+                                      color:
+                                          isDark
+                                              ? Colors.white
+                                              : const Color(0xFF1F2937),
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
                                     ),
                                   ),
-                                  child: const Text('Reintentar'),
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  'o desliza hacia abajo para recargar',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color:
-                                        isDark
-                                            ? Colors.white60
-                                            : const Color(0xFF9CA3AF),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    'Intenta de nuevo más tarde',
+                                    style: TextStyle(
+                                      color:
+                                          isDark
+                                              ? Colors.white70
+                                              : const Color(0xFF6B7280),
+                                    ),
                                   ),
-                                ),
-                              ],
+                                  const SizedBox(height: 16),
+                                  ElevatedButton(
+                                    onPressed: () {
+                                      final userId =
+                                          context
+                                              .read<AuthenticationBloc>()
+                                              .state
+                                              .user
+                                              .uid;
+                                      context.read<SharedExpenseBloc>().add(
+                                        LoadSharedExpenses(userId: userId),
+                                      );
+                                    },
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: const Color(0xFF2D5BFF),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                    ),
+                                    child: const Text('Reintentar'),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    'o desliza hacia abajo para recargar',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color:
+                                          isDark
+                                              ? Colors.white60
+                                              : const Color(0xFF9CA3AF),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                    ],
-                  ),
-                );
+                      ],
+                    ),
+                  );
+                }
+                // Si es error de permisos, continuar mostrando la lista normal
               }
 
               if (state.expenses.isEmpty) {
@@ -356,7 +397,7 @@ class _SharedExpensesScreenState extends State<SharedExpensesScreen> {
                         delegate: SliverChildBuilderDelegate((context, index) {
                           return SharedExpenseCard(
                             expense: state.expenses[index],
-                            onDragStateChanged: _updateDragState, // AÑADIR
+                            onDragStateChanged: _updateDragState,
                           );
                         }, childCount: state.expenses.length),
                       ),

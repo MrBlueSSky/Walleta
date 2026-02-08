@@ -33,7 +33,7 @@ class SharedExpenseBloc extends Bloc<SharedExpenseEvent, SharedExpenseState> {
       final expenses = await _repository.fetchSharedExpenses(event.userId);
       emit(SharedExpenseState.success(expenses));
     } catch (e) {
-      emit(const SharedExpenseState.error());
+      emit(const SharedExpenseState.error('Error al cargar SharedExpenses'));
       print('Error al cargar SharedExpenses ❌: $e');
     }
   }
@@ -54,7 +54,7 @@ class SharedExpenseBloc extends Bloc<SharedExpenseEvent, SharedExpenseState> {
 
       emit(SharedExpenseState.success(expenses));
     } catch (e) {
-      emit(const SharedExpenseState.error());
+      emit(const SharedExpenseState.error('Error al agregar SharedExpense'));
       print('Error al agregar SharedExpense ❌: $e');
     }
   }
@@ -84,7 +84,11 @@ class SharedExpenseBloc extends Bloc<SharedExpenseEvent, SharedExpenseState> {
         emit(const SharedExpenseState.deleted());
       }
     } catch (e) {
-      emit(const SharedExpenseState.error());
+      emit(
+        const SharedExpenseState.error(
+          'Error al eliminar, no eres el organizador o hubo un problema',
+        ),
+      );
       print('Error al eliminar SharedExpense ❌: $e');
     }
   }
@@ -99,7 +103,7 @@ class SharedExpenseBloc extends Bloc<SharedExpenseEvent, SharedExpenseState> {
       await _repository.updateSharedExpense(event.expense);
       emit(const SharedExpenseState.updated());
     } catch (e) {
-      emit(const SharedExpenseState.error());
+      emit(const SharedExpenseState.error('Error al actualizar SharedExpense'));
       print('Error al actualizar SharedExpense ❌: $e');
     }
   }
