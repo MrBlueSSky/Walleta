@@ -3,11 +3,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:walleta/blocs/authentication/bloc/authentication_bloc.dart';
+import 'package:walleta/blocs/income/bloc/incomes_bloc.dart';
+import 'package:walleta/blocs/income/bloc/incomes_event.dart';
 import 'package:walleta/blocs/personalExpense/bloc/personal_expense_bloc.dart';
 import 'package:walleta/blocs/personalExpense/bloc/personal_expense_event.dart';
 import 'package:walleta/blocs/sharedExpense/bloc/shared_expense_bloc.dart';
 import 'package:walleta/blocs/sharedExpense/bloc/shared_expense_event.dart';
 import 'package:walleta/models/appUser.dart';
+import 'package:walleta/models/income.dart';
 import 'package:walleta/utils/formatters.dart';
 
 import 'package:walleta/models/personal_expense.dart';
@@ -44,9 +47,9 @@ class VoiceCommandRouter {
         case 'personal_expense':
           await _handlePersonalExpense(data, user);
           break;
-        // case 'income':
-        //   await _handleIncome(data);
-        //   break;
+        case 'income':
+          await _handleIncome(data, user);
+          break;
         case 'shared_expenses':
         case 'split_bill':
           await _handleSharedExpense(data, user);
@@ -98,6 +101,7 @@ class VoiceCommandRouter {
       categoryColor: CategoryMapper.getColorForCategory(
         normalizedCategory,
       ), // Color según categoría
+      date: DateTime.now(),
     );
 
     context.read<PersonalExpenseBloc>().add(
@@ -105,32 +109,29 @@ class VoiceCommandRouter {
     );
   }
 
-  // Future<void> _handleIncome(Map<String, dynamic> data) async {
-  //   final income = TransactionModel(
-  //     id: '',
-  //     userId: '',
-  //     title: data['title']?.toString() ?? 'Ingreso',
-  //     description: data['description']?.toString() ?? '',
-  //     amount: (data['amount'] as num?)?.toDouble() ?? 0.0,
-  //     type: 'income',
-  //     category: data['category']?.toString() ?? 'salary',
-  //     subcategory: data['subcategory']?.toString(),
-  //     date: DateTime.parse(
-  //       data['date']?.toString() ?? DateTime.now().toIso8601String(),
-  //     ),
-  //     paymentMethod: data['payment_method']?.toString(),
-  //     payer: data['payer']?.toString(),
-  //     isRecurring: data['is_recurring'] ?? false,
-  //     recurrence: data['recurrence']?.toString(),
-  //     tags: (data['tags'] as List?)?.cast<String>() ?? [],
-  //     notes: data['notes']?.toString(),
-  //     location: data['location']?.toString(),
-  //     createdAt: DateTime.now(),
-  //     updatedAt: DateTime.now(),
-  //   );
+  Future<void> _handleIncome(Map<String, dynamic> data, AppUser user) async {
+    final String rawCategory = data['category']?.toString() ?? 'otros';
+    final String normalizedCategory = CategoryMapper.normalizeCategory(
+      rawCategory,
+    );
+    final income = Incomes(
+      title: data['title']?.toString() ?? 'Ingreso',
+      category: Formatters.capitalize(normalizedCategory),
+      date: DateTime.now(),
+      total: data['amount'] != null ? (data['amount'] as num).toDouble() : 0.0,
+      paid: data['paid'] ?? 0.0,
+      categoryIcon: CategoryMapper.getIconForCategory(
+        normalizedCategory,
+      ), // Icono según categoría
+      categoryColor: CategoryMapper.getColorForCategory(
+        normalizedCategory,
+      ), // Color según categoría
+    );
 
-  //   context.read<IncomeBloc>().add(AddIncome(income));
-  // }
+    context.read<IncomesBloc>().add(
+      AddIncomes(income: income, userId: user.uid),
+    );
+  }
 
   Future<void> _handleSharedExpense(
     Map<String, dynamic> data,

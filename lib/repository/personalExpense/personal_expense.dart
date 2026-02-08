@@ -36,7 +36,17 @@ class PersonalExpenseRepository {
       data['userId'] = userId;
       data['createdAt'] = Timestamp.now();
 
-      await _collection.add(data);
+      final DocumentReference docRef = await _collection.add(data);
+
+      //!rEGISTRO EL PAGO INICIAL SI ES QUE SE HIZO UN PAGO AL CREAR EL GASTO
+      await FirebaseFirestore.instance
+          .collection('personal_expenses_payments')
+          .add({
+            'expenseId': docRef.id,
+            'amount': expense.paid,
+            'userId': userId,
+            'createdAt': Timestamp.now(),
+          });
     } catch (e) {
       print('Error adding expense: $e');
       throw Exception('Failed to add expense');

@@ -923,7 +923,7 @@ class _AddPersonalExpenseSheetState extends State<PersonalExpenseSheet> {
                 : paid > 0
                 ? 'partially_paid'
                 : 'pending',
-        createdAt: selectedDate,
+        date: selectedDate,
       );
 
       // Agregar el gasto a través del BLoC

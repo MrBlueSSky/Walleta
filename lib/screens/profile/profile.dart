@@ -2,9 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:walleta/blocs/authentication/bloc/authentication_bloc.dart';
+import 'package:walleta/blocs/income/bloc/incomes_bloc.dart';
+import 'package:walleta/blocs/income/bloc/incomes_state.dart';
 import 'package:walleta/blocs/personalExpense/bloc/personal_expense_bloc.dart';
 import 'package:walleta/blocs/personalExpense/bloc/personal_expense_event.dart';
 import 'package:walleta/blocs/personalExpense/bloc/personal_expense_state.dart';
+import 'package:walleta/screens/profile/incomes/incomes_card.dart';
+import 'package:walleta/screens/profile/incomes/incomes_list.dart';
 import 'package:walleta/screens/profile/personalExpense/expense_card.dart';
 import 'package:walleta/screens/profile/personalExpense/expense_list.dart';
 import 'package:walleta/screens/profile/personalExpense/personal_expense.dart';
@@ -360,6 +364,31 @@ class _ProfileState extends State<Profile> {
     );
   }
 
+  void _openIncomingsListScreen(String userId) {
+    Navigator.push(
+      context,
+      PageRouteBuilder(
+        pageBuilder:
+            (context, animation, secondaryAnimation) =>
+                PersonalIncomesListScreen(userId: userId),
+        transitionDuration: const Duration(milliseconds: 400),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          const begin = Offset(0.0, 1.0);
+          const end = Offset.zero;
+          const curve = Curves.easeInOutCubic;
+
+          var tween = Tween(
+            begin: begin,
+            end: end,
+          ).chain(CurveTween(curve: curve));
+          var offsetAnimation = animation.drive(tween);
+
+          return SlideTransition(position: offsetAnimation, child: child);
+        },
+      ),
+    );
+  }
+
   void _openExpensesListScreen(String userId) {
     Navigator.push(
       context,
@@ -490,12 +519,31 @@ class _ProfileState extends State<Profile> {
                   ),
                 ),
               ),
-              SliverToBoxAdapter(child: const SizedBox(height: 20)),
+              SliverToBoxAdapter(child: SizedBox(height: 8)),
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 16,
-                    vertical: 12,
+                    vertical: 6,
+                  ),
+                  child: _buildPersonalExpensesCard(user.uid),
+                ),
+              ),
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 6,
+                  ),
+                  child: _buildIncomingsCard(user.uid),
+                ),
+              ),
+              // SliverToBoxAdapter(child: const SizedBox(height: 5)),
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 6,
                   ),
                   child: BlocBuilder<SavingBloc, SavingState>(
                     builder: (context, state) {
@@ -527,20 +575,38 @@ class _ProfileState extends State<Profile> {
                   ),
                 ),
               ),
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 12,
-                  ),
-                  child: _buildPersonalExpensesCard(user.uid),
-                ),
-              ),
-              const SliverToBoxAdapter(child: SizedBox(height: 80)),
             ],
           );
         },
       ),
+    );
+  }
+
+  //!Por hacer
+  Widget _buildIncomingsCard(String userId) {
+    return BlocBuilder<IncomesBloc, IncomesState>(
+      builder: (context, state) {
+        // Calcular totales
+        final totalIncomes = state.incomes.fold(
+          0.0,
+          (sum, income) => sum + income.total,
+        );
+        final totalPaid = state.incomes.fold(
+          0.0,
+          (sum, income) => sum + income.paid,
+        );
+        final totalPending = totalIncomes - totalPaid;
+        final progress = totalIncomes > 0 ? totalPaid / totalIncomes : 0.0;
+
+        return IncomesCard(
+          onTap: () => _openIncomingsListScreen(userId),
+          totalExpenses: totalIncomes,
+          totalPaid: totalPaid,
+          totalPending: totalPending,
+          progress: progress,
+          expenseCount: state.incomes.length,
+        );
+      },
     );
   }
 

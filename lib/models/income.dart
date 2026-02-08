@@ -2,7 +2,7 @@ import 'dart:ui';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
-class PersonalExpense {
+class Incomes {
   final String? id;
   final String title;
   final double total;
@@ -13,7 +13,7 @@ class PersonalExpense {
   final String? status;
   final DateTime? date;
 
-  PersonalExpense({
+  Incomes({
     this.id,
     required this.title,
     required this.total,
@@ -25,8 +25,8 @@ class PersonalExpense {
     this.date,
   });
 
-  factory PersonalExpense.fromMap(String id, Map<String, dynamic> map) {
-    return PersonalExpense(
+  factory Incomes.fromMap(String id, Map<String, dynamic> map) {
+    return Incomes(
       id: id,
       title: map['title'],
       total: (map['total'] as num).toDouble(),

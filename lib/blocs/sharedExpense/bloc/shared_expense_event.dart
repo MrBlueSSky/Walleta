@@ -28,6 +28,7 @@ class UpdateSharedExpense extends SharedExpenseEvent {
 
 class DeleteSharedExpense extends SharedExpenseEvent {
   final SharedExpense expense;
+  final AppUser currentUser;
 
-  DeleteSharedExpense(this.expense);
+  DeleteSharedExpense(this.expense, this.currentUser);
 }

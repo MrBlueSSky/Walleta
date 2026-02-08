@@ -1,87 +1,79 @@
-// personal_expenses_list_screen.dart
+// personal_incomes_list_screen.dart
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:intl/intl.dart';
 import 'package:walleta/blocs/authentication/bloc/authentication_bloc.dart';
-import 'package:walleta/blocs/personalExpense/bloc/personal_expense_bloc.dart';
-import 'package:walleta/blocs/personalExpense/bloc/personal_expense_event.dart';
-import 'package:walleta/blocs/personalExpense/bloc/personal_expense_state.dart';
-import 'package:walleta/blocs/personalExpensePayment/bloc/personal_expense_payment_bloc.dart';
-import 'package:walleta/models/personal_expense.dart';
-import 'package:walleta/models/personal_expense_payment.dart';
+import 'package:walleta/blocs/income/bloc/incomes_bloc.dart';
+import 'package:walleta/blocs/income/bloc/incomes_event.dart';
+import 'package:walleta/blocs/income/bloc/incomes_state.dart';
+import 'package:walleta/blocs/income_payment/bloc/income_payment_bloc.dart';
+import 'package:walleta/models/income.dart';
+import 'package:walleta/models/income_payment.dart';
 import 'package:walleta/screens/loans/filter_option.dart';
-import 'package:walleta/screens/profile/personalExpense/personal_expense.dart';
+import 'package:walleta/screens/profile/incomes/incomes.dart';
 import 'package:walleta/utils/formatters.dart';
 import 'package:walleta/widgets/payment/register_payment_dialog.dart';
 import 'package:walleta/widgets/snackBar/snackBar.dart';
-import 'package:walleta/widgets/common/draggable_to_delete_card.dart'; // NUEVO
-import 'package:walleta/widgets/common/trash_overlay.dart'; // NUEVO
+import 'package:walleta/widgets/common/draggable_to_delete_card.dart';
+import 'package:walleta/widgets/common/trash_overlay.dart';
 
-class PersonalExpensesListScreen extends StatefulWidget {
+class PersonalIncomesListScreen extends StatefulWidget {
   final String userId;
 
-  const PersonalExpensesListScreen({super.key, required this.userId});
+  const PersonalIncomesListScreen({super.key, required this.userId});
 
   @override
-  State<PersonalExpensesListScreen> createState() =>
-      _PersonalExpensesListScreenState();
+  State<PersonalIncomesListScreen> createState() =>
+      _PersonalIncomesListScreenState();
 }
 
-class _PersonalExpensesListScreenState
-    extends State<PersonalExpensesListScreen> {
+class _PersonalIncomesListScreenState extends State<PersonalIncomesListScreen> {
   final ScrollController _scrollController = ScrollController();
-  int _selectedFilter = 0; // 0: Todos, 1: Pagados, 2: Pendientes
-  final TrashOverlayController _trashController =
-      TrashOverlayController(); // NUEVO
+  int _selectedFilter = 0; // 0: Todos, 1: Recibidos, 2: Pendientes
+  final TrashOverlayController _trashController = TrashOverlayController();
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<PersonalExpenseBloc>().add(
-        LoadPersonalExpenses(widget.userId),
-      );
+      context.read<IncomesBloc>().add(LoadIncomes(widget.userId));
     });
   }
 
   @override
   void dispose() {
     _scrollController.dispose();
-    _trashController.hideOverlay(); // CAMBIADO
+    _trashController.hideOverlay();
     super.dispose();
   }
 
-  Future<void> _refreshExpenses() async {
-    context.read<PersonalExpenseBloc>().add(
-      LoadPersonalExpenses(widget.userId),
-    );
+  Future<void> _refreshIncomes() async {
+    context.read<IncomesBloc>().add(LoadIncomes(widget.userId));
     await Future.delayed(const Duration(milliseconds: 500));
   }
 
-  void _showAddExpenseSheet() {
+  void _showAddIncomeSheet() {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       barrierColor: Colors.black.withOpacity(0.5),
-      builder: (context) => PersonalExpenseSheet(userId: widget.userId),
+      builder: (context) => PersonalIncomeSheet(userId: widget.userId),
     ).then((_) {
-      context.read<PersonalExpenseBloc>().add(
-        LoadPersonalExpenses(widget.userId),
-      );
+      context.read<IncomesBloc>().add(LoadIncomes(widget.userId));
     });
   }
 
-  List<PersonalExpense> _filterExpenses(List<PersonalExpense> expenses) {
+  List<Incomes> _filterIncomes(List<Incomes> incomes) {
     switch (_selectedFilter) {
-      case 1: // Pagados
-        return expenses.where((e) => e.paid >= e.total).toList();
+      case 1: // Recibidos
+        return incomes.where((e) => e.paid >= e.total).toList();
       case 2: // Pendientes
-        return expenses.where((e) => e.paid >= 0 && e.paid < e.total).toList();
+        return incomes.where((e) => e.paid >= 0 && e.paid < e.total).toList();
       default: // Todos
-        return expenses;
+        return incomes;
     }
   }
 
@@ -186,7 +178,6 @@ class _PersonalExpensesListScreenState
   }
 
   void _updateDragState(bool isDragging) {
-    // SIMPLIFICADO
     if (isDragging) {
       _trashController.showOverlay(context);
     } else {
@@ -204,10 +195,10 @@ class _PersonalExpensesListScreenState
 
     return Scaffold(
       backgroundColor: backgroundColor,
-      body: BlocBuilder<PersonalExpenseBloc, PersonalExpenseState>(
+      body: BlocBuilder<IncomesBloc, IncomesState>(
         builder: (context, state) {
-          final expenses = state.expenses;
-          final filteredExpenses = _filterExpenses(expenses);
+          final incomes = state.incomes;
+          final filteredIncomes = _filterIncomes(incomes);
 
           return NestedScrollView(
             controller: _scrollController,
@@ -219,7 +210,7 @@ class _PersonalExpensesListScreenState
                   backgroundColor: backgroundColor,
                   elevation: 0,
                   title: Text(
-                    'Gastos Personales',
+                    'Ingresos',
                     style: TextStyle(
                       color: isDark ? Colors.white : const Color(0xFF1F2937),
                       fontWeight: FontWeight.w700,
@@ -230,7 +221,7 @@ class _PersonalExpensesListScreenState
                     IconButton(
                       icon: Icon(Iconsax.add, color: iconsColor, size: 24),
                       onPressed: () {
-                        _showAddExpenseSheet();
+                        _showAddIncomeSheet();
                       },
                     ),
                     IconButton(
@@ -242,7 +233,7 @@ class _PersonalExpensesListScreenState
                 SliverToBoxAdapter(child: _buildFilterTabs(isDark)),
               ];
             },
-            body: _buildContent(isDark, state, filteredExpenses),
+            body: _buildContent(isDark, state, filteredIncomes),
           );
         },
       ),
@@ -250,7 +241,7 @@ class _PersonalExpensesListScreenState
   }
 
   Widget _buildFilterTabs(bool isDark) {
-    const filters = ['Todos', 'Pagados', 'Pendientes'];
+    const filters = ['Todos', 'Recibidos', 'Pendientes'];
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
@@ -327,10 +318,10 @@ class _PersonalExpensesListScreenState
 
   Widget _buildContent(
     bool isDark,
-    PersonalExpenseState state,
-    List<PersonalExpense> filteredExpenses,
+    IncomesState state,
+    List<Incomes> filteredIncomes,
   ) {
-    if (state.status == PersonalExpenseStateStatus.loading) {
+    if (state.status == IncomesStateStatus.loading) {
       return Center(
         child: CircularProgressIndicator(
           color: isDark ? Colors.white : const Color(0xFF2D5BFF),
@@ -338,9 +329,9 @@ class _PersonalExpensesListScreenState
       );
     }
 
-    if (state.status == PersonalExpenseStateStatus.error) {
+    if (state.status == IncomesStateStatus.error) {
       return RefreshIndicator(
-        onRefresh: _refreshExpenses,
+        onRefresh: _refreshIncomes,
         color: isDark ? Colors.white : const Color(0xFF2D5BFF),
         backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
         child: SingleChildScrollView(
@@ -358,7 +349,7 @@ class _PersonalExpensesListScreenState
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    'Error al cargar gastos',
+                    'Error al cargar ingresos',
                     style: TextStyle(
                       color: isDark ? Colors.white : const Color(0xFF1F2937),
                       fontSize: 16,
@@ -375,8 +366,8 @@ class _PersonalExpensesListScreenState
                   const SizedBox(height: 16),
                   ElevatedButton(
                     onPressed:
-                        () => context.read<PersonalExpenseBloc>().add(
-                          LoadPersonalExpenses(widget.userId),
+                        () => context.read<IncomesBloc>().add(
+                          LoadIncomes(widget.userId),
                         ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF2D5BFF),
@@ -394,9 +385,9 @@ class _PersonalExpensesListScreenState
       );
     }
 
-    if (filteredExpenses.isEmpty) {
+    if (filteredIncomes.isEmpty) {
       return RefreshIndicator(
-        onRefresh: _refreshExpenses,
+        onRefresh: _refreshIncomes,
         color: isDark ? Colors.white : const Color(0xFF2D5BFF),
         backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
         child: SingleChildScrollView(
@@ -408,15 +399,15 @@ class _PersonalExpensesListScreenState
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(
-                    Iconsax.receipt,
+                    Iconsax.money_recive,
                     size: 64,
                     color: isDark ? Colors.white70 : const Color(0xFF6B7280),
                   ),
                   const SizedBox(height: 16),
                   Text(
                     _selectedFilter == 0
-                        ? 'No hay gastos registrados'
-                        : 'No hay gastos en esta categoría',
+                        ? 'No hay ingresos registrados'
+                        : 'No hay ingresos en esta categoría',
                     style: TextStyle(
                       color: isDark ? Colors.white : const Color(0xFF1F2937),
                       fontSize: 18,
@@ -426,7 +417,7 @@ class _PersonalExpensesListScreenState
                   const SizedBox(height: 8),
                   Text(
                     _selectedFilter == 0
-                        ? 'Agrega tu primer gasto personal'
+                        ? 'Agrega tu primer ingreso personal'
                         : 'Intenta cambiar el filtro',
                     style: TextStyle(
                       color: isDark ? Colors.white70 : const Color(0xFF6B7280),
@@ -435,9 +426,9 @@ class _PersonalExpensesListScreenState
                   if (_selectedFilter == 0) ...[
                     const SizedBox(height: 24),
                     ElevatedButton.icon(
-                      onPressed: _showAddExpenseSheet,
+                      onPressed: _showAddIncomeSheet,
                       icon: const Icon(Iconsax.add, size: 18),
-                      label: const Text('Agregar gasto'),
+                      label: const Text('Agregar ingreso'),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF2D5BFF),
                         foregroundColor: Colors.white,
@@ -457,21 +448,21 @@ class _PersonalExpensesListScreenState
     }
 
     return RefreshIndicator(
-      onRefresh: _refreshExpenses,
+      onRefresh: _refreshIncomes,
       color: isDark ? Colors.white : const Color(0xFF2D5BFF),
       backgroundColor: isDark ? const Color(0xFF1E293B) : Colors.white,
       child: ListView.builder(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        itemCount: filteredExpenses.length,
+        itemCount: filteredIncomes.length,
         itemBuilder: (context, index) {
-          final expense = filteredExpenses[index];
+          final income = filteredIncomes[index];
           return Padding(
             padding: const EdgeInsets.only(bottom: 16),
-            child: ExpenseCard(
-              expense: expense,
+            child: IncomeCard(
+              income: income,
               isDark: isDark,
               userId: widget.userId,
-              key: ValueKey(expense.id),
+              key: ValueKey(income.id),
               onDragStateChanged: _updateDragState,
             ),
           );
@@ -481,15 +472,15 @@ class _PersonalExpensesListScreenState
   }
 }
 
-class ExpenseCard extends StatelessWidget {
-  final PersonalExpense expense;
+class IncomeCard extends StatelessWidget {
+  final Incomes income;
   final bool isDark;
   final String userId;
   final Function(bool) onDragStateChanged;
 
-  const ExpenseCard({
+  const IncomeCard({
     super.key,
-    required this.expense,
+    required this.income,
     required this.isDark,
     required this.userId,
     required this.onDragStateChanged,
@@ -500,21 +491,21 @@ class ExpenseCard extends StatelessWidget {
     return DraggableToDeleteCard(
       isDark: isDark,
       onDeleteConfirmed: () => _handleDelete(context),
-      onCardTap: () => _showExpenseDetails(context),
+      onCardTap: () => _showIncomeDetails(context),
       onDragStateChanged: onDragStateChanged,
-      deleteDialogTitle: '¿Eliminar gasto?',
+      deleteDialogTitle: '¿Eliminar ingreso?',
       deleteDialogMessage:
           'Esta acción no se puede deshacer. '
-          'Se eliminará el gasto "${expense.title}" y todos sus pagos asociados.',
+          'Se eliminará el ingreso "${income.title}" y todos sus recibos asociados.',
       child: _buildCardContent(context),
     );
   }
 
   Widget _buildCardContent(BuildContext context) {
-    final remaining = expense.total - expense.paid;
-    final progress = expense.total > 0 ? expense.paid / expense.total : 0;
-    final statusText = _getStatusText(expense.paid, expense.total);
-    final statusColor = _getStatusColor(expense.paid, expense.total);
+    final remaining = income.total - income.paid;
+    final progress = income.total > 0 ? income.paid / income.total : 0;
+    final statusText = _getStatusText(income.paid, income.total);
+    final statusColor = _getStatusColor(income.paid, income.total);
 
     return Container(
       decoration: BoxDecoration(
@@ -539,7 +530,7 @@ class ExpenseCard extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(16),
-          onTap: () => _showExpenseDetails(context),
+          onTap: () => _showIncomeDetails(context),
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
@@ -555,14 +546,14 @@ class ExpenseCard extends StatelessWidget {
                             width: 40,
                             height: 40,
                             decoration: BoxDecoration(
-                              color: expense.categoryColor.withOpacity(0.1),
+                              color: income.categoryColor.withOpacity(0.1),
                               shape: BoxShape.circle,
                             ),
                             child: Center(
                               child: Icon(
-                                expense.categoryIcon ?? Iconsax.category,
+                                income.categoryIcon ?? Iconsax.category,
                                 size: 20,
-                                color: expense.categoryColor,
+                                color: income.categoryColor,
                               ),
                             ),
                           ),
@@ -572,9 +563,9 @@ class ExpenseCard extends StatelessWidget {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  expense.title.isNotEmpty
-                                      ? expense.title
-                                      : 'Gasto sin título',
+                                  income.title.isNotEmpty
+                                      ? income.title
+                                      : 'Ingreso sin título',
                                   style: TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.w600,
@@ -588,8 +579,8 @@ class ExpenseCard extends StatelessWidget {
                                 ),
                                 const SizedBox(height: 2),
                                 Text(
-                                  expense.category.isNotEmpty
-                                      ? expense.category
+                                  income.category.isNotEmpty
+                                      ? income.category
                                       : 'Sin categoría',
                                   style: TextStyle(
                                     fontSize: 12,
@@ -641,7 +632,7 @@ class ExpenseCard extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          Formatters.formatCurrencyNoDecimals(expense.total),
+                          Formatters.formatCurrencyNoDecimals(income.total),
                           style: TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.w700,
@@ -665,7 +656,7 @@ class ExpenseCard extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
                         Text(
-                          _formatDate(expense.date),
+                          _formatDate(income.date),
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
@@ -778,7 +769,7 @@ class ExpenseCard extends StatelessWidget {
                       ),
 
                       GestureDetector(
-                        onTap: () => _showRegisterPaymentDialog(context),
+                        onTap: () => _showRegisterReceiptDialog(context),
                         child: Container(
                           decoration: BoxDecoration(
                             color: const Color(0xFF2D5BFF).withOpacity(0.1),
@@ -801,7 +792,7 @@ class ExpenseCard extends StatelessWidget {
                               ),
                               const SizedBox(width: 4),
                               Text(
-                                'Registrar Pago',
+                                'Registrar Recibo',
                                 style: TextStyle(
                                   fontSize: 11,
                                   fontWeight: FontWeight.w600,
@@ -825,34 +816,32 @@ class ExpenseCard extends StatelessWidget {
 
   void _handleDelete(BuildContext context) {
     try {
-      context.read<PersonalExpenseBloc>().add(
-        DeletePersonalExpense(expense.id!),
-      );
+      context.read<IncomesBloc>().add(DeleteIncomes(income.id!));
 
       TopSnackBarOverlay.show(
         context: context,
-        message: 'Gasto eliminado exitosamente',
+        message: 'Ingreso eliminado exitosamente',
         verticalOffset: 70.0,
         backgroundColor: const Color(0xFF00C896),
       );
     } catch (e) {
       TopSnackBarOverlay.show(
         context: context,
-        message: 'Error al eliminar el gasto',
+        message: 'Error al eliminar el ingreso',
         verticalOffset: 70.0,
         backgroundColor: const Color(0xFFFF6B6B),
       );
     }
   }
 
-  String _getStatusText(double paid, double total) {
-    if (paid >= total) return 'Pagado';
+  String _getStatusText(double received, double total) {
+    if (received >= total) return 'Recibido';
     return 'Pendiente';
   }
 
-  Color _getStatusColor(double paid, double total) {
-    if (paid >= total) return const Color(0xFF10B981);
-    if (paid > 0) return const Color(0xFF2D5BFF);
+  Color _getStatusColor(double received, double total) {
+    if (received >= total) return const Color(0xFF10B981);
+    if (received > 0) return const Color(0xFF2D5BFF);
     return const Color(0xFFF59E0B);
   }
 
@@ -861,7 +850,7 @@ class ExpenseCard extends StatelessWidget {
     return DateFormat('dd MMM yyyy').format(date);
   }
 
-  void _showExpenseDetails(BuildContext context) {
+  void _showIncomeDetails(BuildContext context) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -884,7 +873,7 @@ class ExpenseCard extends StatelessWidget {
                       top: Radius.circular(24),
                     ),
                   ),
-                  child: _buildExpenseDetailsContent(scrollController),
+                  child: _buildIncomeDetailsContent(scrollController),
                 );
               },
             ),
@@ -894,7 +883,7 @@ class ExpenseCard extends StatelessWidget {
     );
   }
 
-  Widget _buildExpenseDetailsContent(ScrollController scrollController) {
+  Widget _buildIncomeDetailsContent(ScrollController scrollController) {
     return Padding(
       padding: const EdgeInsets.all(20),
       child: Column(
@@ -913,7 +902,7 @@ class ExpenseCard extends StatelessWidget {
           const SizedBox(height: 16),
 
           Text(
-            expense.title.isNotEmpty ? expense.title : 'Gasto sin título',
+            income.title.isNotEmpty ? income.title : 'Ingreso sin título',
             style: TextStyle(
               fontSize: 24,
               fontWeight: FontWeight.w700,
@@ -925,15 +914,13 @@ class ExpenseCard extends StatelessWidget {
           Row(
             children: [
               Icon(
-                expense.categoryIcon ?? Iconsax.category,
+                income.categoryIcon ?? Iconsax.category,
                 size: 16,
-                color: expense.categoryColor,
+                color: income.categoryColor,
               ),
               const SizedBox(width: 8),
               Text(
-                expense.category.isNotEmpty
-                    ? expense.category
-                    : 'Sin categoría',
+                income.category.isNotEmpty ? income.category : 'Sin categoría',
                 style: TextStyle(
                   fontSize: 14,
                   color: isDark ? Colors.white70 : const Color(0xFF6B7280),
@@ -950,22 +937,22 @@ class ExpenseCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _buildDetailRow(
-                    'Total del gasto',
-                    Formatters.formatCurrencyNoDecimals(expense.total),
+                    'Total del ingreso',
+                    Formatters.formatCurrencyNoDecimals(income.total),
                   ),
                   _buildDetailRow(
-                    'Pagado',
-                    Formatters.formatCurrencyNoDecimals(expense.paid),
+                    'Recibido',
+                    Formatters.formatCurrencyNoDecimals(income.paid),
                     color: const Color(0xFF10B981),
                   ),
                   _buildDetailRow(
                     'Pendiente',
                     Formatters.formatCurrencyNoDecimals(
-                      expense.total - expense.paid,
+                      income.total - income.paid,
                     ),
                     color: const Color(0xFFF59E0B),
                   ),
-                  _buildDetailRow('Fecha', _formatDate(expense.date)),
+                  _buildDetailRow('Fecha', _formatDate(income.date)),
                 ],
               ),
             ),
@@ -1001,14 +988,14 @@ class ExpenseCard extends StatelessWidget {
     );
   }
 
-  void _showRegisterPaymentDialog(BuildContext context) {
+  void _showRegisterReceiptDialog(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final remainingBalance = expense.total - expense.paid;
+    final remainingBalance = income.total - income.paid;
 
     if (remainingBalance <= 0) {
       TopSnackBarOverlay.show(
         context: context,
-        message: 'Este gasto ya está completamente pagado',
+        message: 'Este ingreso ya está completamente recibido',
         verticalOffset: 70.0,
         backgroundColor: Colors.orange,
       );
@@ -1021,17 +1008,17 @@ class ExpenseCard extends StatelessWidget {
       backgroundColor: Colors.transparent,
       builder: (context) {
         return RegisterPaymentDialog(
-          title: 'Registrar Pago',
-          subtitle: expense.title,
-          totalAmount: expense.total,
-          paidAmount: expense.paid,
+          title: 'Registrar Recibo',
+          subtitle: income.title,
+          totalAmount: income.total,
+          paidAmount: income.paid,
           isDark: isDark,
           onPaymentConfirmed: (amount, note, image) async {
             final currentUser = context.read<AuthenticationBloc>().state.user;
 
-            final payment = PersonalExpensePayment(
+            final receipt = IncomePayment(
               userId: currentUser.uid,
-              expenseId: expense.id!,
+              incomeId: income.id!,
               payerName: '${currentUser.name} ${currentUser.surname}',
               amount: amount,
               date: DateTime.now(),
@@ -1039,37 +1026,39 @@ class ExpenseCard extends StatelessWidget {
               receiptImageUrl: image?.path,
             );
 
-            final newPaidAmount = expense.paid + amount;
+            final newReceivedAmount = income.paid + amount;
 
             try {
-              context.read<PersonalExpensePaymentBloc>().add(
-                AddPersonalExpensePayment(
-                  payment: payment,
-                  newPaidAmount: newPaidAmount,
+              context.read<IncomesPaymentBloc>().add(
+                AddIncomePayment(
+                  payment: receipt,
+                  newPaidAmount: newReceivedAmount,
                 ),
               );
 
-              final updatedPersonalExpense = PersonalExpense(
-                id: expense.id,
-                title: expense.title,
-                total: expense.total,
-                paid: newPaidAmount,
-                category: expense.category,
-                categoryIcon: expense.categoryIcon,
-                categoryColor: expense.categoryColor,
+              final updatedPersonalIncome = Incomes(
+                id: income.id,
+                title: income.title,
+                total: income.total,
+                paid: newReceivedAmount,
+                category: income.category,
+                categoryIcon: income.categoryIcon,
+                categoryColor: income.categoryColor,
                 status:
-                    newPaidAmount >= expense.total ? 'completado' : 'pendiente',
-                date: expense.date,
+                    newReceivedAmount >= income.total
+                        ? 'completado'
+                        : 'pendiente',
+                date: income.date,
               );
 
-              context.read<PersonalExpenseBloc>().add(
-                UpdatePersonalExpense(expense: updatedPersonalExpense),
+              context.read<IncomesBloc>().add(
+                UpdateIncomes(income: updatedPersonalIncome),
               );
 
               TopSnackBarOverlay.show(
                 context: context,
                 message:
-                    'Pago de ${Formatters.formatCurrencyNoDecimals(amount)} registrado exitosamente',
+                    'Recibo de ${Formatters.formatCurrencyNoDecimals(amount)} registrado exitosamente',
                 verticalOffset: 70.0,
                 backgroundColor: const Color(0xFF00C896),
               );

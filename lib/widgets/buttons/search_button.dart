@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:iconsax/iconsax.dart';
-import 'package:walleta/blocs/search/search_bloc.dart';
-import 'package:walleta/blocs/search/search_event.dart';
-import 'package:walleta/blocs/search/search_state.dart';
+import 'package:walleta/blocs/search/bloc/search_bloc.dart';
+import 'package:walleta/blocs/search/bloc/search_event.dart';
+import 'package:walleta/blocs/search/bloc/search_state.dart';
 import 'package:walleta/repository/search/search_repository.dart';
 
 class SearchButton extends StatefulWidget {

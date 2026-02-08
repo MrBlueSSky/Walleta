@@ -7,7 +7,7 @@ import 'package:walleta/repository/sharedExpense/shared_expense_repository.dart'
 
 class SharedExpenseBloc extends Bloc<SharedExpenseEvent, SharedExpenseState> {
   final SharedExpenseRepository _repository;
-  String? _currentUserId; // 👈 Guardar el userId actual
+  String? _currentUserId; // 👈 Guardar el userId actual //!Vrr luego
 
   SharedExpenseBloc({required SharedExpenseRepository sharedExpenseRepository})
     : _repository = sharedExpenseRepository,
@@ -18,7 +18,7 @@ class SharedExpenseBloc extends Bloc<SharedExpenseEvent, SharedExpenseState> {
     on<UpdateSharedExpense>(_onUpdateSharedExpense);
   }
 
-  // 👉 Método para establecer el userId actual
+  // 👉 Método para establecer el userId actual //!Luego veoooooooooo, si lo paso desde el incio a todos los blocs
   void setCurrentUserId(String userId) {
     _currentUserId = userId;
   }
@@ -67,13 +67,13 @@ class SharedExpenseBloc extends Bloc<SharedExpenseEvent, SharedExpenseState> {
 
     try {
       // 👈 Necesitamos el userId actual para verificar permisos
-      if (_currentUserId == null) {
-        throw Exception('Usuario no autenticado');
-      }
+      // if (_currentUserId == null) {
+      //   throw Exception('Usuario no autenticado');
+      // }
 
       await _repository.deleteSharedExpense(
         event.expense,
-        _currentUserId!, // 👈 Pasar el userId actual
+        event.currentUser.uid, // 👈 Pasar el userId actual
       );
 
       // Recargar la lista después de eliminar

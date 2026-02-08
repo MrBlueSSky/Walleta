@@ -7,9 +7,9 @@ import 'package:walleta/blocs/sharedExpense/bloc/shared_expense_event.dart';
 import 'package:walleta/blocs/sharedExpense/bloc/shared_expense_state.dart';
 import 'package:walleta/blocs/sharedExpensePayment/bloc/shared_expense_payment_bloc.dart';
 import 'package:walleta/screens/loans/filter_option.dart';
-
 import 'package:walleta/screens/sharedExpenses/add_expense.dart';
 import 'package:walleta/widgets/cards/shared_expense_card.dart';
+import 'package:walleta/widgets/common/trash_overlay.dart'; // AÑADIR
 
 class SharedExpensesScreen extends StatefulWidget {
   const SharedExpensesScreen({Key? key}) : super(key: key);
@@ -20,6 +20,8 @@ class SharedExpensesScreen extends StatefulWidget {
 
 class _SharedExpensesScreenState extends State<SharedExpensesScreen> {
   final ScrollController _scrollController = ScrollController();
+  final TrashOverlayController _trashController =
+      TrashOverlayController(); // AÑADIR
 
   @override
   void initState() {
@@ -27,12 +29,18 @@ class _SharedExpensesScreenState extends State<SharedExpensesScreen> {
     _loadExpenses();
   }
 
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    _trashController.hideOverlay(); // AÑADIR
+    super.dispose();
+  }
+
   void _loadExpenses() {
     final userId = context.read<AuthenticationBloc>().state.user.uid;
     context.read<SharedExpenseBloc>().add(LoadSharedExpenses(userId: userId));
   }
 
-  // Función para recargar datos
   Future<void> _refreshExpenses() async {
     final authBloc = context.read<AuthenticationBloc>();
     final authState = authBloc.state;
@@ -40,8 +48,6 @@ class _SharedExpensesScreenState extends State<SharedExpensesScreen> {
     if (authState.status == AuthenticationStatus.authenticated) {
       final userId = authState.user.uid;
       context.read<SharedExpenseBloc>().add(LoadSharedExpenses(userId: userId));
-
-      // Esperar un momento para que se complete la carga
       await Future.delayed(const Duration(milliseconds: 500));
     }
   }
@@ -54,14 +60,12 @@ class _SharedExpensesScreenState extends State<SharedExpensesScreen> {
       builder:
           (context) => AddExpenseSheet(
             onSave: (expense) {
-              // Recargar los gastos después de agregar uno nuevo
               _loadExpenses();
             },
           ),
     );
   }
 
-  //!Hacer esto un widget porque se usa mucho
   void _showFilterDialog(bool isDark) {
     bool allSelected = true;
     bool pendingSelected = false;
@@ -162,10 +166,13 @@ class _SharedExpensesScreenState extends State<SharedExpensesScreen> {
     );
   }
 
-  @override
-  void dispose() {
-    _scrollController.dispose();
-    super.dispose();
+  void _updateDragState(bool isDragging) {
+    // AÑADIR
+    if (isDragging) {
+      _trashController.showOverlay(context);
+    } else {
+      _trashController.hideOverlay();
+    }
   }
 
   @override
@@ -177,7 +184,6 @@ class _SharedExpensesScreenState extends State<SharedExpensesScreen> {
             ? Theme.of(context).scaffoldBackgroundColor
             : const Color(0xFFF8FAFD);
 
-    // Widget del AppBar común para todos los estados
     Widget _buildAppBar() {
       return SliverAppBar(
         floating: true,
@@ -212,11 +218,9 @@ class _SharedExpensesScreenState extends State<SharedExpensesScreen> {
       body: SafeArea(
         child: MultiBlocListener(
           listeners: [
-            // Escuchar cuando se agrega un pago exitosamente
             BlocListener<ExpensePaymentBloc, ExpensePaymentState>(
               listener: (context, state) {
                 if (ExpensePaymentStatus.success == state.status) {
-                  // Recargar los gastos cuando se agrega un pago
                   _loadExpenses();
                 }
               },
@@ -343,7 +347,6 @@ class _SharedExpensesScreenState extends State<SharedExpensesScreen> {
                   physics: const AlwaysScrollableScrollPhysics(),
                   slivers: [
                     _buildAppBar(),
-                    // Padding general para todas las cards
                     SliverPadding(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 16,
@@ -353,6 +356,7 @@ class _SharedExpensesScreenState extends State<SharedExpensesScreen> {
                         delegate: SliverChildBuilderDelegate((context, index) {
                           return SharedExpenseCard(
                             expense: state.expenses[index],
+                            onDragStateChanged: _updateDragState, // AÑADIR
                           );
                         }, childCount: state.expenses.length),
                       ),
@@ -374,7 +378,6 @@ class _SharedExpensesScreenState extends State<SharedExpensesScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            // AppBar fijo para el estado de loading
             Container(
               color:
                   isDark
@@ -482,7 +485,6 @@ class _SharedExpensesScreenState extends State<SharedExpensesScreen> {
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 32),
-          // Sugerencias
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(20),

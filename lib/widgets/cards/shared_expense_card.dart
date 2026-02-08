@@ -1,6 +1,8 @@
+// shared_expense_card.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:intl/intl.dart';
 import 'package:walleta/blocs/authentication/bloc/authentication_bloc.dart';
 import 'package:walleta/blocs/sharedExpense/bloc/shared_expense_bloc.dart';
 import 'package:walleta/blocs/sharedExpense/bloc/shared_expense_event.dart';
@@ -11,10 +13,17 @@ import 'package:walleta/screens/sharedExpenses/shared_expense_history.dart';
 import 'package:walleta/widgets/payment/register_payment_dialog.dart';
 import 'package:walleta/widgets/snackBar/snackBar.dart';
 import 'package:walleta/utils/formatters.dart';
+import 'package:walleta/widgets/common/draggable_to_delete_card.dart';
 
 class SharedExpenseCard extends StatefulWidget {
   final SharedExpense expense;
-  const SharedExpenseCard({super.key, required this.expense});
+  final Function(bool)? onDragStateChanged;
+
+  const SharedExpenseCard({
+    super.key,
+    required this.expense,
+    this.onDragStateChanged,
+  });
 
   @override
   State<SharedExpenseCard> createState() => _SharedExpenseCardState();
@@ -23,230 +32,6 @@ class SharedExpenseCard extends StatefulWidget {
 class _SharedExpenseCardState extends State<SharedExpenseCard> {
   bool _showParticipants = false;
   final _participantsKey = GlobalKey();
-
-  void _showExpenseDetails(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final progress = widget.expense.paid / widget.expense.total;
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) {
-        return Container(
-          color: Colors.black.withOpacity(0.5),
-          child: DraggableScrollableSheet(
-            initialChildSize: 0.8,
-            minChildSize: 0.5,
-            maxChildSize: 0.95,
-            builder: (context, scrollController) {
-              return Container(
-                decoration: BoxDecoration(
-                  color: isDark ? const Color(0xFF1E293B) : Colors.white,
-                  borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(24),
-                  ),
-                ),
-                child: Column(
-                  children: [
-                    // Handle
-                    Center(
-                      child: Container(
-                        width: 40,
-                        height: 4,
-                        margin: const EdgeInsets.only(top: 12, bottom: 8),
-                        decoration: BoxDecoration(
-                          color:
-                              isDark ? Colors.white30 : const Color(0xFFE5E7EB),
-                          borderRadius: BorderRadius.circular(2),
-                        ),
-                      ),
-                    ),
-
-                    // Header
-                    Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 20,
-                        vertical: 16,
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 48,
-                            height: 48,
-                            decoration: BoxDecoration(
-                              color: widget.expense.categoryColor.withOpacity(
-                                0.1,
-                              ),
-                              shape: BoxShape.circle,
-                            ),
-                            child: Center(
-                              child: Icon(
-                                widget.expense.categoryIcon,
-                                color: widget.expense.categoryColor,
-                                size: 24,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  widget.expense.title,
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w700,
-                                    color:
-                                        isDark
-                                            ? Colors.white
-                                            : const Color(0xFF1F2937),
-                                  ),
-                                  overflow: TextOverflow.ellipsis,
-                                  maxLines: 2,
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  '${widget.expense.participants.length} participantes • ${Formatters.formatCurrencyNoDecimals(widget.expense.total)} total',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    color:
-                                        isDark
-                                            ? Colors.white70
-                                            : const Color(0xFF6B7280),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    // Historial de pagos
-                    Expanded(
-                      child: SingleChildScrollView(
-                        controller: scrollController,
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 20),
-                          child: ExpensePaymentHistory(
-                            expense: widget.expense,
-                            isDark: isDark,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            },
-          ),
-        );
-      },
-    );
-  }
-
-  //!Registar pago compartido
-  void _showRegisterPaymentDialog(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final remainingBalance = widget.expense.total - widget.expense.paid;
-    final screenHeight = MediaQuery.of(context).size.height;
-
-    // Solo mostrar el diálogo si hay saldo pendiente
-    if (remainingBalance <= 0) {
-      TopSnackBarOverlay.show(
-        context: context,
-        message: 'Este gasto ya está completamente pagado',
-        verticalOffset: 70.0,
-        backgroundColor: Colors.orange,
-      );
-      return;
-    }
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) {
-        return RegisterPaymentDialog(
-          title: 'Registrar Pago',
-          subtitle: widget.expense.title,
-          totalAmount: widget.expense.total,
-          paidAmount: widget.expense.paid,
-          isDark: isDark,
-          onPaymentConfirmed: (amount, note, image) async {
-            // Obtener el nombre del usuario actual
-            final currentUser = context.read<AuthenticationBloc>().state.user;
-
-            // Crear el pago
-            final payment = SharedExpensePayment(
-              userId: currentUser.uid,
-              expenseId: widget.expense.id!,
-              payerName: '${currentUser.name} ${currentUser.surname}',
-              amount: amount,
-              date: DateTime.now(),
-              description: note,
-              receiptImageUrl: image?.path,
-            );
-
-            // Calcular nuevo monto pagado
-            final newPaidAmount = widget.expense.paid + amount;
-
-            try {
-              // 1. Agregar el pago al BLoC
-              context.read<ExpensePaymentBloc>().add(
-                AddExpensePayment(
-                  payment: payment,
-                  newPaidAmount: newPaidAmount,
-                ),
-              );
-
-              // 2. Actualizar el gasto compartido
-              final updatedExpense = SharedExpense(
-                id: widget.expense.id,
-                title: widget.expense.title,
-                total: widget.expense.total,
-                paid: newPaidAmount,
-                participants: widget.expense.participants,
-                category: widget.expense.category,
-                categoryIcon: widget.expense.categoryIcon,
-                categoryColor: widget.expense.categoryColor,
-                status:
-                    newPaidAmount >= widget.expense.total
-                        ? 'completado'
-                        : 'pendiente',
-                createdAt: widget.expense.createdAt,
-                createdBy: currentUser,
-              );
-
-              // 3. Actualizar en el BLoC de gastos compartidos
-              context.read<SharedExpenseBloc>().add(
-                UpdateSharedExpense(expense: updatedExpense),
-              );
-
-              // 4. Mostrar confirmación
-              TopSnackBarOverlay.show(
-                context: context,
-                message:
-                    'Pago de ${Formatters.formatCurrencyNoDecimals(amount)} registrado exitosamente',
-                verticalOffset: 70.0,
-                backgroundColor: const Color(0xFF00C896),
-              );
-            } catch (e) {
-              TopSnackBarOverlay.show(
-                context: context,
-                message: 'Error: $e',
-                verticalOffset: 70.0,
-                backgroundColor: const Color(0xFFFF6B6B),
-              );
-              rethrow;
-            }
-          },
-        );
-      },
-    );
-  }
 
   void _toggleParticipantsOverlay(BuildContext context) {
     final RenderBox renderBox =
@@ -257,10 +42,8 @@ class _SharedExpenseCardState extends State<SharedExpenseCard> {
       _showParticipants = !_showParticipants;
     });
 
-    // Si estamos mostrando el overlay, podemos configurar un listener para cerrarlo al tocar fuera
     if (_showParticipants) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        // Cerrar al tocar fuera
         Future.delayed(Duration.zero, () {
           showDialog(
             context: context,
@@ -277,7 +60,6 @@ class _SharedExpenseCardState extends State<SharedExpenseCard> {
                   color: Colors.transparent,
                   child: Stack(
                     children: [
-                      // Overlay flotante de participantes
                       Positioned(
                         top: position.dy,
                         right:
@@ -305,34 +87,19 @@ class _SharedExpenseCardState extends State<SharedExpenseCard> {
     final participantsCount = widget.expense.participants.length;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    // Calcular alto dinámico basado en la cantidad de participantes
     double calculateHeight() {
       if (participantsCount == 0) return 100;
-
-      // Altura base: header + padding
       double baseHeight = 80;
-
-      // Altura por participante
-      const participantHeight = 40.0; // Altura aproximada de cada chip
-
-      // Calcular altura necesaria
+      const participantHeight = 40.0;
       double contentHeight =
           baseHeight + (participantsCount * participantHeight);
-
-      // Altura máxima permitida (70% de la pantalla)
       final maxScreenHeight = MediaQuery.of(context).size.height * 0.7;
-
-      // Si excede el máximo, usar altura máxima con scroll
-      if (contentHeight > maxScreenHeight) {
-        return maxScreenHeight;
-      }
-
+      if (contentHeight > maxScreenHeight) return maxScreenHeight;
       return contentHeight;
     }
 
     final containerHeight = calculateHeight();
-    final needsScroll =
-        participantsCount > 2; // Si hay más de 4 participantes, activar scroll
+    final needsScroll = participantsCount > 2;
 
     return Container(
       width: 150,
@@ -356,7 +123,6 @@ class _SharedExpenseCardState extends State<SharedExpenseCard> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header del overlay
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
@@ -382,7 +148,6 @@ class _SharedExpenseCardState extends State<SharedExpenseCard> {
             ),
           ),
 
-          // Lista de participantes
           if (needsScroll)
             Expanded(
               child: SingleChildScrollView(
@@ -466,12 +231,31 @@ class _SharedExpenseCardState extends State<SharedExpenseCard> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      child: DraggableToDeleteCard(
+        isDark: isDark,
+        onDeleteConfirmed: () => _handleDelete(context),
+        onCardTap: () => _showExpenseDetails(context),
+        onDragStateChanged: widget.onDragStateChanged,
+        deleteDialogTitle: '¿Eliminar gasto compartido?',
+        deleteDialogMessage:
+            'Esta acción no se puede deshacer. '
+            'Se eliminará el gasto "${widget.expense.title}" y todos sus pagos asociados.',
+        child: _buildCardContent(context),
+      ),
+    );
+  }
+
+  Widget _buildCardContent(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final progress = widget.expense.paid / widget.expense.total;
     final isComplete = progress >= 1.0;
     final remaining = widget.expense.total - widget.expense.paid;
+    final remainingBalance = widget.expense.total - widget.expense.paid;
     final participantsCount = widget.expense.participants.length;
 
-    // Color basado en el progreso
     Color getProgressColor(double progress) {
       if (progress <= 0.25) return const Color(0xFFFF6B6B);
       if (progress <= 0.50) return const Color(0xFFFFA726);
@@ -482,10 +266,8 @@ class _SharedExpenseCardState extends State<SharedExpenseCard> {
 
     final progressColor = getProgressColor(progress);
     final cardColor = isDark ? const Color(0xFF1E293B) : Colors.white;
-    final remainingBalance = widget.expense.total - widget.expense.paid;
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
         color: cardColor,
         borderRadius: BorderRadius.circular(16),
@@ -516,77 +298,65 @@ class _SharedExpenseCardState extends State<SharedExpenseCard> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Encabezado - MODIFICADO para coincidir con LoanCard
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Expanded(
-                          child: Padding(
-                            padding: const EdgeInsets.only(right: 35),
-                            child: Row(
-                              children: [
-                                Container(
-                                  width: 40, // Tamaño igual que LoanCard
-                                  height: 40, // Tamaño igual que LoanCard
-                                  decoration: BoxDecoration(
-                                    color: widget.expense.categoryColor
-                                        .withOpacity(0.1),
-                                    shape:
-                                        BoxShape
-                                            .circle, // Círculo como LoanCard
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 40,
+                                height: 40,
+                                decoration: BoxDecoration(
+                                  color: widget.expense.categoryColor
+                                      .withOpacity(0.1),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Center(
+                                  child: Icon(
+                                    widget.expense.categoryIcon,
+                                    color: widget.expense.categoryColor,
+                                    size: 20,
                                   ),
-                                  child: Center(
-                                    child: Icon(
-                                      widget.expense.categoryIcon,
-                                      color: widget.expense.categoryColor,
-                                      size: 20, // Tamaño ajustado
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    // CATEGORÍA
+                                    Text(
+                                      widget.expense.category,
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: widget.expense.categoryColor,
+                                        fontWeight: FontWeight.w600,
+                                      ),
                                     ),
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      // Categoría
-                                      Text(
-                                        widget.expense.category,
-                                        style: TextStyle(
-                                          fontSize: 12, // Igual que LoanCard
-                                          color: widget.expense.categoryColor,
-                                          fontWeight: FontWeight.w600,
-                                        ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      widget.expense.title,
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w600,
+                                        color:
+                                            isDark
+                                                ? Colors.white
+                                                : const Color(0xFF1F2937),
                                       ),
-                                      const SizedBox(height: 2),
-                                      // Título
-                                      Text(
-                                        widget.expense.title,
-                                        style: TextStyle(
-                                          fontSize:
-                                              16, // Igual que LoanCard (16px)
-                                          fontWeight: FontWeight.w600,
-                                          color:
-                                              isDark
-                                                  ? Colors.white
-                                                  : const Color(0xFF1F2937),
-                                        ),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ],
-                                  ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ],
                                 ),
-                              ],
-                            ),
+                              ),
+                            ],
                           ),
                         ),
                       ],
                     ),
-
                     const SizedBox(height: 16),
-
-                    // Información de montos - REORGANIZADO como LoanCard
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -598,15 +368,16 @@ class _SharedExpenseCardState extends State<SharedExpenseCard> {
                                 widget.expense.paid,
                               ),
                               style: TextStyle(
-                                fontSize: 20, // Igual que LoanCard
+                                fontSize: 20,
                                 fontWeight: FontWeight.w700,
-                                color: progressColor,
+                                color:
+                                    progressColor, // Color dinámico según progreso
                               ),
                             ),
                             Text(
                               'Pagado',
                               style: TextStyle(
-                                fontSize: 11, // Igual que LoanCard
+                                fontSize: 11,
                                 color:
                                     isDark
                                         ? Colors.white70
@@ -623,7 +394,7 @@ class _SharedExpenseCardState extends State<SharedExpenseCard> {
                                 widget.expense.total,
                               ),
                               style: TextStyle(
-                                fontSize: 14, // Igual que LoanCard para fecha
+                                fontSize: 14,
                                 fontWeight: FontWeight.w600,
                                 color:
                                     isDark
@@ -634,7 +405,7 @@ class _SharedExpenseCardState extends State<SharedExpenseCard> {
                             Text(
                               'Total',
                               style: TextStyle(
-                                fontSize: 11, // Igual que LoanCard
+                                fontSize: 11,
                                 color:
                                     isDark
                                         ? Colors.white60
@@ -645,26 +416,19 @@ class _SharedExpenseCardState extends State<SharedExpenseCard> {
                         ),
                       ],
                     ),
-
                     const SizedBox(height: 16),
-
-                    // Barra de progreso - MODIFICADO para coincidir con LoanCard
                     TweenAnimationBuilder<double>(
+                      duration: const Duration(milliseconds: 1500),
+                      curve: Curves.easeOutQuart,
                       tween: Tween<double>(
                         begin: 0,
                         end: progress.clamp(0.0, 1.0),
                       ),
-                      duration: const Duration(
-                        milliseconds: 1500,
-                      ), // Igual que LoanCard
-                      curve: Curves.easeOutQuart, // Igual que LoanCard
                       builder: (context, value, _) {
                         return Container(
-                          height: 8, // Igual que LoanCard
+                          height: 8,
                           decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(
-                              4,
-                            ), // Igual que LoanCard
+                            borderRadius: BorderRadius.circular(4),
                             color:
                                 isDark
                                     ? const Color(0xFF334155)
@@ -679,7 +443,6 @@ class _SharedExpenseCardState extends State<SharedExpenseCard> {
                           ),
                           child: Stack(
                             children: [
-                              // Fondo
                               Container(
                                 decoration: BoxDecoration(
                                   borderRadius: BorderRadius.circular(4),
@@ -689,7 +452,6 @@ class _SharedExpenseCardState extends State<SharedExpenseCard> {
                                           : const Color(0xFFF3F4F6),
                                 ),
                               ),
-                              // Barra de progreso animada
                               FractionallySizedBox(
                                 widthFactor: value,
                                 child: Container(
@@ -723,7 +485,6 @@ class _SharedExpenseCardState extends State<SharedExpenseCard> {
                                   ),
                                   child: Stack(
                                     children: [
-                                      // Efecto de brillo (opcional)
                                       Container(
                                         decoration: BoxDecoration(
                                           borderRadius: BorderRadius.circular(
@@ -748,14 +509,11 @@ class _SharedExpenseCardState extends State<SharedExpenseCard> {
                       },
                     ),
                     const SizedBox(height: 12),
-
-                    // Información de progreso - MANTENIDO igual
                     Padding(
                       padding: const EdgeInsets.only(top: 8),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          // FALTANTE - AL INICIO (IZQUIERDA)
                           if (!isComplete)
                             Container(
                               decoration: BoxDecoration(
@@ -774,14 +532,14 @@ class _SharedExpenseCardState extends State<SharedExpenseCard> {
                                 children: [
                                   Icon(
                                     Iconsax.money_send,
-                                    size: 10, // Igual que LoanCard
+                                    size: 10,
                                     color: progressColor,
                                   ),
                                   const SizedBox(width: 4),
                                   Text(
                                     'Faltante: ${Formatters.formatCurrencyNoDecimals(remaining)}',
                                     style: TextStyle(
-                                      fontSize: 11, // Igual que LoanCard
+                                      fontSize: 11,
                                       fontWeight: FontWeight.w600,
                                       color: progressColor,
                                     ),
@@ -790,7 +548,6 @@ class _SharedExpenseCardState extends State<SharedExpenseCard> {
                               ),
                             ),
 
-                          // REGISTRAR PAGO - AL FINAL (DERECHA)
                           if (!isComplete && remainingBalance > 0)
                             GestureDetector(
                               onTap: () => _showRegisterPaymentDialog(context),
@@ -815,14 +572,14 @@ class _SharedExpenseCardState extends State<SharedExpenseCard> {
                                   children: [
                                     Icon(
                                       Iconsax.add_circle,
-                                      size: 10, // Igual que LoanCard
+                                      size: 10,
                                       color: Theme.of(context).primaryColor,
                                     ),
                                     const SizedBox(width: 4),
                                     Text(
                                       'Registrar Pago',
                                       style: TextStyle(
-                                        fontSize: 11, // Igual que LoanCard
+                                        fontSize: 11,
                                         fontWeight: FontWeight.w600,
                                         color: Theme.of(context).primaryColor,
                                       ),
@@ -837,7 +594,7 @@ class _SharedExpenseCardState extends State<SharedExpenseCard> {
                   ],
                 ),
 
-                // Botón de participantes en la esquina superior derecha - MANTENIDO
+                // BOTÓN DE PARTICIPANTES - MANTENIDO DEL DISEÑO ORIGINAL
                 Positioned(
                   top: 0,
                   right: 0,
@@ -898,6 +655,241 @@ class _SharedExpenseCardState extends State<SharedExpenseCard> {
           ),
         ),
       ),
+    );
+  }
+
+  void _handleDelete(BuildContext context) {
+    try {
+      context.read<SharedExpenseBloc>().add(
+        DeleteSharedExpense(
+          widget.expense,
+          context.read<AuthenticationBloc>().state.user,
+        ),
+      );
+
+      TopSnackBarOverlay.show(
+        context: context,
+        message: 'Gasto compartido eliminado exitosamente',
+        verticalOffset: 70.0,
+        backgroundColor: const Color(0xFF00C896),
+      );
+    } catch (e) {
+      TopSnackBarOverlay.show(
+        context: context,
+        message: 'Error al eliminar el gasto compartido: $e',
+        verticalOffset: 70.0,
+        backgroundColor: const Color(0xFFFF6B6B),
+      );
+    }
+  }
+
+  void _showExpenseDetails(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return Container(
+          color: Colors.black.withOpacity(0.5),
+          child: DraggableScrollableSheet(
+            initialChildSize: 0.8,
+            minChildSize: 0.5,
+            maxChildSize: 0.95,
+            builder: (context, scrollController) {
+              return Container(
+                decoration: BoxDecoration(
+                  color: isDark ? const Color(0xFF1E293B) : Colors.white,
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(24),
+                  ),
+                ),
+                child: Column(
+                  children: [
+                    Center(
+                      child: Container(
+                        width: 40,
+                        height: 4,
+                        margin: const EdgeInsets.only(top: 12, bottom: 8),
+                        decoration: BoxDecoration(
+                          color:
+                              isDark ? Colors.white30 : const Color(0xFFE5E7EB),
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                    ),
+
+                    Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 16,
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 48,
+                            height: 48,
+                            decoration: BoxDecoration(
+                              color: widget.expense.categoryColor.withOpacity(
+                                0.1,
+                              ),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Center(
+                              child: Icon(
+                                widget.expense.categoryIcon,
+                                color: widget.expense.categoryColor,
+                                size: 24,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  widget.expense.title,
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w700,
+                                    color:
+                                        isDark
+                                            ? Colors.white
+                                            : const Color(0xFF1F2937),
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                  maxLines: 2,
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  '${widget.expense.participants.length} participantes • ${Formatters.formatCurrencyNoDecimals(widget.expense.total)} total',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color:
+                                        isDark
+                                            ? Colors.white70
+                                            : const Color(0xFF6B7280),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    Expanded(
+                      child: SingleChildScrollView(
+                        controller: scrollController,
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 20),
+                          child: ExpensePaymentHistory(
+                            expense: widget.expense,
+                            isDark: isDark,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
+
+  void _showRegisterPaymentDialog(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final remainingBalance = widget.expense.total - widget.expense.paid;
+
+    if (remainingBalance <= 0) {
+      TopSnackBarOverlay.show(
+        context: context,
+        message: 'Este gasto ya está completamente pagado',
+        verticalOffset: 70.0,
+        backgroundColor: Colors.orange,
+      );
+      return;
+    }
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return RegisterPaymentDialog(
+          title: 'Registrar Pago',
+          subtitle: widget.expense.title,
+          totalAmount: widget.expense.total,
+          paidAmount: widget.expense.paid,
+          isDark: isDark,
+          onPaymentConfirmed: (amount, note, image) async {
+            final currentUser = context.read<AuthenticationBloc>().state.user;
+
+            final payment = SharedExpensePayment(
+              userId: currentUser.uid,
+              expenseId: widget.expense.id!,
+              payerName: '${currentUser.name} ${currentUser.surname}',
+              amount: amount,
+              date: DateTime.now(),
+              description: note,
+              receiptImageUrl: image?.path,
+            );
+
+            final newPaidAmount = widget.expense.paid + amount;
+
+            try {
+              context.read<ExpensePaymentBloc>().add(
+                AddExpensePayment(
+                  payment: payment,
+                  newPaidAmount: newPaidAmount,
+                ),
+              );
+
+              final updatedExpense = SharedExpense(
+                id: widget.expense.id,
+                title: widget.expense.title,
+                total: widget.expense.total,
+                paid: newPaidAmount,
+                participants: widget.expense.participants,
+                category: widget.expense.category,
+                categoryIcon: widget.expense.categoryIcon,
+                categoryColor: widget.expense.categoryColor,
+                status:
+                    newPaidAmount >= widget.expense.total
+                        ? 'completado'
+                        : 'pendiente',
+                createdAt: widget.expense.createdAt,
+                createdBy: currentUser,
+              );
+
+              context.read<SharedExpenseBloc>().add(
+                UpdateSharedExpense(expense: updatedExpense),
+              );
+
+              TopSnackBarOverlay.show(
+                context: context,
+                message:
+                    'Pago de ${Formatters.formatCurrencyNoDecimals(amount)} registrado exitosamente',
+                verticalOffset: 70.0,
+                backgroundColor: const Color(0xFF00C896),
+              );
+            } catch (e) {
+              TopSnackBarOverlay.show(
+                context: context,
+                message: 'Error: $e',
+                verticalOffset: 70.0,
+                backgroundColor: const Color(0xFFFF6B6B),
+              );
+              rethrow;
+            }
+          },
+        );
+      },
     );
   }
 }
