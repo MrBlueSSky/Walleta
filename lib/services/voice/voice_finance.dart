@@ -10,7 +10,7 @@ class VoiceFinanceService {
   late final AudioRecorder _audioRecorder;
 
   //!Mover esto a .env
-  static const String _groqApiKey = 'api key';
+  static const String _groqApiKey = 'api key xd';
   static const String _groqBaseUrl = 'https://api.groq.com/openai/v1';
   static const String _transcriptionModel = 'whisper-large-v3-turbo';
   static const String _chatModel = 'llama-3.3-70b-versatile';

@@ -10,6 +10,7 @@ import 'package:walleta/screens/loans/empty_loan.dart';
 import 'package:walleta/screens/loans/filter_option.dart';
 import 'package:walleta/screens/loans/form/add_loan.dart';
 import 'package:walleta/screens/loans/loan_card.dart';
+import 'package:walleta/widgets/common/trash_overlay.dart';
 import 'package:walleta/widgets/toggle/loan_tab_button.dart';
 import 'package:walleta/utils/formatters.dart'; // ← AGREGAR ESTA LÍNEA
 
@@ -24,6 +25,8 @@ class _LoansState extends State<Loans> {
   int _selectedTab = 0; // 0: Me deben, 1: Debo
   final PageController _pageController = PageController();
   final ScrollController _scrollController = ScrollController();
+  // En la clase _LoansState
+  final TrashOverlayController _trashController = TrashOverlayController();
 
   @override
   void initState() {
@@ -67,7 +70,16 @@ class _LoansState extends State<Loans> {
   void dispose() {
     _pageController.dispose();
     _scrollController.dispose();
+    _trashController.hideOverlay(); // Añadir
     super.dispose();
+  }
+
+  void _updateDragState(bool isDragging) {
+    if (isDragging) {
+      _trashController.showOverlay(context);
+    } else {
+      _trashController.hideOverlay();
+    }
   }
 
   // Filtrar préstamos según la pestaña seleccionada
@@ -518,8 +530,7 @@ class _LoansState extends State<Loans> {
           ),
           Expanded(
             child: ListView.builder(
-              physics:
-                  const AlwaysScrollableScrollPhysics(), // Necesario para RefreshIndicator
+              physics: const AlwaysScrollableScrollPhysics(),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               itemCount: loans.length,
               itemBuilder: (context, index) {
@@ -533,6 +544,12 @@ class _LoansState extends State<Loans> {
                             (loan) => loan.borrowerUserId.uid == currentUserId,
                           )
                           .toList(),
+                  onDragStateChanged:
+                      _selectedTab == 0
+                          ? _updateDragState
+                          : null, // Solo para "Me deben"
+                  canDelete:
+                      _selectedTab == 0, // Solo se puede eliminar en "Me deben"
                 );
               },
             ),

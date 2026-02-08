@@ -1,34 +1,43 @@
+// loan_card.dart
 import 'package:flutter/material.dart';
 import 'package:iconsax/iconsax.dart';
 import 'package:walleta/models/loan.dart';
 import 'package:walleta/screens/loans/details/details_content.dart';
 import 'package:walleta/screens/loans/payment/loan_payment_dialog.dart';
 import 'package:walleta/utils/formatters.dart';
+import 'package:walleta/widgets/common/draggable_to_delete_card.dart'; // AÑADIR
+import 'package:flutter_bloc/flutter_bloc.dart'; // AÑADIR
+import 'package:walleta/blocs/loan/bloc/loan_bloc.dart'; // AÑADIR
+import 'package:walleta/blocs/loan/bloc/loan_event.dart'; // AÑADIR
+import 'package:walleta/widgets/snackBar/snackBar.dart'; // AÑADIR
 
 class LoanCard extends StatefulWidget {
+  final Loan loan;
+  final bool isDark;
+  final int selectedTab; // 0 = "Me deben", 1 = "Yo debo"
+  final List<Loan> iOwe;
+  final Function(bool)? onDragStateChanged; // AÑADIR
+  final bool
+  canDelete; // AÑADIR: Nuevo parámetro para controlar si se puede eliminar
+
   const LoanCard({
     super.key,
     required this.loan,
     required this.isDark,
     required this.selectedTab,
     required this.iOwe,
+    this.onDragStateChanged,
+    this.canDelete = true, // Por defecto se puede eliminar
   });
-
-  final Loan loan;
-  final bool isDark;
-  final int selectedTab; // 0 = "Me deben", 1 = "Yo debo"
-  final List<Loan> iOwe;
 
   @override
   State<LoanCard> createState() => _LoanCardState();
 }
 
 class _LoanCardState extends State<LoanCard> {
-  @override
-  Widget build(BuildContext context) {
+  Widget _buildCardContent() {
     final remainingBalance = widget.loan.amount - widget.loan.paidAmount;
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
         color: widget.isDark ? const Color(0xFF1E293B) : Colors.white,
         borderRadius: BorderRadius.circular(16),
@@ -51,7 +60,7 @@ class _LoanCardState extends State<LoanCard> {
         color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(16),
-          onTap: () => _showLoanDetails(),
+          onTap: _showLoanDetails,
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: Column(
@@ -86,7 +95,6 @@ class _LoanCardState extends State<LoanCard> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                // Nombre
                                 Text(
                                   _getDisplayName(),
                                   style: TextStyle(
@@ -101,7 +109,6 @@ class _LoanCardState extends State<LoanCard> {
                                   overflow: TextOverflow.ellipsis,
                                 ),
                                 const SizedBox(height: 2),
-                                // Descripción responsive
                                 Text(
                                   widget.loan.description,
                                   style: TextStyle(
@@ -207,7 +214,6 @@ class _LoanCardState extends State<LoanCard> {
                   ],
                 ),
                 const SizedBox(height: 16),
-                // BARRA DE PROGRESO ANIMADA
                 TweenAnimationBuilder<double>(
                   duration: const Duration(milliseconds: 1500),
                   curve: Curves.easeOutQuart,
@@ -231,7 +237,6 @@ class _LoanCardState extends State<LoanCard> {
                       ),
                       child: Stack(
                         children: [
-                          // Fondo
                           Container(
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(4),
@@ -241,7 +246,6 @@ class _LoanCardState extends State<LoanCard> {
                                       : const Color(0xFFF3F4F6),
                             ),
                           ),
-                          // Barra de progreso animada
                           FractionallySizedBox(
                             widthFactor: value,
                             child: Container(
@@ -269,7 +273,6 @@ class _LoanCardState extends State<LoanCard> {
                               ),
                               child: Stack(
                                 children: [
-                                  // Efecto de brillo
                                   Container(
                                     decoration: BoxDecoration(
                                       borderRadius: BorderRadius.circular(4),
@@ -293,13 +296,11 @@ class _LoanCardState extends State<LoanCard> {
                 ),
                 const SizedBox(height: 12),
 
-                // Información de progreso
                 Padding(
                   padding: const EdgeInsets.only(top: 8),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      // FALTANTE - AL INICIO (IZQUIERDA)
                       Container(
                         decoration: BoxDecoration(
                           color: widget.loan.color.withOpacity(0.1),
@@ -335,7 +336,7 @@ class _LoanCardState extends State<LoanCard> {
 
                       if (widget.selectedTab == 1)
                         GestureDetector(
-                          onTap: () => _showRegisterPaymentDialog(),
+                          onTap: _showRegisterPaymentDialog,
                           child: Container(
                             decoration: BoxDecoration(
                               color: Theme.of(
@@ -384,22 +385,48 @@ class _LoanCardState extends State<LoanCard> {
     );
   }
 
-  // NUEVA FUNCIÓN: Obtener el nombre a mostrar según la pestaña
+  @override
+  Widget build(BuildContext context) {
+    // SOLO envolver con DraggableToDeleteCard si se puede eliminar
+    final cardContent = _buildCardContent();
+
+    if (!widget.canDelete) {
+      // Si no se puede eliminar, devolver solo el contenido
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 12),
+        child: cardContent,
+      );
+    }
+
+    // Si se puede eliminar, envolver con DraggableToDeleteCard
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: DraggableToDeleteCard(
+        isDark: widget.isDark,
+        onDeleteConfirmed: () => _handleDelete(context),
+        onCardTap: _showLoanDetails,
+        onDragStateChanged: widget.onDragStateChanged,
+        deleteDialogTitle: '¿Eliminar préstamo?',
+        deleteDialogMessage:
+            'Esta acción no se puede deshacer. '
+            'Se eliminará el préstamo con ${_getDisplayName()} por ${Formatters.formatCurrencyNoDecimals(widget.loan.amount)}.',
+        child: cardContent,
+      ),
+    );
+  }
+
   String _getDisplayName() {
     if (widget.selectedTab == 0) {
-      // "Me deben" → Mostrar el nombre del deudor (borrower)
       return widget.loan.borrowerUserId.name.isNotEmpty
           ? widget.loan.borrowerUserId.name
           : 'Sin nombre';
     } else {
-      // "Yo debo" → Mostrar el nombre del prestamista (lender)
       return widget.loan.lenderUserId.name.isNotEmpty
           ? widget.loan.lenderUserId.name
           : 'Sin nombre';
     }
   }
 
-  // NUEVO MÉTODO PARA OBTENER LA INICIAL SEGURA
   String _getInitial(String name) {
     if (name.isEmpty) return '?';
     return name.substring(0, 1).toUpperCase();
@@ -420,10 +447,28 @@ class _LoanCardState extends State<LoanCard> {
       'Nov',
       'Dic',
     ];
-
-    // Asegurarse de que el mes esté en rango
     if (month < 1 || month > 12) return 'Ene';
     return months[month - 1];
+  }
+
+  void _handleDelete(BuildContext context) {
+    try {
+      context.read<LoanBloc>().add(DeleteLoan(widget.loan.id!));
+
+      TopSnackBarOverlay.show(
+        context: context,
+        message: 'Préstamo eliminado exitosamente',
+        verticalOffset: 70.0,
+        backgroundColor: const Color(0xFF00C896),
+      );
+    } catch (e) {
+      TopSnackBarOverlay.show(
+        context: context,
+        message: 'Error al eliminar el préstamo',
+        verticalOffset: 70.0,
+        backgroundColor: const Color(0xFFFF6B6B),
+      );
+    }
   }
 
   void _showLoanDetails() {
