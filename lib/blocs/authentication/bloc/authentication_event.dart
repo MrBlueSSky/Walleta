@@ -4,55 +4,45 @@ abstract class AuthenticationEvent extends Equatable {
   const AuthenticationEvent();
 
   @override
-  List<Object> get props => []; //!Es para saber si dos instacias son iaguales viene de equatable
+  List<Object> get props => [];
 }
 
 class AuthenticationUserChanged extends AuthenticationEvent {
-  final AppUser user; //!Este es el user que viene del stream de firebase.
+  final AppUser user;
 
   const AuthenticationUserChanged(this.user);
 
   @override
-  List<Object> get props => [user]; //!Aqui esta user, tons 2 eventos con distointos user no serán iguales
+  List<Object> get props => [user];
 }
 
 class AuthenticationUserSignIn extends AuthenticationEvent {
   final String email;
   final String password;
 
-  AuthenticationUserSignIn({required this.email, required this.password});
+  const AuthenticationUserSignIn({required this.email, required this.password});
 
   @override
   List<Object> get props => [email, password];
 }
 
-class AuthenticationPasswordResetRequested extends AuthenticationEvent {
-  final String email;
-
-  const AuthenticationPasswordResetRequested({required this.email});
-
-  @override
-  List<Object> get props => [email];
-}
-
 class AuthenticationLogoutRequested extends AuthenticationEvent {}
 
-//!Registrar al user normal
 class AuthenticationUserRegister extends AuthenticationEvent {
   final String username;
   final String name;
   final String surname;
-  final String email;
   final String phone;
+  final String email;
   final String password;
   final String profilePictureUrl;
 
-  AuthenticationUserRegister({
+  const AuthenticationUserRegister({
     required this.username,
     required this.name,
     required this.surname,
-    required this.email,
     required this.phone,
+    required this.email,
     required this.password,
     required this.profilePictureUrl,
   });
@@ -62,8 +52,8 @@ class AuthenticationUserRegister extends AuthenticationEvent {
     username,
     name,
     surname,
-    email,
     phone,
+    email,
     password,
     profilePictureUrl,
   ];
@@ -74,38 +64,49 @@ class UpdateUser extends AuthenticationEvent {
   final String username;
   final String name;
   final String surname;
-  final String email;
   final String phone;
+  final String email;
   final String profilePictureUrl;
 
-  UpdateUser({
+  const UpdateUser({
     required this.uid,
     required this.username,
     required this.name,
     required this.surname,
-    required this.email,
     required this.phone,
+    required this.email,
     required this.profilePictureUrl,
   });
 
   @override
   List<Object> get props => [
     uid,
+    username,
     name,
     surname,
-    email,
     phone,
+    email,
     profilePictureUrl,
   ];
 }
 
-// En authentication_event.dart
 class UpgradeToPremium extends AuthenticationEvent {
   final String userId;
   final Duration duration;
 
-  UpgradeToPremium({required this.userId, required this.duration});
+  const UpgradeToPremium({required this.userId, required this.duration});
 
   @override
   List<Object> get props => [userId, duration];
+}
+
+class ReloadUserRequested extends AuthenticationEvent {}
+
+class AuthenticationPasswordResetRequested extends AuthenticationEvent {
+  final String email;
+
+  const AuthenticationPasswordResetRequested({required this.email});
+
+  @override
+  List<Object> get props => [email];
 }

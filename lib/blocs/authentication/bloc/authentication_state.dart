@@ -3,15 +3,15 @@ part of 'authentication_bloc.dart';
 enum AuthenticationStatus {
   authenticated,
   unauthenticated,
-  modified, //!No deberia ir aqui pero de mientras
+  loading, // Nuevo estado para carga
   unknown,
-  error, // Nuevo estado para manejar errores
+  error,
 }
 
 class AuthenticationState extends Equatable {
   final AuthenticationStatus status;
   final AppUser user;
-  final String? errorMessage; // Mensaje de error opcional
+  final String? errorMessage;
 
   const AuthenticationState({
     this.status = AuthenticationStatus.unknown,
@@ -27,12 +27,24 @@ class AuthenticationState extends Equatable {
   const AuthenticationState.unauthenticated()
     : this(status: AuthenticationStatus.unauthenticated);
 
-  const AuthenticationState.modified(AppUser user)
-    : this(status: AuthenticationStatus.modified, user: user);
+  const AuthenticationState.loading(AppUser user)
+    : this(status: AuthenticationStatus.loading, user: user);
 
-  // Nuevo constructor para estado de error
   const AuthenticationState.error(String message)
     : this(status: AuthenticationStatus.error, errorMessage: message);
+
+  // Método para copiar con cambios
+  AuthenticationState copyWith({
+    AuthenticationStatus? status,
+    AppUser? user,
+    String? errorMessage,
+  }) {
+    return AuthenticationState(
+      status: status ?? this.status,
+      user: user ?? this.user,
+      errorMessage: errorMessage ?? this.errorMessage,
+    );
+  }
 
   @override
   List<Object?> get props => [status, user, errorMessage];

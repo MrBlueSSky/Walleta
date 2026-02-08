@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:iconsax/iconsax.dart';
+import 'package:walleta/widgets/snackBar/snackBar.dart';
 
 class CustomBottomNavBar extends StatefulWidget {
   final int currentIndex;
   final Function(int) onTap;
-  final Function(bool) onMicPressed; // Cambiado a Function(bool)
+  final Function(bool) onMicPressed;
   final bool isRecording;
+  final bool isPremium; // 🔥 Nuevo parámetro
 
   const CustomBottomNavBar({
     Key? key,
@@ -13,6 +15,7 @@ class CustomBottomNavBar extends StatefulWidget {
     required this.onTap,
     required this.onMicPressed,
     this.isRecording = false,
+    required this.isPremium, // 🔥 Nuevo parámetro requerido
   }) : super(key: key);
 
   @override
@@ -27,7 +30,7 @@ class _CustomBottomNavBarState extends State<CustomBottomNavBar>
   late Animation<double> _pulseAnimation;
   bool _isMicPressed = false;
 
-  // Variables para el gesto de slide (se mantienen igual)
+  // Variables para el gesto de slide
   double _dragStartX = 0.0;
   double _dragThreshold = 30.0;
 
@@ -68,6 +71,13 @@ class _CustomBottomNavBarState extends State<CustomBottomNavBar>
         _micController.reverse();
       }
     }
+
+    // 🔥 Reaccionar a cambios en el estado premium
+    if (widget.isPremium != oldWidget.isPremium) {
+      setState(() {
+        // Forzar rebuild para actualizar colores
+      });
+    }
   }
 
   @override
@@ -77,19 +87,27 @@ class _CustomBottomNavBarState extends State<CustomBottomNavBar>
   }
 
   void _onMicTapDown(TapDownDetails details) {
+    if (!widget.isPremium) {
+      // 🔥 Mostrar feedback visual de que no está disponible
+      _showPremiumRequiredFeedback();
+      return;
+    }
+
     setState(() {
       _isMicPressed = true;
     });
     _micController.forward();
-    widget.onMicPressed(true); // Iniciar grabación
+    widget.onMicPressed(true);
   }
 
   void _onMicTapUp(TapUpDetails details) {
+    if (!widget.isPremium) return;
+
     setState(() {
       _isMicPressed = false;
     });
     _micController.reverse();
-    widget.onMicPressed(false); // Detener grabación
+    widget.onMicPressed(false);
   }
 
   void _onMicTapCancel() {
@@ -97,11 +115,25 @@ class _CustomBottomNavBarState extends State<CustomBottomNavBar>
       _isMicPressed = false;
     });
     _micController.reverse();
-    widget.onMicPressed(false); // Cancelar grabación
+    if (widget.isPremium) {
+      widget.onMicPressed(false);
+    }
   }
 
-  // Los métodos _handleHorizontalDragStart y _handleHorizontalDragUpdate
-  // se mantienen igual, no los modifiqué
+  // 🔥 Feedback visual para función premium
+  void _showPremiumRequiredFeedback() {
+    _micController.forward();
+    Future.delayed(const Duration(milliseconds: 200), () {
+      _micController.reverse();
+    });
+
+    TopSnackBarOverlay.show(
+      context: context,
+      message: '⭐ ¡Función exclusiva para usuarios Premium!',
+      backgroundColor: Colors.deepPurple,
+      textColor: Colors.white,
+    );
+  }
 
   void _handleHorizontalDragStart(DragStartDetails details) {
     _dragStartX = details.globalPosition.dx;
@@ -148,9 +180,16 @@ class _CustomBottomNavBarState extends State<CustomBottomNavBar>
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    final screenWidth = MediaQuery.of(context).size.width;
 
     final primaryColor = theme.primaryColor;
+    final premiumColor = Colors.amber; // 🔥 Color especial para premium
+    const disabledColor = Color(0xFF9CA3AF);
+
+    // 🔥 Determinar colores basados en estado premium
+    final micActiveColor = widget.isPremium ? primaryColor : disabledColor;
+    final micInactiveColor =
+        widget.isPremium ? primaryColor.withOpacity(0.5) : disabledColor;
+    final micTextColor = widget.isPremium ? Colors.white : Colors.grey[300];
 
     return GestureDetector(
       onHorizontalDragStart: _handleHorizontalDragStart,
@@ -161,7 +200,7 @@ class _CustomBottomNavBarState extends State<CustomBottomNavBar>
         child: Stack(
           clipBehavior: Clip.none,
           children: [
-            // Navbar principal (se mantiene igual)
+            // Navbar principal
             Positioned(
               bottom: 0,
               left: 0,
@@ -184,7 +223,7 @@ class _CustomBottomNavBarState extends State<CustomBottomNavBar>
                   ),
                   child: BackdropFilter(
                     filter:
-                        widget.isRecording
+                        widget.isRecording && widget.isPremium
                             ? const ColorFilter.mode(
                               Colors.transparent,
                               BlendMode.srcOver,
@@ -289,90 +328,172 @@ class _CustomBottomNavBarState extends State<CustomBottomNavBar>
                   child: AnimatedBuilder(
                     animation: _micController,
                     builder: (context, child) {
-                      return Transform.translate(
-                        offset: Offset(0, 0),
-                        child: Transform.scale(
-                          scale:
-                              widget.isRecording
-                                  ? _pulseAnimation.value
-                                  : _micScaleAnimation.value,
-                          child: Container(
-                            width: 70,
-                            height: 70,
-                            decoration: BoxDecoration(
-                              gradient:
-                                  _isMicPressed || widget.isRecording
-                                      ? LinearGradient(
-                                        colors: [
-                                          primaryColor,
-                                          primaryColor.withOpacity(0.8),
-                                        ],
-                                        begin: Alignment.topLeft,
-                                        end: Alignment.bottomRight,
-                                      )
-                                      : const LinearGradient(
-                                        colors: [
-                                          Colors.white,
-                                          Color(0xFFF8FAFD),
-                                        ],
-                                        begin: Alignment.topLeft,
-                                        end: Alignment.bottomRight,
+                      return Column(
+                        children: [
+                          // // 🔥 Badge premium (opcional)
+                          // if (widget.isPremium)
+                          //   Container(
+                          //     padding: const EdgeInsets.symmetric(
+                          //       horizontal: 8,
+                          //       vertical: 2,
+                          //     ),
+                          //     decoration: BoxDecoration(
+                          //       color: premiumColor.withOpacity(0.9),
+                          //       borderRadius: BorderRadius.circular(10),
+                          //       boxShadow: [
+                          //         BoxShadow(
+                          //           color: premiumColor.withOpacity(0.3),
+                          //           blurRadius: 8,
+                          //           offset: const Offset(0, 2),
+                          //         ),
+                          //       ],
+                          //     ),
+                          //     child: Row(
+                          //       mainAxisSize: MainAxisSize.min,
+                          //       children: [
+                          //         Icon(
+                          //           Icons.star,
+                          //           size: 10,
+                          //           color: Colors.white,
+                          //         ),
+                          //         SizedBox(width: 4),
+                          //         Text(
+                          //           'PREMIUM',
+                          //           style: TextStyle(
+                          //             fontSize: 8,
+                          //             fontWeight: FontWeight.bold,
+                          //             color: Colors.white,
+                          //           ),
+                          //         ),
+                          //       ],
+                          //     ),
+                          //   ),
+                          // SizedBox(height: widget.isPremium ? 4 : 0),
+                          Transform.translate(
+                            offset: Offset(0, 0),
+                            child: Transform.scale(
+                              scale:
+                                  widget.isRecording && widget.isPremium
+                                      ? _pulseAnimation.value
+                                      : _micScaleAnimation.value,
+                              child: Container(
+                                width: 70,
+                                height: 70,
+                                decoration: BoxDecoration(
+                                  gradient:
+                                      _isMicPressed && widget.isPremium
+                                          ? LinearGradient(
+                                            colors: [
+                                              micActiveColor,
+                                              micActiveColor.withOpacity(0.8),
+                                            ],
+                                            begin: Alignment.topLeft,
+                                            end: Alignment.bottomRight,
+                                          )
+                                          : widget.isPremium
+                                          ? const LinearGradient(
+                                            colors: [
+                                              Colors.white,
+                                              Color(0xFFF8FAFD),
+                                            ],
+                                            begin: Alignment.topLeft,
+                                            end: Alignment.bottomRight,
+                                          )
+                                          : LinearGradient(
+                                            colors: [
+                                              Colors.grey[200]!,
+                                              Colors.grey[300]!,
+                                            ],
+                                            begin: Alignment.topLeft,
+                                            end: Alignment.bottomRight,
+                                          ),
+                                  shape: BoxShape.circle,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: (_isMicPressed && widget.isPremium
+                                              ? micActiveColor
+                                              : widget.isPremium
+                                              ? Colors.black
+                                              : Colors.grey)
+                                          .withOpacity(
+                                            0.25 +
+                                                (_micElevationAnimation.value /
+                                                        30) *
+                                                    0.3,
+                                          ),
+                                      blurRadius:
+                                          25 + _micElevationAnimation.value,
+                                      spreadRadius: -8,
+                                      offset: Offset(
+                                        0,
+                                        10 + _micElevationAnimation.value / 2,
                                       ),
-                              shape: BoxShape.circle,
-                              boxShadow: [
-                                BoxShadow(
-                                  color: (_isMicPressed || widget.isRecording
-                                          ? primaryColor
-                                          : Colors.black)
-                                      .withOpacity(
-                                        0.25 +
-                                            (_micElevationAnimation.value /
-                                                    30) *
-                                                0.3,
-                                      ),
-                                  blurRadius: 25 + _micElevationAnimation.value,
-                                  spreadRadius: -8,
-                                  offset: Offset(
-                                    0,
-                                    10 + _micElevationAnimation.value / 2,
-                                  ),
-                                ),
-                                BoxShadow(
-                                  color: Colors.white.withOpacity(0.9),
-                                  blurRadius: 3,
-                                  spreadRadius: 1.5,
-                                  offset: const Offset(0, -2),
-                                ),
-                              ],
-                              border: Border.all(
-                                color:
-                                    _isMicPressed || widget.isRecording
-                                        ? const Color(
-                                          0xFF2D5BFF,
-                                        ).withOpacity(0.3)
-                                        : const Color(0xFFE5E7EB),
-                                width: 2.5,
-                              ),
-                            ),
-                            child: Center(
-                              child: Stack(
-                                children: [
-                                  Icon(
-                                    Iconsax.microphone_2,
-                                    // widget.isRecording
-                                    //     ? Iconsax.microphone_slash5
-                                    //     : Iconsax.microphone_2,
+                                    ),
+                                    BoxShadow(
+                                      color: Colors.white.withOpacity(0.9),
+                                      blurRadius: 3,
+                                      spreadRadius: 1.5,
+                                      offset: const Offset(0, -2),
+                                    ),
+                                  ],
+                                  border: Border.all(
                                     color:
-                                        _isMicPressed || widget.isRecording
-                                            ? Colors.white
-                                            : Theme.of(context).primaryColor,
-                                    size: 30,
+                                        _isMicPressed && widget.isPremium
+                                            ? micActiveColor.withOpacity(0.3)
+                                            : widget.isPremium
+                                            ? const Color(0xFFE5E7EB)
+                                            : Colors.grey[400]!,
+                                    width: 2.5,
                                   ),
-                                ],
+                                ),
+                                child: Center(
+                                  child: Stack(
+                                    children: [
+                                      // Ícono principal
+                                      Icon(
+                                        Iconsax.microphone_2,
+                                        color:
+                                            widget.isPremium
+                                                ? (_isMicPressed ||
+                                                        widget.isRecording
+                                                    ? Colors.white
+                                                    : primaryColor)
+                                                : disabledColor,
+                                        size: 30,
+                                      ),
+
+                                      // 🔥 Indicador de bloqueo si no es premium
+                                      if (!widget.isPremium)
+                                        Positioned(
+                                          right: 0,
+                                          bottom: 0,
+                                          child: Container(
+                                            padding: const EdgeInsets.all(2),
+                                            decoration: BoxDecoration(
+                                              color: Colors.white,
+                                              shape: BoxShape.circle,
+                                              boxShadow: [
+                                                BoxShadow(
+                                                  color: Colors.black
+                                                      .withOpacity(0.1),
+                                                  blurRadius: 2,
+                                                ),
+                                              ],
+                                            ),
+                                            child: Icon(
+                                              Icons.lock,
+                                              size: 12,
+                                              color: disabledColor,
+                                            ),
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                                ),
                               ),
                             ),
                           ),
-                        ),
+                        ],
                       );
                     },
                   ),

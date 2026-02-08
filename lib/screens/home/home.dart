@@ -2,6 +2,9 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:provider/provider.dart';
+import 'package:walleta/blocs/authentication/authentication.dart';
 import 'package:walleta/screens/dashboard/dashbard.dart';
 import 'package:walleta/screens/loans/loans.dart';
 import 'package:walleta/screens/profile/profile.dart';
@@ -62,7 +65,15 @@ class _HomeState extends State<Home> {
     super.dispose();
   }
 
-  Future<void> _onMicPressed(bool isRecordingStart) async {
+  Future<void> _onMicPressed(bool isRecordingStart, bool isPremium) async {
+    if (!isPremium) {
+      _showErrorTopSnackbar(
+        context,
+        'Esta función es exclusiva para usuarios premium. ¡Actualiza para disfrutarla!',
+      );
+      return;
+    }
+
     setState(() {
       if (isRecordingStart) {
         // Iniciar grabación
@@ -85,7 +96,7 @@ class _HomeState extends State<Home> {
       setState(() {
         _isRecording = false;
       });
-      _showErrorSnackbar(context, 'Error iniciando grabación: $e');
+      _showErrorTopSnackbar(context, 'Error iniciando grabación: $e');
     }
   }
 
@@ -105,42 +116,16 @@ class _HomeState extends State<Home> {
         _showVoiceResultPopup(result);
       } else {
         _hideProcessingOverlay();
-        _showErrorSnackbar(
+        _showErrorTopSnackbar(
           context,
           'No se pudo detectar una transacción válida. Intenta de nuevo.',
         );
       }
     } catch (e) {
       _hideProcessingOverlay();
-      _showErrorSnackbar(context, 'Error procesando audio: $e');
+      _showErrorTopSnackbar(context, 'Error procesando audio: $e');
     }
   }
-
-  // void _showRecordingSnackbar() {
-  //   ScaffoldMessenger.of(context).showSnackBar(
-  //     SnackBar(
-  //       content: Row(
-  //         children: [
-  //           const Icon(Icons.mic, color: Colors.white),
-  //           const SizedBox(width: 10),
-  //           const Text('Grabando... Habla ahora'),
-  //         ],
-  //       ),
-  //       backgroundColor: const Color(0xFF4B39EF),
-  //       duration: const Duration(seconds: 10),
-  //       action: SnackBarAction(
-  //         label: 'Cancelar',
-  //         textColor: Colors.white,
-  //         onPressed: () {
-  //           setState(() {
-  //             _isRecording = false;
-  //           });
-  //           _voiceService.cancelRecording();
-  //         },
-  //       ),
-  //     ),
-  //   );
-  // }
 
   void _showProcessingSnackbar() {
     setState(() {
@@ -167,8 +152,7 @@ class _HomeState extends State<Home> {
     });
   }
 
-  void _showErrorSnackbar(BuildContext context, String message) {
-    // TopSnackBarOverlay(context, message, const Color(0xFFF44336));
+  void _showErrorTopSnackbar(BuildContext context, String message) {
     TopSnackBarOverlay.show(
       context: context,
       message: message,
@@ -254,63 +238,75 @@ class _HomeState extends State<Home> {
 
   @override
   Widget build(BuildContext context) {
-    final primaryColor = Theme.of(context).primaryColor;
-    final primaryWithOpacity = Theme.of(context).primaryColor.withOpacity(0.3);
-    return Scaffold(
-      extendBody: true,
-      body: Container(
-        color: const Color(0xFFF8FAFD),
-        child: NotificationListener<OverscrollIndicatorNotification>(
-          onNotification: (notification) {
-            notification.disallowIndicator();
-            return true;
-          },
-          child: PageView(
-            controller: _pageController,
-            onPageChanged: _onPageChanged,
-            physics: const _SmoothNoOverscrollPhysics(),
-            scrollDirection: Axis.horizontal,
-            pageSnapping: true,
-            children: _screens,
-          ),
-        ),
-      ),
-      bottomNavigationBar: CustomBottomNavBar(
-        currentIndex: _currentIndex,
-        onTap: _onTabTapped,
-        onMicPressed: _onMicPressed, // Ahora recibe bool
-        isRecording: _isRecording,
-      ),
+    return BlocBuilder<AuthenticationBloc, AuthenticationState>(
+      builder: (context, authState) {
+        final isPremium = authState.user.isPremium;
 
-      floatingActionButton:
-          _showVoiceResult && _lastVoiceResult != null && !_showVoicePopup
-              ? FloatingActionButton(
-                onPressed: () => _showVoiceResultPopup(_lastVoiceResult!),
-                backgroundColor: primaryColor,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                elevation: 4,
-                child: Container(
-                  width: 60,
-                  height: 60,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [primaryColor, primaryWithOpacity],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
+        final primaryColor = Theme.of(context).primaryColor;
+        final primaryWithOpacity = Theme.of(
+          context,
+        ).primaryColor.withOpacity(0.3);
+
+        return Scaffold(
+          extendBody: true,
+          body: Container(
+            color: const Color(0xFFF8FAFD),
+            child: NotificationListener<OverscrollIndicatorNotification>(
+              onNotification: (notification) {
+                notification.disallowIndicator();
+                return true;
+              },
+              child: PageView(
+                controller: _pageController,
+                onPageChanged: _onPageChanged,
+                physics: const _SmoothNoOverscrollPhysics(),
+                scrollDirection: Axis.horizontal,
+                pageSnapping: true,
+                children: _screens,
+              ),
+            ),
+          ),
+          bottomNavigationBar: CustomBottomNavBar(
+            currentIndex: _currentIndex,
+            onTap: _onTabTapped,
+            onMicPressed:
+                (isRecordingStart) =>
+                    _onMicPressed(isRecordingStart, isPremium),
+            isRecording: _isRecording,
+            isPremium: isPremium,
+          ),
+
+          floatingActionButton:
+              _showVoiceResult && _lastVoiceResult != null && !_showVoicePopup
+                  ? FloatingActionButton(
+                    onPressed: () => _showVoiceResultPopup(_lastVoiceResult!),
+                    backgroundColor: primaryColor,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
                     ),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: const Icon(
-                    Icons.voice_chat,
-                    color: Colors.white,
-                    size: 24,
-                  ),
-                ),
-              )
-              : null,
-      floatingActionButtonLocation: FloatingActionButtonLocation.startFloat,
+                    elevation: 4,
+                    child: Container(
+                      width: 60,
+                      height: 60,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [primaryColor, primaryWithOpacity],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: const Icon(
+                        Icons.voice_chat,
+                        color: Colors.white,
+                        size: 24,
+                      ),
+                    ),
+                  )
+                  : null,
+          floatingActionButtonLocation: FloatingActionButtonLocation.startFloat,
+        );
+      },
     );
   }
 }

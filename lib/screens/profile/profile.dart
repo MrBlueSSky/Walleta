@@ -21,6 +21,7 @@ import 'package:walleta/widgets/layaout/appbar/drawer/custom_drawer.dart';
 import 'package:walleta/blocs/saving/bloc/saving_bloc.dart';
 import 'package:walleta/blocs/saving/bloc/saving_state.dart';
 import 'package:walleta/blocs/saving/bloc/saving_event.dart';
+import 'package:walleta/widgets/snackBar/snackBar.dart';
 
 class Profile extends StatefulWidget {
   const Profile({super.key});
@@ -122,6 +123,9 @@ class _ProfileState extends State<Profile> {
     final user = authState.user;
 
     switch (item) {
+      case 'premium':
+        updateUserToPremium(context, user);
+        break;
       case 'personalInfo':
         showProfileFloatingWidget(context, user);
         break;
@@ -144,6 +148,19 @@ class _ProfileState extends State<Profile> {
         context.read<AuthenticationBloc>().add(AuthenticationLogoutRequested());
         break;
     }
+  }
+
+  void updateUserToPremium(BuildContext context, user) {
+    context.read<AuthenticationBloc>().add(
+      UpgradeToPremium(userId: user.uid, duration: Duration(days: 30)),
+    );
+
+    TopSnackBarOverlay.show(
+      context: context,
+      message: '¡Felicidades!\nHas sido actualizado a Premium por 30 días.',
+      backgroundColor: Colors.green,
+      textColor: Colors.white,
+    );
   }
 
   void _showPlaceholderDialog(String feature) {

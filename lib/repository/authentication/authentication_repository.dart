@@ -19,25 +19,66 @@ class PasswordResetFailure implements Exception {
 
 class AuthenticationRepository {
   final firebase_auth.FirebaseAuth _firebaseAuth;
+  final StreamController<AppUser> _userController =
+      StreamController<AppUser>.broadcast();
 
   //!Lo dio gepeto para quitar el cuando se quita de fireAuth
   firebase_auth.User? get currentUser => _firebaseAuth.currentUser;
 
   AuthenticationRepository({firebase_auth.FirebaseAuth? firebaseAuth})
-    : _firebaseAuth = firebaseAuth ?? firebase_auth.FirebaseAuth.instance;
+    : _firebaseAuth = firebaseAuth ?? firebase_auth.FirebaseAuth.instance {
+    // Inicializar el stream
+    _initializeUserStream();
+  }
 
-  Stream<AppUser> get user {
-    return _firebaseAuth.authStateChanges().asyncMap((firebaseUser) async {
-      if (firebaseUser == null) {
-        return AppUser.empty;
-      }
+  // Stream público que cualquier componente puede escuchar
+  Stream<AppUser> get user => _userController.stream;
 
-      Map<String, dynamic> userData = await getUserDataFromFirestore(
-        firebaseUser.uid,
-      );
+  void _initializeUserStream() {
+    // Escuchar cambios en la autenticación de Firebase
+    _firebaseAuth
+        .authStateChanges()
+        .asyncMap((firebaseUser) async {
+          print(
+            '🔄 authStateChanges detectado - Usuario: ${firebaseUser?.uid}',
+          );
 
-      return userData.toAppUser(firebaseUser.uid);
-    });
+          if (firebaseUser == null) {
+            return AppUser.empty;
+          }
+
+          try {
+            // Recargar usuario para obtener datos frescos
+            await firebaseUser.reload();
+
+            // Obtener datos actualizados de Firestore
+            final userData = await getUserDataFromFirestore(firebaseUser.uid);
+            final appUser = userData.toAppUser(firebaseUser.uid);
+
+            print(
+              '✅ Usuario cargado desde Firestore - isPremium: ${appUser.isPremium}',
+            );
+
+            // Emitir al StreamController
+            _userController.add(appUser);
+
+            return appUser;
+          } catch (e) {
+            print('❌ Error en authStateChanges: $e');
+            return AppUser.empty;
+          }
+        })
+        .listen(
+          (user) {
+            // Esto asegura que siempre emitamos algo
+            if (user != AppUser.empty) {
+              _userController.add(user);
+            }
+          },
+          onError: (error) {
+            print('❌ Error en stream de authStateChanges: $error');
+          },
+        );
   }
 
   // 🔥 Login con Google pero usando solo Firebase
@@ -57,6 +98,8 @@ class AuthenticationRepository {
     required String password,
   }) async {
     try {
+      print('🔐 Intentando login con email: $email');
+
       firebase_auth.UserCredential result = await _firebaseAuth
           .signInWithEmailAndPassword(email: email, password: password);
 
@@ -66,33 +109,59 @@ class AuthenticationRepository {
         throw Exception("Usuario no autenticado");
       }
 
+      // Forzar recarga inmediata
+      await authUser.reload();
+
       Map<String, dynamic> userData = await getUserDataFromFirestore(
         authUser.uid,
       );
-      return userData.toAppUser(authUser.uid);
-    } on Exception {
-      print("No sirvio el login con email y password: ❌❌❌❌❌");
+
+      final appUser = userData.toAppUser(authUser.uid);
+
+      // Emitir usuario al stream
+      _userController.add(appUser);
+
+      print('✅ Login exitoso - isPremium: ${appUser.isPremium}');
+
+      return appUser;
+    } on Exception catch (e) {
+      print("❌ No sirvio el login con email y password: $e");
       throw LoginWithEmailAndPasswordFailure();
     }
   }
 
   Future<Map<String, dynamic>> getUserDataFromFirestore(String uid) async {
-    DocumentSnapshot<Map<String, dynamic>> snapshot =
-        await FirebaseFirestore.instance.collection('users').doc(uid).get();
+    try {
+      print('📡 Obteniendo datos de Firestore para: $uid');
 
-    if (snapshot.exists) {
-      return snapshot.data()!;
-    } else {
-      throw Exception("No se encontraron datos para el usuario.");
+      DocumentSnapshot<Map<String, dynamic>> snapshot =
+          await FirebaseFirestore.instance.collection('users').doc(uid).get();
+
+      if (snapshot.exists) {
+        final data = snapshot.data()!;
+        print('📊 Datos obtenidos - isPremium: ${data['isPremium']}');
+        return data;
+      } else {
+        print('⚠️ No se encontraron datos para el usuario: $uid');
+        throw Exception("No se encontraron datos para el usuario.");
+      }
+    } catch (e) {
+      print('❌ Error en getUserDataFromFirestore: $e');
+      rethrow;
     }
   }
 
   Future<void> logOut() async {
     try {
-      // await Future.wait([_firebaseAuth.signOut(), _googleSignIn.signOut()]);
+      print('🚪 Cerrando sesión...');
       await _firebaseAuth.signOut();
-    } on Exception {
-      print("No sirvio el logout: ❌❌❌❌❌");
+
+      // Emitir usuario vacío
+      _userController.add(AppUser.empty);
+
+      print('✅ Sesión cerrada exitosamente');
+    } on Exception catch (e) {
+      print("❌ No sirvio el logout: $e");
       throw LogOutFailure();
     }
   }
@@ -123,22 +192,6 @@ class AuthenticationRepository {
     }
   }
 
-  //!Login con google
-  // Future<void> logInWithGoogle() async {
-  //   try {
-  //     final googleUser = await _googleSignIn.signIn();
-  //     final googleAuth = await googleUser?.authentication;
-  //     final credential = firebase_auth.GoogleAuthProvider.credential(
-  //       accessToken: googleAuth?.accessToken,
-  //       idToken: googleAuth?.idToken,
-  //     );
-  //     await _firebaseAuth.signInWithCredential(credential);
-  //   } on Exception {
-  //     print("No sirvio el login con google: ❌❌❌❌❌");
-  //     throw LogInWithGoogleFailure();
-  //   }
-  // }
-
   Future<AppUser> signUp({
     required String username,
     required String name,
@@ -149,6 +202,8 @@ class AuthenticationRepository {
     required String profilePictureUrl,
   }) async {
     try {
+      print('👤 Registrando nuevo usuario: $email');
+
       firebase_auth.UserCredential result = await registerAuthUser(
         email,
         password,
@@ -170,17 +225,20 @@ class AuthenticationRepository {
         profilePictureUrl,
       );
 
-      return AppUser(
-        uid: authUser.uid,
-        username: username,
-        name: name,
-        surname: surname,
-        email: email,
-        phoneNumber: phone,
-        profilePictureUrl: profilePictureUrl,
+      // Obtener datos recién creados
+      final userData = await getUserDataFromFirestore(authUser.uid);
+      final appUser = userData.toAppUser(authUser.uid);
+
+      // Emitir al stream
+      _userController.add(appUser);
+
+      print(
+        '✅ Usuario registrado exitosamente - isPremium: ${appUser.isPremium}',
       );
-    } on Exception {
-      print("No sirvio el registro del user completo ❌❌❌❌❌");
+
+      return appUser;
+    } on Exception catch (e) {
+      print("❌ No sirvio el registro del user completo: $e");
       throw SignUpFailure();
     }
   }
@@ -220,15 +278,15 @@ class AuthenticationRepository {
             'profilePictureUrl': profilePictureUrl ?? '',
             'role': 'user',
             'isActive': true,
-            'isPremium': false, // ← Agregar este campo
+            'isPremium': false,
+            'premiumUntil': null,
             'createdAt': now,
             'updatedAt': now,
           });
 
-      print("✅ Usuario registrado correctamente");
+      print("✅ Usuario registrado correctamente en Firestore");
     } catch (e) {
-      print("❌ Error registrando usuario");
-      print(e);
+      print("❌ Error registrando usuario en Firestore: $e");
       rethrow;
     }
   }
@@ -243,6 +301,8 @@ class AuthenticationRepository {
     required String profilePictureUrl,
   }) async {
     try {
+      print('✏️ Actualizando usuario: $uid');
+
       await updateUserData(
         uid: uid,
         name: name,
@@ -252,19 +312,19 @@ class AuthenticationRepository {
         profilePictureUrl: profilePictureUrl,
       );
 
-      return AppUser(
-        uid: uid,
-        username: username,
-        name: name,
-        surname: surname,
-        email: email,
-        phoneNumber: phone,
-        profilePictureUrl: profilePictureUrl,
-      );
+      // Obtener datos actualizados
+      final userData = await getUserDataFromFirestore(uid);
+      final appUser = userData.toAppUser(uid);
+
+      // Emitir al stream
+      _userController.add(appUser);
+
+      print('✅ Usuario actualizado - isPremium: ${appUser.isPremium}');
+
+      return appUser;
     } catch (e) {
-      print("No sirvio se pudo actualizar el user completo: ❌❌❌❌❌");
-      print(e);
-      rethrow; //!sigue su camino y deja que el error lo maneje otro
+      print("❌ No se pudo actualizar el usuario completo: $e");
+      rethrow;
     }
   }
 
@@ -280,38 +340,102 @@ class AuthenticationRepository {
       await FirebaseFirestore.instance.collection('users').doc(uid).update({
         'name': name,
         'surname': surname,
-        'phone': phone,
-        'email': email,
+        'phoneNumber': phone,
+        'email': email.toLowerCase(),
         'profilePictureUrl': profilePictureUrl,
+        'updatedAt': FieldValue.serverTimestamp(),
       });
+
+      print('✅ Datos de usuario actualizados en Firestore');
     } catch (e) {
-      print("No sirvio se pudo actualizar el user: ❌❌❌❌❌");
-      print(e);
+      print("❌ Error actualizando usuario en Firestore: $e");
+      rethrow;
     }
   }
 
-  // Agrega este método a tu AuthenticationRepository
+  // 🔥 MÉTODO CORREGIDO PARA UPGRADE A PREMIUM
   Future<void> upgradeToPremium({
     required String userId,
     required Duration duration,
   }) async {
     try {
+      print('⭐ Iniciando upgrade a premium para usuario: $userId');
+      print('📅 Duración: ${duration.inDays} días');
+
       final premiumUntil = DateTime.now().add(duration);
 
+      // 1. Actualizar en Firestore
       await FirebaseFirestore.instance.collection('users').doc(userId).update({
         'isPremium': true,
         'premiumUntil': Timestamp.fromDate(premiumUntil),
         'updatedAt': FieldValue.serverTimestamp(),
       });
 
-      print("✅ Usuario actualizado a premium");
+      print('✅ Firestore actualizado correctamente');
+
+      // 2. Forzar recarga del usuario de Firebase Auth
+      final firebaseUser = _firebaseAuth.currentUser;
+      if (firebaseUser != null) {
+        await firebaseUser.reload();
+        print('✅ Firebase Auth recargado');
+      }
+
+      // 3. Obtener datos actualizados de Firestore
+      final userData = await getUserDataFromFirestore(userId);
+      final updatedUser = userData.toAppUser(userId);
+
+      print('🎉 Usuario actualizado - isPremium: ${updatedUser.isPremium}');
+
+      // 4. Emitir usuario actualizado al stream
+      _userController.add(updatedUser);
+
+      // 5. Pequeña pausa para asegurar propagación
+      await Future.delayed(Duration(milliseconds: 500));
+
+      print('🚀 Upgrade a premium completado exitosamente');
     } catch (e) {
       print("❌ Error actualizando a premium: $e");
       rethrow;
     }
   }
 
-  // Método para verificar estado premium
+  // Método para recargar usuario manualmente
+  Future<void> reloadCurrentUser() async {
+    try {
+      print('🔄 Recargando usuario manualmente...');
+
+      final firebaseUser = _firebaseAuth.currentUser;
+      if (firebaseUser != null) {
+        await firebaseUser.reload();
+        final userData = await getUserDataFromFirestore(firebaseUser.uid);
+        final updatedUser = userData.toAppUser(firebaseUser.uid);
+
+        _userController.add(updatedUser);
+
+        print('✅ Usuario recargado - isPremium: ${updatedUser.isPremium}');
+      } else {
+        print('⚠️ No hay usuario autenticado para recargar');
+      }
+    } catch (e) {
+      print('❌ Error al recargar usuario: $e');
+    }
+  }
+
+  // Método para obtener usuario actual de forma síncrona
+  Future<AppUser?> getCurrentUser() async {
+    try {
+      final firebaseUser = _firebaseAuth.currentUser;
+      if (firebaseUser == null) return null;
+
+      final userData = await getUserDataFromFirestore(firebaseUser.uid);
+      return userData.toAppUser(firebaseUser.uid);
+    } catch (e) {
+      print('❌ Error obteniendo usuario actual: $e');
+      return null;
+    }
+  }
+
+  // Método para verificar estado premium con validación de fecha
   Future<bool> checkPremiumStatus(String userId) async {
     try {
       final doc =
@@ -326,7 +450,13 @@ class AuthenticationRepository {
 
         if (isPremium && data['premiumUntil'] != null) {
           final premiumUntil = (data['premiumUntil'] as Timestamp).toDate();
-          return premiumUntil.isAfter(DateTime.now());
+          final isStillPremium = premiumUntil.isAfter(DateTime.now());
+
+          print(
+            '🔍 Verificación premium: $isPremium, hasta: $premiumUntil, aún válido: $isStillPremium',
+          );
+
+          return isStillPremium;
         }
       }
       return false;
@@ -336,39 +466,40 @@ class AuthenticationRepository {
     }
   }
 
-  Future<AppUser?> getCurrentUser() async {
-    final firebaseUser = _firebaseAuth.currentUser;
-    if (firebaseUser == null) return null;
-
-    final userData = await getUserDataFromFirestore(firebaseUser.uid);
-    return userData.toAppUser(firebaseUser.uid);
-  }
-}
-
-extension on firebase_auth.User {
-  AppUser get toAppUser {
-    return AppUser(
-      uid: uid,
-      username: '',
-      name: displayName ?? '',
-      surname: '',
-      email: email ?? '',
-      phoneNumber: phoneNumber ?? '',
-      profilePictureUrl: photoURL ?? '',
-    );
+  // Método para limpiar recursos
+  void dispose() {
+    _userController.close();
   }
 }
 
 extension UserFromMap on Map<String, dynamic> {
   AppUser toAppUser(String uid) {
-    return AppUser(
-      uid: uid,
-      username: this['username'] ?? '',
-      name: this['name'] ?? '',
-      email: this['email'] ?? '',
-      surname: this['surname'] ?? '',
-      phoneNumber: this['phoneNumber'] ?? '',
-      profilePictureUrl: this['profilePictureUrl'] ?? '',
-    );
+    try {
+      print(
+        '🔄 Convirtiendo mapa a AppUser - isPremium en mapa: ${this['isPremium']}',
+      );
+
+      return AppUser(
+        uid: uid,
+        username: this['username']?.toString() ?? '',
+        name: this['name']?.toString() ?? '',
+        email: this['email']?.toString() ?? '',
+        surname: this['surname']?.toString() ?? '',
+        phoneNumber: this['phoneNumber']?.toString() ?? '',
+        profilePictureUrl: this['profilePictureUrl']?.toString() ?? '',
+        isPremium:
+            this['isPremium'] is bool
+                ? (this['isPremium'] as bool)
+                : this['isPremium']?.toString().toLowerCase() == 'true',
+        premiumUntil:
+            this['premiumUntil'] != null
+                ? (this['premiumUntil'] as Timestamp).toDate()
+                : null,
+      );
+    } catch (e) {
+      print('❌ Error en toAppUser: $e');
+      print('📋 Datos del mapa: $this');
+      rethrow;
+    }
   }
 }

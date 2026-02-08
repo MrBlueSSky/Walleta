@@ -3,17 +3,12 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:record/record.dart';
+import 'package:walleta/config/groq_config.dart';
 import 'package:walleta/utils/voice_text_parser.dart';
 import 'package:path_provider/path_provider.dart';
 
 class VoiceFinanceService {
   late final AudioRecorder _audioRecorder;
-
-  //!Mover esto a .env
-  static const String _groqApiKey = 'api key xd';
-  static const String _groqBaseUrl = 'https://api.groq.com/openai/v1';
-  static const String _transcriptionModel = 'whisper-large-v3-turbo';
-  static const String _chatModel = 'llama-3.3-70b-versatile';
 
   bool _isRecording = false;
 
@@ -146,18 +141,19 @@ ANALIZA: "$text"
 ''';
 
       final response = await http.post(
-        Uri.parse('$_groqBaseUrl/chat/completions'),
+        Uri.parse('${GroqConfig.baseUrl}/chat/completions'),
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Bearer $_groqApiKey',
+          'Authorization': 'Bearer ${GroqConfig.apiKey}',
         },
         body: jsonEncode({
-          'model': _chatModel,
+          'model': GroqConfig.chatModel,
           'messages': [
             {
               'role': 'system',
               'content':
-                  'Eres un analizador financiero. Devuelve SOLO JSON con la estructura exacta solicitada.',
+                  'Eres un analizador financiero preciso. '
+                  'Devuelve SOLO JSON válido sin texto adicional.',
             },
             {'role': 'user', 'content': prompt},
           ],
@@ -579,16 +575,16 @@ ANALIZA: "$text"
       // 4. Crear request
       var request = http.MultipartRequest(
         'POST',
-        Uri.parse('$_groqBaseUrl/audio/transcriptions'),
+        Uri.parse('${GroqConfig.baseUrl}/audio/transcriptions'),
       );
 
-      request.headers['Authorization'] = 'Bearer $_groqApiKey';
+      request.headers['Authorization'] = 'Bearer ${GroqConfig.apiKey}';
       request.files.add(
         http.MultipartFile.fromBytes('file', bytes, filename: 'audio.m4a'),
       );
 
       request.fields.addAll({
-        'model': _transcriptionModel,
+        'model': GroqConfig.transcriptionModel,
         'language': 'es',
         'response_format': 'json',
         'temperature': '0',
