@@ -7,8 +7,8 @@ import 'package:walleta/models/shared_expense.dart';
 import 'package:walleta/models/appUser.dart';
 import 'package:walleta/widgets/buttons/search_button.dart';
 import 'package:walleta/widgets/snackBar/snackBar.dart';
-import 'package:provider/provider.dart'; // 🔥 Importar Provider
-import 'package:walleta/providers/ads_provider.dart'; // 🔥 Importar AdsProvider
+import 'package:provider/provider.dart';
+import 'package:walleta/providers/ads_provider.dart';
 
 class AddExpenseSheet extends StatefulWidget {
   final Function(SharedExpense) onSave;
@@ -108,179 +108,114 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
           color: backgroundColor,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         ),
-        child: Column(
+        child: Stack(
           children: [
-            // Header fijo
-            Container(
-              padding: const EdgeInsets.only(top: 8, bottom: 16),
-              decoration: BoxDecoration(
-                color: backgroundColor,
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(24),
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 10,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
-              ),
+            // Contenido principal con SingleChildScrollView
+            SingleChildScrollView(
+              controller: _scrollController,
+              physics: const BouncingScrollPhysics(),
+              padding: const EdgeInsets.only(
+                bottom: 100,
+              ), // Espacio para el botón fijo
               child: Column(
                 children: [
-                  // Handle bar
+                  // Header fijo
                   Container(
-                    width: 40,
-                    height: 4,
+                    padding: const EdgeInsets.only(top: 8, bottom: 16),
                     decoration: BoxDecoration(
-                      color: textColor,
-                      borderRadius: BorderRadius.circular(2),
+                      color: backgroundColor,
+                      borderRadius: const BorderRadius.vertical(
+                        top: Radius.circular(24),
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 10,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
                     ),
-                  ),
-                  const SizedBox(height: 12),
-
-                  // Título y botón de cerrar
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    child: Column(
                       children: [
-                        Text(
-                          'Nuevo Gasto Compartido',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.w700,
+                        // Handle bar
+                        Container(
+                          width: 40,
+                          height: 4,
+                          decoration: BoxDecoration(
                             color: textColor,
+                            borderRadius: BorderRadius.circular(2),
                           ),
                         ),
-                        IconButton(
-                          onPressed: () => Navigator.pop(context),
-                          icon: const Icon(Iconsax.close_circle, size: 22),
-                          padding: EdgeInsets.zero,
-                          constraints: const BoxConstraints(),
+                        const SizedBox(height: 12),
+
+                        // Título y botón de cerrar
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 20),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Nuevo Gasto Compartido',
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w700,
+                                  color: textColor,
+                                ),
+                              ),
+                              IconButton(
+                                onPressed: () => Navigator.pop(context),
+                                icon: const Icon(
+                                  Iconsax.close_circle,
+                                  size: 22,
+                                ),
+                                padding: EdgeInsets.zero,
+                                constraints: const BoxConstraints(),
+                              ),
+                            ],
+                          ),
                         ),
                       ],
                     ),
                   ),
-                ],
-              ),
-            ),
 
-            // Contenido principal con SingleChildScrollView
-            Expanded(
-              child: Form(
-                key: _formKey,
-                child: SingleChildScrollView(
-                  controller: _scrollController,
-                  physics: const BouncingScrollPhysics(),
-                  padding: const EdgeInsets.all(20),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Sección 1: Información básica
-                      Card(
-                        elevation: 0,
-                        color: cardColor,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                          side: BorderSide(
-                            color: const Color(0xFFE5E7EB).withOpacity(0.5),
-                            width: 1,
-                          ),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(20),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              // Título del gasto
-                              _buildSectionLabel('Título del gasto', isDark),
-                              const SizedBox(height: 12),
-                              TextFormField(
-                                controller: _titleController,
-                                style: TextStyle(color: textColor),
-                                decoration: InputDecoration(
-                                  hintText:
-                                      'Ej: Cena en restaurante, Viaje a la playa...',
-                                  hintStyle: TextStyle(
-                                    color: secondaryTextColor,
-                                  ),
-                                  filled: true,
-                                  fillColor:
-                                      isDark
-                                          ? const Color(0xFF0F172A)
-                                          : const Color(0xFFF9FAFB),
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                    borderSide: BorderSide.none,
-                                  ),
-                                  enabledBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                    borderSide: const BorderSide(
-                                      color: Color(0xFFE5E7EB),
-                                    ),
-                                  ),
-                                  focusedBorder: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                    borderSide: const BorderSide(
-                                      color: Color(0xFF2D5BFF),
-                                      width: 2,
-                                    ),
-                                  ),
-                                  contentPadding: const EdgeInsets.all(16),
-                                ),
-                                validator: (value) {
-                                  if (value == null || value.isEmpty) {
-                                    return 'Por favor ingresa un título';
-                                  }
-                                  return null;
-                                },
+                  Form(
+                    key: _formKey,
+                    child: Padding(
+                      padding: const EdgeInsets.all(20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Sección 1: Información básica
+                          Card(
+                            elevation: 0,
+                            color: cardColor,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                              side: BorderSide(
+                                color: const Color(0xFFE5E7EB).withOpacity(0.5),
+                                width: 1,
                               ),
-
-                              const SizedBox(height: 20),
-
-                              // Monto Total
-                              Column(
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.all(20),
+                              child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  _buildSectionLabel('Total', isDark),
-                                  const SizedBox(height: 8),
+                                  // Título del gasto
+                                  _buildSectionLabel(
+                                    'Título del gasto',
+                                    isDark,
+                                  ),
+                                  const SizedBox(height: 12),
                                   TextFormField(
-                                    controller: _totalController,
-                                    keyboardType: TextInputType.number,
-                                    style: TextStyle(
-                                      color: textColor,
-                                      height: 1.0,
-                                    ),
+                                    controller: _titleController,
+                                    style: TextStyle(color: textColor),
                                     decoration: InputDecoration(
-                                      hintText: '0',
+                                      hintText:
+                                          'Ej: Cena en restaurante, Viaje a la playa...',
                                       hintStyle: TextStyle(
                                         color: secondaryTextColor,
                                       ),
-                                      prefixIcon: Padding(
-                                        padding: const EdgeInsets.only(
-                                          left: 16,
-                                          right: 8,
-                                        ),
-                                        child: Align(
-                                          widthFactor: 1.0,
-                                          heightFactor: 1.0,
-                                          child: Text(
-                                            '₡',
-                                            style: TextStyle(
-                                              fontSize: 16,
-                                              fontWeight: FontWeight.w600,
-                                              color: const Color(0xFF00C896),
-                                              height: 1.0,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                      prefixIconConstraints:
-                                          const BoxConstraints(
-                                            minWidth: 24,
-                                            minHeight: 0,
-                                          ),
                                       filled: true,
                                       fillColor:
                                           isDark
@@ -303,448 +238,557 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
                                           width: 2,
                                         ),
                                       ),
-                                      contentPadding:
-                                          const EdgeInsets.symmetric(
-                                            horizontal: 16,
-                                            vertical: 16,
-                                          ),
-                                      alignLabelWithHint: true,
+                                      contentPadding: const EdgeInsets.all(16),
                                     ),
                                     validator: (value) {
                                       if (value == null || value.isEmpty) {
-                                        return 'Requerido';
-                                      }
-                                      final total = double.tryParse(value);
-                                      if (total == null) {
-                                        return 'Ingresa un número válido';
-                                      }
-                                      if (total <= 0) {
-                                        return 'No se permiten números negativos o cero';
+                                        return 'Por favor ingresa un título';
                                       }
                                       return null;
                                     },
                                   ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
 
-                      const SizedBox(height: 16),
+                                  const SizedBox(height: 20),
 
-                      // Sección 2: Categoría
-                      Card(
-                        elevation: 0,
-                        color: cardColor,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                          side: BorderSide(
-                            color: const Color(0xFFE5E7EB).withOpacity(0.5),
-                            width: 1,
-                          ),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(20),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              _buildSectionLabel('Categoría', isDark),
-                              const SizedBox(height: 16),
-
-                              // Grid de categorías (2x3)
-                              GridView.count(
-                                crossAxisCount: 3,
-                                crossAxisSpacing: 12,
-                                mainAxisSpacing: 12,
-                                shrinkWrap: true,
-                                physics: const NeverScrollableScrollPhysics(),
-                                childAspectRatio: 1.2,
-                                children:
-                                    categories.map((cat) {
-                                      final isSelected =
-                                          selectedCategory == cat['name'];
-                                      return GestureDetector(
-                                        onTap: () {
-                                          setState(() {
-                                            selectedCategory = cat['name'];
-                                          });
-                                        },
-                                        child: Container(
-                                          decoration: BoxDecoration(
-                                            color:
-                                                isSelected
-                                                    ? cat['color'] as Color
-                                                    : isDark
-                                                    ? const Color(0xFF0F172A)
-                                                    : const Color(0xFFF9FAFB),
+                                  // Monto Total
+                                  Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      _buildSectionLabel('Total', isDark),
+                                      const SizedBox(height: 8),
+                                      TextFormField(
+                                        controller: _totalController,
+                                        keyboardType: TextInputType.number,
+                                        style: TextStyle(
+                                          color: textColor,
+                                          height: 1.0,
+                                        ),
+                                        decoration: InputDecoration(
+                                          hintText: '0',
+                                          hintStyle: TextStyle(
+                                            color: secondaryTextColor,
+                                          ),
+                                          prefixIcon: Padding(
+                                            padding: const EdgeInsets.only(
+                                              left: 16,
+                                              right: 8,
+                                            ),
+                                            child: Align(
+                                              widthFactor: 1.0,
+                                              heightFactor: 1.0,
+                                              child: Text(
+                                                '₡',
+                                                style: TextStyle(
+                                                  fontSize: 16,
+                                                  fontWeight: FontWeight.w600,
+                                                  color: const Color(
+                                                    0xFF00C896,
+                                                  ),
+                                                  height: 1.0,
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                          prefixIconConstraints:
+                                              const BoxConstraints(
+                                                minWidth: 24,
+                                                minHeight: 0,
+                                              ),
+                                          filled: true,
+                                          fillColor:
+                                              isDark
+                                                  ? const Color(0xFF0F172A)
+                                                  : const Color(0xFFF9FAFB),
+                                          border: OutlineInputBorder(
                                             borderRadius: BorderRadius.circular(
                                               12,
                                             ),
-                                            border: Border.all(
-                                              color:
-                                                  isSelected
-                                                      ? cat['color'] as Color
-                                                      : const Color(0xFFE5E7EB),
-                                              width: isSelected ? 0 : 1,
+                                            borderSide: BorderSide.none,
+                                          ),
+                                          enabledBorder: OutlineInputBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              12,
                                             ),
-                                            boxShadow:
-                                                isSelected
-                                                    ? [
-                                                      BoxShadow(
-                                                        color: (cat['color']
-                                                                as Color)
-                                                            .withOpacity(0.3),
-                                                        blurRadius: 8,
-                                                        offset: const Offset(
-                                                          0,
-                                                          2,
-                                                        ),
-                                                      ),
-                                                    ]
-                                                    : null,
+                                            borderSide: const BorderSide(
+                                              color: Color(0xFFE5E7EB),
+                                            ),
                                           ),
-                                          child: Column(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.center,
-                                            children: [
-                                              Icon(
-                                                cat['icon'] as IconData,
-                                                color:
-                                                    isSelected
-                                                        ? Colors.white
-                                                        : cat['color'] as Color,
-                                                size: 22,
-                                              ),
-                                              const SizedBox(height: 8),
-                                              Text(
-                                                cat['name'],
-                                                style: TextStyle(
-                                                  fontSize: 11,
-                                                  fontWeight: FontWeight.w600,
-                                                  color:
-                                                      isSelected
-                                                          ? Colors.white
-                                                          : textColor,
-                                                ),
-                                                textAlign: TextAlign.center,
-                                              ),
-                                            ],
+                                          focusedBorder: OutlineInputBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              12,
+                                            ),
+                                            borderSide: const BorderSide(
+                                              color: Color(0xFF2D5BFF),
+                                              width: 2,
+                                            ),
                                           ),
+                                          contentPadding:
+                                              const EdgeInsets.symmetric(
+                                                horizontal: 16,
+                                                vertical: 16,
+                                              ),
+                                          alignLabelWithHint: true,
                                         ),
-                                      );
-                                    }).toList(),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-
-                      const SizedBox(height: 16),
-
-                      // Sección 3: Participantes
-                      Card(
-                        elevation: 0,
-                        color: cardColor,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                          side: BorderSide(
-                            color: const Color(0xFFE5E7EB).withOpacity(0.5),
-                            width: 1,
-                          ),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(20),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  _buildSectionLabel('Participantes', isDark),
-                                  if (selectedParticipants.isNotEmpty)
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 10,
-                                        vertical: 4,
+                                        validator: (value) {
+                                          if (value == null || value.isEmpty) {
+                                            return 'Requerido';
+                                          }
+                                          final total = double.tryParse(value);
+                                          if (total == null) {
+                                            return 'Ingresa un número válido';
+                                          }
+                                          if (total <= 0) {
+                                            return 'No se permiten números negativos o cero';
+                                          }
+                                          return null;
+                                        },
                                       ),
-                                      decoration: BoxDecoration(
-                                        color: const Color(
-                                          0xFF2D5BFF,
-                                        ).withOpacity(0.1),
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                      child: Text(
-                                        '${selectedParticipants.length}',
-                                        style: const TextStyle(
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.w600,
-                                          color: Color(0xFF2D5BFF),
-                                        ),
-                                      ),
-                                    ),
+                                    ],
+                                  ),
                                 ],
                               ),
-                              const SizedBox(height: 16),
+                            ),
+                          ),
 
-                              // Mostrar que el usuario actual siempre participa
-                              BlocBuilder<
-                                AuthenticationBloc,
-                                AuthenticationState
-                              >(
-                                builder: (context, state) {
-                                  final currentUser = state.user;
-                                  return Column(
-                                    children: [
-                                      Container(
-                                        padding: const EdgeInsets.all(12),
-                                        decoration: BoxDecoration(
-                                          color: const Color(
-                                            0xFF2D5BFF,
-                                          ).withOpacity(0.1),
-                                          borderRadius: BorderRadius.circular(
-                                            12,
-                                          ),
-                                          border: Border.all(
-                                            color: const Color(
-                                              0xFF2D5BFF,
-                                            ).withOpacity(0.3),
-                                            width: 1,
-                                          ),
-                                        ),
-                                        child: Row(
-                                          children: [
-                                            Container(
-                                              width: 32,
-                                              height: 32,
+                          const SizedBox(height: 16),
+
+                          // Sección 2: Categoría
+                          Card(
+                            elevation: 0,
+                            color: cardColor,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                              side: BorderSide(
+                                color: const Color(0xFFE5E7EB).withOpacity(0.5),
+                                width: 1,
+                              ),
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.all(20),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  _buildSectionLabel('Categoría', isDark),
+                                  const SizedBox(height: 16),
+
+                                  // Grid de categorías (2x3)
+                                  GridView.count(
+                                    crossAxisCount: 3,
+                                    crossAxisSpacing: 12,
+                                    mainAxisSpacing: 12,
+                                    shrinkWrap: true,
+                                    physics:
+                                        const NeverScrollableScrollPhysics(),
+                                    childAspectRatio: 1.2,
+                                    children:
+                                        categories.map((cat) {
+                                          final isSelected =
+                                              selectedCategory == cat['name'];
+                                          return GestureDetector(
+                                            onTap: () {
+                                              setState(() {
+                                                selectedCategory = cat['name'];
+                                              });
+                                            },
+                                            child: Container(
                                               decoration: BoxDecoration(
-                                                color: const Color(0xFF2D5BFF),
-                                                shape: BoxShape.circle,
-                                              ),
-                                              child: Center(
-                                                child: Text(
-                                                  currentUser.username[0]
-                                                      .toUpperCase(),
-                                                  style: const TextStyle(
-                                                    color: Colors.white,
-                                                    fontSize: 12,
-                                                    fontWeight: FontWeight.bold,
-                                                  ),
+                                                color:
+                                                    isSelected
+                                                        ? cat['color'] as Color
+                                                        : isDark
+                                                        ? const Color(
+                                                          0xFF0F172A,
+                                                        )
+                                                        : const Color(
+                                                          0xFFF9FAFB,
+                                                        ),
+                                                borderRadius:
+                                                    BorderRadius.circular(12),
+                                                border: Border.all(
+                                                  color:
+                                                      isSelected
+                                                          ? cat['color']
+                                                              as Color
+                                                          : const Color(
+                                                            0xFFE5E7EB,
+                                                          ),
+                                                  width: isSelected ? 0 : 1,
                                                 ),
+                                                boxShadow:
+                                                    isSelected
+                                                        ? [
+                                                          BoxShadow(
+                                                            color: (cat['color']
+                                                                    as Color)
+                                                                .withOpacity(
+                                                                  0.3,
+                                                                ),
+                                                            blurRadius: 8,
+                                                            offset:
+                                                                const Offset(
+                                                                  0,
+                                                                  2,
+                                                                ),
+                                                          ),
+                                                        ]
+                                                        : null,
                                               ),
-                                            ),
-                                            const SizedBox(width: 12),
-                                            Expanded(
                                               child: Column(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment.center,
                                                 children: [
+                                                  Icon(
+                                                    cat['icon'] as IconData,
+                                                    color:
+                                                        isSelected
+                                                            ? Colors.white
+                                                            : cat['color']
+                                                                as Color,
+                                                    size: 22,
+                                                  ),
+                                                  const SizedBox(height: 8),
                                                   Text(
-                                                    '${currentUser.username} (Tú)',
+                                                    cat['name'],
                                                     style: TextStyle(
-                                                      fontSize: 14,
+                                                      fontSize: 11,
                                                       fontWeight:
                                                           FontWeight.w600,
                                                       color:
-                                                          isDark
+                                                          isSelected
                                                               ? Colors.white
-                                                              : const Color(
-                                                                0xFF1F2937,
-                                                              ),
+                                                              : textColor,
                                                     ),
-                                                  ),
-                                                  Text(
-                                                    'Organizador',
-                                                    style: TextStyle(
-                                                      fontSize: 12,
-                                                      color: secondaryTextColor,
-                                                    ),
+                                                    textAlign: TextAlign.center,
                                                   ),
                                                 ],
                                               ),
                                             ),
-                                            const Icon(
-                                              Icons.check_circle,
-                                              color: Color(0xFF2D5BFF),
-                                              size: 20,
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                      const SizedBox(height: 16),
-                                    ],
-                                  );
-                                },
-                              ),
-
-                              // Botón de búsqueda de participantes
-                              Container(
-                                decoration: BoxDecoration(
-                                  color:
-                                      isDark
-                                          ? const Color(0xFF0F172A)
-                                          : const Color(0xFFF9FAFB),
-                                  borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(
-                                    color: const Color(0xFFE5E7EB),
+                                          );
+                                        }).toList(),
                                   ),
-                                ),
-                                child: Material(
-                                  color: Colors.transparent,
-                                  child: InkWell(
-                                    borderRadius: BorderRadius.circular(12),
-                                    onTap: () {
-                                      showDialog(
-                                        context: context,
-                                        builder:
-                                            (context) =>
-                                                _buildParticipantSearchDialog(
-                                                  isDark,
-                                                ),
-                                      );
-                                    },
-                                    child: Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 16,
-                                        vertical: 16,
+                                ],
+                              ),
+                            ),
+                          ),
+
+                          const SizedBox(height: 16),
+
+                          // Sección 3: Participantes
+                          Card(
+                            elevation: 0,
+                            color: cardColor,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                              side: BorderSide(
+                                color: const Color(0xFFE5E7EB).withOpacity(0.5),
+                                width: 1,
+                              ),
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.all(20),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      _buildSectionLabel(
+                                        'Participantes',
+                                        isDark,
                                       ),
-                                      child: Row(
-                                        children: [
-                                          Icon(
-                                            Iconsax.search_normal,
-                                            color: const Color(0xFF2D5BFF),
-                                            size: 20,
+                                      if (selectedParticipants.isNotEmpty)
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 10,
+                                            vertical: 4,
                                           ),
-                                          const SizedBox(width: 12),
-                                          Expanded(
-                                            child: Text(
-                                              'Buscar participantes...',
-                                              style: TextStyle(
-                                                color: secondaryTextColor,
-                                                fontSize: 14,
+                                          decoration: BoxDecoration(
+                                            color: const Color(
+                                              0xFF2D5BFF,
+                                            ).withOpacity(0.1),
+                                            borderRadius: BorderRadius.circular(
+                                              12,
+                                            ),
+                                          ),
+                                          child: Text(
+                                            '${selectedParticipants.length}',
+                                            style: const TextStyle(
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w600,
+                                              color: Color(0xFF2D5BFF),
+                                            ),
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 16),
+
+                                  // Mostrar que el usuario actual siempre participa
+                                  BlocBuilder<
+                                    AuthenticationBloc,
+                                    AuthenticationState
+                                  >(
+                                    builder: (context, state) {
+                                      final currentUser = state.user;
+                                      return Column(
+                                        children: [
+                                          Container(
+                                            padding: const EdgeInsets.all(12),
+                                            decoration: BoxDecoration(
+                                              color: const Color(
+                                                0xFF2D5BFF,
+                                              ).withOpacity(0.1),
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
+                                              border: Border.all(
+                                                color: const Color(
+                                                  0xFF2D5BFF,
+                                                ).withOpacity(0.3),
+                                                width: 1,
                                               ),
                                             ),
+                                            child: Row(
+                                              children: [
+                                                Container(
+                                                  width: 32,
+                                                  height: 32,
+                                                  decoration: BoxDecoration(
+                                                    color: const Color(
+                                                      0xFF2D5BFF,
+                                                    ),
+                                                    shape: BoxShape.circle,
+                                                  ),
+                                                  child: Center(
+                                                    child: Text(
+                                                      currentUser.username[0]
+                                                          .toUpperCase(),
+                                                      style: const TextStyle(
+                                                        color: Colors.white,
+                                                        fontSize: 12,
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 12),
+                                                Expanded(
+                                                  child: Column(
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .start,
+                                                    children: [
+                                                      Text(
+                                                        '${currentUser.username} (Tú)',
+                                                        style: TextStyle(
+                                                          fontSize: 14,
+                                                          fontWeight:
+                                                              FontWeight.w600,
+                                                          color:
+                                                              isDark
+                                                                  ? Colors.white
+                                                                  : const Color(
+                                                                    0xFF1F2937,
+                                                                  ),
+                                                        ),
+                                                      ),
+                                                      Text(
+                                                        'Organizador',
+                                                        style: TextStyle(
+                                                          fontSize: 12,
+                                                          color:
+                                                              secondaryTextColor,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                                const Icon(
+                                                  Icons.check_circle,
+                                                  color: Color(0xFF2D5BFF),
+                                                  size: 20,
+                                                ),
+                                              ],
+                                            ),
                                           ),
-                                          Icon(
-                                            Iconsax.arrow_right_3,
+                                          const SizedBox(height: 16),
+                                        ],
+                                      );
+                                    },
+                                  ),
+
+                                  // Botón de búsqueda de participantes
+                                  Container(
+                                    decoration: BoxDecoration(
+                                      color:
+                                          isDark
+                                              ? const Color(0xFF0F172A)
+                                              : const Color(0xFFF9FAFB),
+                                      borderRadius: BorderRadius.circular(12),
+                                      border: Border.all(
+                                        color: const Color(0xFFE5E7EB),
+                                      ),
+                                    ),
+                                    child: Material(
+                                      color: Colors.transparent,
+                                      child: InkWell(
+                                        borderRadius: BorderRadius.circular(12),
+                                        onTap: () {
+                                          showDialog(
+                                            context: context,
+                                            builder:
+                                                (context) =>
+                                                    _buildParticipantSearchDialog(
+                                                      isDark,
+                                                    ),
+                                          );
+                                        },
+                                        child: Padding(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 16,
+                                            vertical: 16,
+                                          ),
+                                          child: Row(
+                                            children: [
+                                              Icon(
+                                                Iconsax.search_normal,
+                                                color: const Color(0xFF2D5BFF),
+                                                size: 20,
+                                              ),
+                                              const SizedBox(width: 12),
+                                              Expanded(
+                                                child: Text(
+                                                  'Buscar participantes...',
+                                                  style: TextStyle(
+                                                    color: secondaryTextColor,
+                                                    fontSize: 14,
+                                                  ),
+                                                ),
+                                              ),
+                                              Icon(
+                                                Iconsax.arrow_right_3,
+                                                color: secondaryTextColor,
+                                                size: 18,
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+
+                                  const SizedBox(height: 20),
+
+                                  // Lista de participantes seleccionados
+                                  if (selectedParticipants.isNotEmpty)
+                                    Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'Participantes agregados:',
+                                          style: TextStyle(
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.w500,
                                             color: secondaryTextColor,
-                                            size: 18,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 12),
+                                        Wrap(
+                                          spacing: 8,
+                                          runSpacing: 8,
+                                          children:
+                                              selectedParticipants
+                                                  .asMap()
+                                                  .entries
+                                                  .map((entry) {
+                                                    final index = entry.key;
+                                                    final participant =
+                                                        entry.value;
+                                                    final colorIndex =
+                                                        index %
+                                                        categories.length;
+                                                    final chipColor =
+                                                        categories[colorIndex]['color']
+                                                            as Color;
+
+                                                    return _buildParticipantChip(
+                                                      participant,
+                                                      index,
+                                                      chipColor,
+                                                      isDark,
+                                                    );
+                                                  })
+                                                  .toList(),
+                                        ),
+                                      ],
+                                    ),
+
+                                  if (selectedParticipants.isEmpty)
+                                    Container(
+                                      width: double.infinity,
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 24,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color:
+                                            isDark
+                                                ? const Color(0xFF0F172A)
+                                                : const Color(0xFFF9FAFB),
+                                        borderRadius: BorderRadius.circular(12),
+                                        border: Border.all(
+                                          color: const Color(0xFFE5E7EB),
+                                          width: 1,
+                                          style: BorderStyle.solid,
+                                        ),
+                                      ),
+                                      child: Column(
+                                        children: [
+                                          Icon(
+                                            Iconsax.people,
+                                            size: 32,
+                                            color: secondaryTextColor
+                                                .withOpacity(0.5),
+                                          ),
+                                          const SizedBox(height: 12),
+                                          Text(
+                                            'No hay otros participantes',
+                                            style: TextStyle(
+                                              fontSize: 14,
+                                              color: secondaryTextColor,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            'Agrega amigos usando el buscador',
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              color: secondaryTextColor
+                                                  .withOpacity(0.7),
+                                            ),
+                                            textAlign: TextAlign.center,
                                           ),
                                         ],
                                       ),
                                     ),
-                                  ),
-                                ),
+                                ],
                               ),
-
-                              const SizedBox(height: 20),
-
-                              // Lista de participantes seleccionados
-                              if (selectedParticipants.isNotEmpty)
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'Participantes agregados:',
-                                      style: TextStyle(
-                                        fontSize: 13,
-                                        fontWeight: FontWeight.w500,
-                                        color: secondaryTextColor,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 12),
-                                    Wrap(
-                                      spacing: 8,
-                                      runSpacing: 8,
-                                      children:
-                                          selectedParticipants
-                                              .asMap()
-                                              .entries
-                                              .map((entry) {
-                                                final index = entry.key;
-                                                final participant = entry.value;
-                                                final colorIndex =
-                                                    index % categories.length;
-                                                final chipColor =
-                                                    categories[colorIndex]['color']
-                                                        as Color;
-
-                                                return _buildParticipantChip(
-                                                  participant,
-                                                  index,
-                                                  chipColor,
-                                                  isDark,
-                                                );
-                                              })
-                                              .toList(),
-                                    ),
-                                  ],
-                                ),
-
-                              if (selectedParticipants.isEmpty)
-                                Container(
-                                  width: double.infinity,
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 24,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color:
-                                        isDark
-                                            ? const Color(0xFF0F172A)
-                                            : const Color(0xFFF9FAFB),
-                                    borderRadius: BorderRadius.circular(12),
-                                    border: Border.all(
-                                      color: const Color(0xFFE5E7EB),
-                                      width: 1,
-                                      style: BorderStyle.solid,
-                                    ),
-                                  ),
-                                  child: Column(
-                                    children: [
-                                      Icon(
-                                        Iconsax.people,
-                                        size: 32,
-                                        color: secondaryTextColor.withOpacity(
-                                          0.5,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 12),
-                                      Text(
-                                        'No hay otros participantes',
-                                        style: TextStyle(
-                                          fontSize: 14,
-                                          color: secondaryTextColor,
-                                          fontWeight: FontWeight.w500,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        'Agrega amigos usando el buscador',
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          color: secondaryTextColor.withOpacity(
-                                            0.7,
-                                          ),
-                                        ),
-                                        textAlign: TextAlign.center,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                            ],
+                            ),
                           ),
-                        ),
-                      ),
 
-                      const SizedBox(height: 80),
-                    ],
+                          const SizedBox(height: 80),
+                        ],
+                      ),
+                    ),
                   ),
-                ),
+                ],
               ),
             ),
 
-            // 🔥 BOTÓN CON ADSPROVIDER
+            // 🔥 BOTÓN CON ADSPROVIDER - Ahora sí dentro de un Stack
             Positioned(
               left: 0,
               right: 0,
