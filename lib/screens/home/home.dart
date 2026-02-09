@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:provider/provider.dart';
 import 'package:walleta/blocs/authentication/authentication.dart';
+import 'package:walleta/providers/ads_provider.dart';
 import 'package:walleta/screens/dashboard/dashbard.dart';
 import 'package:walleta/screens/loans/loans.dart';
 import 'package:walleta/screens/profile/profile.dart';
@@ -246,6 +247,12 @@ class _HomeState extends State<Home> {
         final primaryWithOpacity = Theme.of(
           context,
         ).primaryColor.withOpacity(0.3);
+
+        // 🔥 Actualizar AdsProvider cuando cambie el estado premium
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          final adsProvider = Provider.of<AdsProvider>(context, listen: false);
+          adsProvider.updatePremiumStatus(isPremium);
+        });
 
         return Scaffold(
           extendBody: true,

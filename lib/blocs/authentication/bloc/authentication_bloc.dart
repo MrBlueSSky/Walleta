@@ -11,15 +11,14 @@ part 'authentication_event.dart';
 class AuthenticationBloc
     extends Bloc<AuthenticationEvent, AuthenticationState> {
   final AuthenticationRepository _authenticationRepository;
-  late StreamSubscription<AppUser> _userSubscription;
+  StreamSubscription<AppUser>? _userSubscription;
 
   AuthenticationBloc({
     required AuthenticationRepository authenticationRepository,
   }) : _authenticationRepository = authenticationRepository,
        super(const AuthenticationState.unknown()) {
-    _userSubscription = _authenticationRepository.user.listen(
-      (user) => add(AuthenticationUserChanged(user)),
-    );
+    // 🔥 SUSCRIBIRSE AL STREAM DEL REPOSITORY
+    _setupUserSubscription();
 
     on<AuthenticationPasswordResetRequested>((event, emit) async {
       try {
@@ -29,35 +28,16 @@ class AuthenticationBloc
       }
     });
 
-    on<AuthenticationUserChanged>((event, emit) async {
-      // await Future.delayed(
-      //   const Duration(seconds: 5),
-      // ); //! Simula un retaro pa ver el spalsh
+    on<AuthenticationUserChanged>((event, emit) {
+      print('🔄 BLoC: AuthenticationUserChanged recibido');
+      print('📊 Usuario - isPremium: ${event.user.isPremium}');
       emit(_mapAuthenticationUserChangedToState(event));
-
-      //!Esto me lo dio gepeto para eliminar el user de fireAuth//////////////
-      try {
-        final currentUser = _authenticationRepository.currentUser;
-
-        await currentUser?.reload(); // Fuerza la recarga desde Firebase
-
-        final refreshedUser = _authenticationRepository.currentUser;
-
-        if (refreshedUser == null) {
-          // El usuario fue eliminado de FirebaseAuth
-          emit(const AuthenticationState.unauthenticated());
-        } else {
-          await Future.delayed(const Duration(seconds: 5)); // Simula splash
-          emit(_mapAuthenticationUserChangedToState(event));
-        }
-      } catch (_) {
-        emit(const AuthenticationState.unauthenticated());
-      }
-      //!Hasta aqui/////////////////////////////////////////////////////
     });
 
     on<AuthenticationUserSignIn>((event, emit) async {
       try {
+        emit(AuthenticationState.loading(state.user));
+
         final user = await _authenticationRepository.logInWithEmailAndPassword(
           email: event.email,
           password: event.password,
@@ -68,7 +48,6 @@ class AuthenticationBloc
         String errorMessage = _getErrorMessage(e);
         emit(AuthenticationState.error(errorMessage));
 
-        // Después de mostrar el error, volver a unauthenticated para permitir nuevos intentos
         await Future.delayed(const Duration(milliseconds: 100));
         if (!isClosed) {
           emit(const AuthenticationState.unauthenticated());
@@ -76,15 +55,15 @@ class AuthenticationBloc
       }
     });
 
-    //! Aqui se maneja el evento de logout
     on<AuthenticationLogoutRequested>((event, emit) async {
       await _authenticationRepository.logOut();
       emit(const AuthenticationState.unauthenticated());
     });
 
-    //!Manejar la autentication del usuario que se registre
     on<AuthenticationUserRegister>((event, emit) async {
       try {
+        emit(AuthenticationState.loading(state.user));
+
         final user = await _authenticationRepository.signUp(
           username: event.username,
           name: event.name,
@@ -104,6 +83,8 @@ class AuthenticationBloc
 
     on<UpdateUser>((event, emit) async {
       try {
+        emit(AuthenticationState.loading(state.user));
+
         final user = await _authenticationRepository.updateUser(
           uid: event.uid,
           username: event.username,
@@ -114,35 +95,93 @@ class AuthenticationBloc
           profilePictureUrl: event.profilePictureUrl,
         );
 
-        emit(
-          AuthenticationState.authenticated(user),
-        ); //!Puede ser este o el estado modified es la misma vaina pero luego muvo logica
-        // emit(AuthenticationState.modified(user));
+        emit(AuthenticationState.authenticated(user));
       } catch (e) {
         String errorMessage = _getErrorMessage(e);
         emit(AuthenticationState.error(errorMessage));
       }
     });
 
-    // En authentication_bloc.dart
+    // 🔥 EVENTO UPGRADE TO PREMIUM CORREGIDO
     on<UpgradeToPremium>((event, emit) async {
       try {
+        print('⭐ BLoC: UpgradeToPremium iniciado');
+
+        // 1. Emitir estado de carga
+        emit(AuthenticationState.loading(state.user));
+
+        // 2. Actualizar en repository
         await _authenticationRepository.upgradeToPremium(
           userId: event.userId,
           duration: event.duration,
         );
 
-        // Recargar usuario actualizado
-        final updatedUser = await _authenticationRepository.getCurrentUser();
+        print('✅ BLoC: Repository actualizado');
 
-        if (updatedUser != null) {
-          emit(AuthenticationState.authenticated(updatedUser));
-        }
+        // 3. NO emitir aquí - El stream se encargará automáticamente
+        // El AuthenticationUserChanged será disparado por el stream
       } catch (e) {
-        emit(AuthenticationState.error('Error al actualizar a premium'));
+        print('❌ BLoC: Error en UpgradeToPremium: $e');
+        emit(AuthenticationState.error('Error al actualizar a premium: $e'));
+
+        // Volver al estado anterior
+        emit(AuthenticationState.authenticated(state.user));
       }
     });
-  } //?Fin del constructor
+
+    // 🔥 NUEVO: Evento para forzar recarga manual
+    on<ReloadUserRequested>((event, emit) async {
+      try {
+        print('🔄 BLoC: Recargando usuario manualmente');
+        await _authenticationRepository.reloadCurrentUser();
+      } catch (e) {
+        print('❌ BLoC: Error al recargar usuario: $e');
+      }
+    });
+  }
+
+  // 🔥 MÉTODO PARA SUSCRIBIRSE AL STREAM
+  void _setupUserSubscription() {
+    _userSubscription?.cancel(); // Cancelar suscripción anterior si existe
+
+    _userSubscription = _authenticationRepository.user.listen(
+      (user) {
+        print('🎯 BLoC: Stream del repository emitido');
+        print('📊 Nuevo usuario recibido - isPremium: ${user.isPremium}');
+        print('📊 Estado anterior - isPremium: ${state.user.isPremium}');
+
+        // Solo emitir si el usuario cambió
+        if (user.uid != state.user.uid ||
+            user.isPremium != state.user.isPremium ||
+            user.email != state.user.email) {
+          print('🔄 BLoC: Usuario cambió, emitiendo evento...');
+          add(AuthenticationUserChanged(user));
+        } else {
+          print('ℹ️ BLoC: Usuario sin cambios, ignorando');
+        }
+      },
+      onError: (error) {
+        print('❌ BLoC: Error en stream: $error');
+        add(const AuthenticationUserChanged(AppUser.empty));
+      },
+    );
+  }
+
+  AuthenticationState _mapAuthenticationUserChangedToState(
+    AuthenticationUserChanged event,
+  ) {
+    print('🎯 _mapAuthenticationUserChangedToState llamado');
+    print('📊 Event user - isPremium: ${event.user.isPremium}');
+    print('📊 Event user - uid: ${event.user.uid}');
+
+    if (event.user != AppUser.empty && event.user.uid.isNotEmpty) {
+      print('✅ Emitiendo estado AUTHENTICATED');
+      return AuthenticationState.authenticated(event.user);
+    } else {
+      print('🚫 Emitiendo estado UNAUTHENTICATED');
+      return const AuthenticationState.unauthenticated();
+    }
+  }
 
   String _getErrorMessage(dynamic error) {
     if (error is firebase_auth.FirebaseAuthException) {
@@ -172,17 +211,12 @@ class AuthenticationBloc
     return 'Ocurrió un error inesperado. Intenta nuevamente.';
   }
 
-  AuthenticationState _mapAuthenticationUserChangedToState(
-    AuthenticationUserChanged event,
-  ) {
-    return event.user != AppUser.empty
-        ? AuthenticationState.authenticated(event.user)
-        : const AuthenticationState.unauthenticated();
-  }
+  // Método para obtener usuario actual
+  AppUser get currentUser => state.user;
 
   @override
   Future<void> close() {
-    _userSubscription.cancel();
+    _userSubscription?.cancel();
     return super.close();
   }
 }

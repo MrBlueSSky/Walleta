@@ -1,3 +1,4 @@
+// En tu App class - ARCHIVO COMPLETO CORREGIDO
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:provider/provider.dart';
@@ -10,6 +11,7 @@ import 'package:walleta/blocs/personalExpense/bloc/personal_expense_bloc.dart';
 import 'package:walleta/blocs/personalExpensePayment/bloc/personal_expense_payment_bloc.dart';
 import 'package:walleta/blocs/sharedExpensePayment/bloc/shared_expense_payment_bloc.dart';
 import 'package:walleta/blocs/saving/bloc/saving_bloc.dart';
+import 'package:walleta/providers/ads_provider.dart';
 import 'package:walleta/providers/auth_provider.dart';
 import 'package:walleta/providers/theme_provider.dart';
 import 'package:walleta/repository/FinancialSummary/financial_summary_repository.dart';
@@ -24,9 +26,9 @@ import 'package:walleta/repository/repository.dart';
 import 'package:walleta/repository/saving/saving_repository.dart';
 import 'package:walleta/routes/routes.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'blocs/authentication/bloc/authentication_bloc.dart';
-import 'blocs/sharedExpense/bloc/shared_expense_bloc.dart';
-import 'repository/sharedExpense/shared_expense_repository.dart';
+import 'package:walleta/blocs/authentication/bloc/authentication_bloc.dart';
+import 'package:walleta/blocs/sharedExpense/bloc/shared_expense_bloc.dart';
+import 'package:walleta/repository/sharedExpense/shared_expense_repository.dart';
 
 class App extends StatelessWidget {
   final AuthenticationRepository authenticationRepository;
@@ -42,6 +44,9 @@ class App extends StatelessWidget {
           ChangeNotifierProvider(create: (_) => ThemeProvider()),
           ChangeNotifierProvider(create: (_) => AuthProvider()),
 
+          // 🔥 CAMBIAR: Constructor sin parámetros
+          ChangeNotifierProvider<AdsProvider>(create: (_) => AdsProvider()),
+
           BlocProvider(
             create:
                 (_) => AuthenticationBloc(
@@ -50,59 +55,63 @@ class App extends StatelessWidget {
           ),
           BlocProvider(
             create:
-                (context) => SharedExpenseBloc(
+                (_) => SharedExpenseBloc(
                   sharedExpenseRepository: SharedExpenseRepository(),
                 ),
           ),
           BlocProvider(
-            create: (context) => LoanBloc(loanRepository: LoanRepository()),
+            create: (_) => LoanBloc(loanRepository: LoanRepository()),
+          ),
+          BlocProvider(
+            create: (_) => PaymentBloc(paymentRepository: PaymentRepository()),
           ),
           BlocProvider(
             create:
-                (context) =>
-                    PaymentBloc(paymentRepository: PaymentRepository()),
-          ),
-          BlocProvider(
-            create:
-                (context) => ExpensePaymentBloc(
+                (_) => ExpensePaymentBloc(
                   repository: SharedExpensePaymentRepository(),
                 ),
           ),
           BlocProvider(
             create:
-                (context) => PersonalExpensePaymentBloc(
+                (_) => PersonalExpensePaymentBloc(
                   repository: PersonalExpensePaymentRepository(),
                 ),
           ),
           BlocProvider<PersonalExpenseBloc>(
             create:
-                (context) => PersonalExpenseBloc(
+                (_) => PersonalExpenseBloc(
                   repository: PersonalExpenseRepository(),
                 ),
           ),
           BlocProvider<IncomesBloc>(
-            create: (context) => IncomesBloc(repository: IncomesRepository()),
+            create: (_) => IncomesBloc(repository: IncomesRepository()),
           ),
           BlocProvider<IncomesPaymentBloc>(
             create:
-                (context) =>
+                (_) =>
                     IncomesPaymentBloc(repository: IncomePaymentRepository()),
           ),
           BlocProvider<FinancialSummaryBloc>(
             create:
-                (context) => FinancialSummaryBloc(
+                (_) => FinancialSummaryBloc(
                   repository: FinancialSummaryRepository(),
                 ),
           ),
-
           BlocProvider(
-            create: (context) => SavingBloc(repository: SavingGoalRepository()),
+            create: (_) => SavingBloc(repository: SavingGoalRepository()),
           ),
-
-          // ChangeNotifierProvider(create: (_) => UserProvider()),
-          // BlocProvider(create: (_) => RoleCubit()),
         ],
-        child: AppView(),
+        child: Builder(
+          builder: (context) {
+            // 🔥 INICIALIZAR AdsProvider después de que el árbol esté construido
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              final adsProvider = context.read<AdsProvider>();
+              adsProvider.initialize(context);
+            });
+
+            return AppView();
+          },
+        ),
       ),
     );
   }
@@ -127,7 +136,7 @@ class _AppViewState extends State<AppView> {
           navigatorKey: _navigatorKey,
           initialRoute: '/auth',
           routes: routes,
-          theme: themeProvider.theme, // Usar el tema del provider
+          theme: themeProvider.theme,
           locale: const Locale('es', 'ES'),
           localizationsDelegates: const [
             GlobalMaterialLocalizations.delegate,
@@ -136,11 +145,6 @@ class _AppViewState extends State<AppView> {
           ],
           supportedLocales: const [Locale('es', 'ES'), Locale('en', 'US')],
           builder: (context, child) {
-            // return BlocBuilder<ConnectivityBloc, ConnectivityState>(
-            //   builder: (context, connectivityState) {
-            //     if (!connectivityState.isConnected) {
-            //       return NoConnection1(connectivityState: connectivityState);
-            //     } else {
             return BlocListener<AuthenticationBloc, AuthenticationState>(
               listener: (context, state) {
                 switch (state.status) {
@@ -156,23 +160,13 @@ class _AppViewState extends State<AppView> {
                       '/home',
                       (route) => false,
                     );
-
                     break;
-                  // case AuthenticationStatus.unknown:
-                  //   _navigatorKey.currentState?.pushNamedAndRemoveUntil(
-                  //     '/splash',
-                  //     (route) => false,
-                  //   );
-                  //   break;
                   default:
                     break;
                 }
               },
               child: child,
             );
-            //     }
-            //   },
-            // );
           },
         );
       },

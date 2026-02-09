@@ -7,6 +7,8 @@ import 'package:walleta/models/shared_expense.dart';
 import 'package:walleta/models/appUser.dart';
 import 'package:walleta/widgets/buttons/search_button.dart';
 import 'package:walleta/widgets/snackBar/snackBar.dart';
+import 'package:provider/provider.dart'; // 🔥 Importar Provider
+import 'package:walleta/providers/ads_provider.dart'; // 🔥 Importar AdsProvider
 
 class AddExpenseSheet extends StatefulWidget {
   final Function(SharedExpense) onSave;
@@ -24,7 +26,7 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
   final ScrollController _scrollController = ScrollController();
 
   String? selectedCategory;
-  List<AppUser> selectedParticipants = []; // 👈 Cambiado a List<AppUser>
+  List<AppUser> selectedParticipants = [];
 
   final List<Map<String, dynamic>> categories = [
     {
@@ -742,7 +744,7 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
               ),
             ),
 
-            // Botón flotante (FIXED)
+            // 🔥 BOTÓN CON ADSPROVIDER
             Positioned(
               left: 0,
               right: 0,
@@ -822,7 +824,7 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
   }
 
   Widget _buildParticipantChip(
-    AppUser user, // 👈 Cambiado a AppUser
+    AppUser user,
     int index,
     Color color,
     bool isDark,
@@ -844,7 +846,7 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
             decoration: BoxDecoration(color: color, shape: BoxShape.circle),
             child: Center(
               child: Text(
-                user.username[0].toUpperCase(), // 👈 Usa username del AppUser
+                user.username[0].toUpperCase(),
                 style: const TextStyle(
                   color: Colors.white,
                   fontSize: 11,
@@ -856,7 +858,7 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
           const SizedBox(width: 8),
           // Nombre de usuario
           Text(
-            user.username, // 👈 Usa username del AppUser
+            user.username,
             style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w500,
@@ -881,51 +883,218 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
     );
   }
 
+  // 🔥 MODIFICADO: BOTÓN CON ADSPROVIDER
   Widget _buildBottomBar(bool isDark) {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E293B) : Colors.white,
-        border: Border(
-          top: BorderSide(
-            color: isDark ? const Color(0xFF334155) : const Color(0xFFE5E7EB),
-            width: 1,
-          ),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 20,
-            offset: const Offset(0, -5),
-          ),
-        ],
-      ),
-      child: SafeArea(
-        top: false,
-        child: SizedBox(
-          width: double.infinity,
-          height: 52,
-          child: ElevatedButton(
-            onPressed: _saveExpense,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF2D5BFF),
-              foregroundColor: Colors.white,
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+    return Consumer<AdsProvider>(
+      builder: (context, adsProvider, child) {
+        return Container(
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF1E293B) : Colors.white,
+            border: Border(
+              top: BorderSide(
+                color:
+                    isDark ? const Color(0xFF334155) : const Color(0xFFE5E7EB),
+                width: 1,
               ),
-              shadowColor: const Color(0xFF2D5BFF).withOpacity(0.3),
             ),
-            child: const Text(
-              'Crear Gasto Compartido',
-              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 20,
+                offset: const Offset(0, -5),
+              ),
+            ],
+          ),
+          child: SafeArea(
+            top: false,
+            child: SizedBox(
+              width: double.infinity,
+              height: 52,
+              child: ElevatedButton(
+                onPressed: () async {
+                  if (_formKey.currentState!.validate() &&
+                      selectedCategory != null &&
+                      selectedParticipants.isNotEmpty) {
+                    final total = double.tryParse(_totalController.text) ?? 0;
+
+                    if (total < 0) {
+                      TopSnackBarOverlay.show(
+                        context: context,
+                        message: 'El total debe ser mayor a 0',
+                        verticalOffset: 70.0,
+                        backgroundColor: const Color(0xFFFF6B6B),
+                      );
+                      return;
+                    }
+
+                    final category = categories.firstWhere(
+                      (cat) => cat['name'] == selectedCategory,
+                    );
+
+                    // Obtener el usuario actual
+                    final currentUser =
+                        context.read<AuthenticationBloc>().state.user;
+
+                    final paid = 0.0;
+
+                    // Crear el SharedExpense con la estructura correcta
+                    final expense = SharedExpense(
+                      title: _titleController.text,
+                      total: total,
+                      paid: paid,
+                      participants: [currentUser, ...selectedParticipants],
+                      category: selectedCategory!,
+                      categoryIcon: category['icon'] as IconData,
+                      categoryColor: category['color'] as Color,
+                      createdBy: currentUser,
+                    );
+
+                    // 🔥 USAR ADSPROVIDER PARA MOSTRAR ANUNCIO
+                    await adsProvider.showAdOnButtonTap(
+                      context: context,
+                      onAfterAd: () async {
+                        // Mostrar loader mientras se guarda
+                        showDialog(
+                          context: context,
+                          barrierDismissible: false,
+                          builder:
+                              (context) => Center(
+                                child: CircularProgressIndicator(
+                                  color:
+                                      Theme.of(context).brightness ==
+                                              Brightness.dark
+                                          ? Colors.white
+                                          : const Color(0xFF2D5BFF),
+                                ),
+                              ),
+                        );
+
+                        // Enviar al BLoC
+                        context.read<SharedExpenseBloc>().add(
+                          AddSharedExpense(
+                            expense: expense,
+                            currentUser: currentUser,
+                            userId: '',
+                          ),
+                        );
+
+                        // Escuchar el estado del BLoC para saber cuando se completó
+                        _listenForExpenseSaved(expense);
+                      },
+                      onAdFailed: () {
+                        // Si falla el anuncio, proceder igual
+                        _saveExpenseDirectly(expense, currentUser);
+                      },
+                    );
+                  } else {
+                    String message = 'Por favor completa todos los campos';
+                    if (selectedParticipants.isEmpty) {
+                      message = 'Agrega al menos un participante';
+                    } else if (selectedCategory == null) {
+                      message = 'Selecciona una categoría';
+                    }
+
+                    TopSnackBarOverlay.show(
+                      context: context,
+                      message: message,
+                      verticalOffset: 70.0,
+                      backgroundColor: const Color(0xFFFF6B6B),
+                    );
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF2D5BFF),
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  shadowColor: const Color(0xFF2D5BFF).withOpacity(0.3),
+                ),
+                child: const Text(
+                  'Crear Gasto Compartido',
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                ),
+              ),
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 
+  // Método para guardar directamente (cuando falla el anuncio)
+  void _saveExpenseDirectly(SharedExpense expense, AppUser currentUser) {
+    // Mostrar loader mientras se guarda
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder:
+          (context) => Center(
+            child: CircularProgressIndicator(
+              color:
+                  Theme.of(context).brightness == Brightness.dark
+                      ? Colors.white
+                      : const Color(0xFF2D5BFF),
+            ),
+          ),
+    );
+
+    // Enviar al BLoC
+    context.read<SharedExpenseBloc>().add(
+      AddSharedExpense(expense: expense, currentUser: currentUser, userId: ''),
+    );
+
+    // Escuchar el estado del BLoC para saber cuando se completó
+    _listenForExpenseSaved(expense);
+  }
+
+  void _listenForExpenseSaved(SharedExpense expense) {
+    // Escuchar cambios en el BLoC
+    final stream = context.read<SharedExpenseBloc>().stream;
+
+    // Tomar solo el primer evento donde el gasto fue agregado exitosamente
+    stream
+        .where((state) => state.status == SharedExpenseStatus.success)
+        .take(1)
+        .listen((state) {
+          // Cerrar el loader
+          Navigator.pop(context);
+
+          // Cerrar el bottom sheet
+          Navigator.pop(context);
+
+          // Ejecutar el callback
+          widget.onSave(expense);
+
+          // Mostrar snackbar de éxito
+          TopSnackBarOverlay.show(
+            context: context,
+            message: 'Gasto compartido creado exitosamente',
+            verticalOffset: 70.0,
+            backgroundColor: const Color(0xFF00C896),
+          );
+        });
+
+    // También manejar errores
+    stream
+        .where((state) => state.status == SharedExpenseStatus.error)
+        .take(1)
+        .listen((state) {
+          // Cerrar el loader
+          Navigator.pop(context);
+
+          TopSnackBarOverlay.show(
+            context: context,
+            message: 'Error al crear el gasto compartido',
+            verticalOffset: 70.0,
+            backgroundColor: const Color(0xFFFF6B6B),
+          );
+        });
+  }
+
+  // 🔥 MÉTODO ORIGINAL DE BACKUP (para mantener compatibilidad)
   void _saveExpense() {
     if (_formKey.currentState!.validate() &&
         selectedCategory != null &&
@@ -1004,49 +1173,5 @@ class _AddExpenseSheetState extends State<AddExpenseSheet> {
         backgroundColor: const Color(0xFFFF6B6B),
       );
     }
-  }
-
-  void _listenForExpenseSaved(SharedExpense expense) {
-    // Escuchar cambios en el BLoC
-    final stream = context.read<SharedExpenseBloc>().stream;
-
-    // Tomar solo el primer evento donde el gasto fue agregado exitosamente
-    stream
-        .where((state) => state.status == SharedExpenseStatus.success)
-        .take(1)
-        .listen((state) {
-          // Cerrar el loader
-          Navigator.pop(context);
-
-          // Cerrar el bottom sheet
-          Navigator.pop(context);
-
-          // Ejecutar el callback
-          widget.onSave(expense);
-
-          // Mostrar snackbar de éxito
-          TopSnackBarOverlay.show(
-            context: context,
-            message: 'Gasto compartido creado exitosamente',
-            verticalOffset: 70.0,
-            backgroundColor: const Color(0xFF00C896),
-          );
-        });
-
-    // También manejar errores
-    stream
-        .where((state) => state.status == SharedExpenseStatus.error)
-        .take(1)
-        .listen((state) {
-          // Cerrar el loader
-          Navigator.pop(context);
-
-          TopSnackBarOverlay.show(
-            context: context,
-            message: 'Error al crear el gasto compartido',
-            verticalOffset: 70.0,
-            backgroundColor: const Color(0xFFFF6B6B),
-          );
-        });
   }
 }

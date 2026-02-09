@@ -58,3 +58,7 @@ lib/firebase_config.dart
 firebase-debug.log
 firestore-debug.log
 ui-debug.log
+
+
+
+lib/services/ads/ads_manager.dart

@@ -3,7 +3,9 @@ import 'package:equatable/equatable.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:walleta/app.dart';
+import 'package:walleta/services/ads/ads_manager.dart';
 import 'package:walleta/simple_bloc_observer.dart';
 import 'firebase_options.dart';
 import 'package:walleta/repository/authentication/authentication_repository.dart';
@@ -16,6 +18,10 @@ void main() async {
     await GroqConfig.initialize();
 
     try {
+      AdsManager.initialize();
+
+      AdsManager.printCurrentConfig();
+
       if (Firebase.apps.isEmpty) {
         await Firebase.initializeApp(
           options: DefaultFirebaseOptions.currentPlatform,

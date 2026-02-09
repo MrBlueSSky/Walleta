@@ -316,6 +316,9 @@ class _LoansSectionState extends State<LoansSection> {
                 // Si hay error en cualquiera de los dos, mostrar estado de error
                 if (loanState.status == LoanStateStatus.error ||
                     paymentState.status == PaymentStateStatus.error) {
+                  print(
+                    'Error detectado - LoanState: ${loanState.status}, PaymentState: ${paymentState.status}',
+                  );
                   return _buildErrorState(
                     loanError: loanState.status == LoanStateStatus.error,
                     paymentError:

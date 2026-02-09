@@ -5,6 +5,8 @@ import 'package:walleta/blocs/income/bloc/incomes_bloc.dart';
 import 'package:walleta/blocs/income/bloc/incomes_event.dart';
 import 'package:walleta/models/income.dart';
 import 'package:walleta/widgets/snackBar/snackBar.dart';
+import 'package:provider/provider.dart'; // 🔥 Importar Provider
+import 'package:walleta/providers/ads_provider.dart'; // 🔥 Importar AdsProvider
 
 class PersonalIncomeSheet extends StatefulWidget {
   final String userId;
@@ -820,7 +822,7 @@ class _AddPersonalIncomeSheetState extends State<PersonalIncomeSheet> {
               ],
             ),
 
-            // Botón flotante (FIXED)
+            // 🔥 BOTÓN CON ADSPROVIDER
             Positioned(
               left: 0,
               right: 0,
@@ -907,51 +909,140 @@ class _AddPersonalIncomeSheetState extends State<PersonalIncomeSheet> {
     );
   }
 
+  // 🔥 MODIFICADO: BOTÓN CON ADSPROVIDER
   Widget _buildBottomBar(bool isDark) {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E293B) : Colors.white,
-        border: Border(
-          top: BorderSide(
-            color: isDark ? const Color(0xFF334155) : const Color(0xFFE5E7EB),
-            width: 1,
-          ),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 20,
-            offset: const Offset(0, -5),
-          ),
-        ],
-      ),
-      child: SafeArea(
-        top: false,
-        child: SizedBox(
-          width: double.infinity,
-          height: 52,
-          child: ElevatedButton(
-            onPressed: _saveIncome,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF2D5BFF),
-              foregroundColor: Colors.white,
-              elevation: 0,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+    return Consumer<AdsProvider>(
+      builder: (context, adsProvider, child) {
+        return Container(
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF1E293B) : Colors.white,
+            border: Border(
+              top: BorderSide(
+                color:
+                    isDark ? const Color(0xFF334155) : const Color(0xFFE5E7EB),
+                width: 1,
               ),
-              shadowColor: const Color(0xFF2D5BFF).withOpacity(0.3),
             ),
-            child: const Text(
-              'Guardar Ingreso Personal',
-              style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 20,
+                offset: const Offset(0, -5),
+              ),
+            ],
+          ),
+          child: SafeArea(
+            top: false,
+            child: SizedBox(
+              width: double.infinity,
+              height: 52,
+              child: ElevatedButton(
+                onPressed: () async {
+                  if (_formKey.currentState!.validate() &&
+                      selectedCategory != null) {
+                    // Validación final: Asegurar que recibido <= total
+                    final total = double.tryParse(_totalController.text) ?? 0;
+                    final received =
+                        double.tryParse(_receivedController.text) ?? 0;
+
+                    if (received > total) {
+                      TopSnackBarOverlay.show(
+                        context: context,
+                        message:
+                            'El monto recibido no puede ser mayor al total esperado',
+                        verticalOffset: 70.0,
+                        backgroundColor: const Color(0xFFFF6B6B),
+                      );
+                      return;
+                    }
+
+                    final category = categories.firstWhere(
+                      (cat) => cat['name'] == selectedCategory,
+                    );
+
+                    final income = Incomes(
+                      id: null,
+                      title: _titleController.text,
+                      total: total,
+                      paid: received,
+                      category: selectedCategory!,
+                      categoryIcon: category['icon'] as IconData,
+                      categoryColor: category['color'] as Color,
+                      status:
+                          received >= total
+                              ? 'received'
+                              : received > 0
+                              ? 'partially_received'
+                              : 'pending',
+                      date: selectedDate,
+                    );
+
+                    // 🔥 USAR ADSPROVIDER PARA MOSTRAR ANUNCIO
+                    await adsProvider.showAdOnButtonTap(
+                      context: context,
+                      onAfterAd: () {
+                        // Guardar el ingreso después del anuncio
+                        _saveIncomeDirectly(income);
+                      },
+                      onAdFailed: () {
+                        // Si falla el anuncio, guardar igual
+                        _saveIncomeDirectly(income);
+                      },
+                    );
+                  } else {
+                    String message = 'Por favor completa todos los campos';
+                    if (selectedCategory == null) {
+                      message = 'Selecciona una categoría';
+                    }
+
+                    TopSnackBarOverlay.show(
+                      context: context,
+                      message: message,
+                      verticalOffset: 70.0,
+                      backgroundColor: const Color(0xFFFF6B6B),
+                    );
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF2D5BFF),
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  shadowColor: const Color(0xFF2D5BFF).withOpacity(0.3),
+                ),
+                child: const Text(
+                  'Guardar Ingreso Personal',
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+                ),
+              ),
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 
+  // 🔥 NUEVO: Método para guardar directamente
+  void _saveIncomeDirectly(Incomes income) {
+    // Agregar el ingreso a través del BLoC
+    context.read<IncomesBloc>().add(
+      AddIncomes(income: income, userId: widget.userId),
+    );
+
+    TopSnackBarOverlay.show(
+      context: context,
+      message: 'Ingreso añadido',
+      verticalOffset: 70.0,
+      backgroundColor: const Color(0xFF00C896),
+    );
+
+    Navigator.pop(context);
+  }
+
+  // 🔥 MÉTODO ORIGINAL (para compatibilidad)
   void _saveIncome() {
     if (_formKey.currentState!.validate() && selectedCategory != null) {
       // Validación final: Asegurar que recibido <= total

@@ -60,6 +60,7 @@ dependencies:
   flutter_colorpicker: ^1.1.0
   record: ^6.2.0
   http: ^1.6.0
+  google_mobile_ads: ^6.0.0
 
 dev_dependencies:
   flutter_test:

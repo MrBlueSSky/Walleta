@@ -9,8 +9,9 @@ import 'package:walleta/models/appUser.dart';
 import 'package:walleta/models/loan.dart';
 import 'package:walleta/widgets/buttons/search_button.dart';
 import 'package:walleta/widgets/snackBar/snackBar.dart';
+import 'package:provider/provider.dart'; // 🔥 Asegúrate de importar Provider
+import 'package:walleta/providers/ads_provider.dart'; // 🔥 Cambiar a AdsProvider
 
-// Cambiar a StatefulWidget para manejar el estado interno
 class AddLoanForm extends StatefulWidget {
   final BuildContext context;
   final bool isDark;
@@ -32,7 +33,6 @@ class AddLoanForm extends StatefulWidget {
 }
 
 class _AddLoanFormState extends State<AddLoanForm> {
-  // Mover los controllers y variables de estado al State
   late TextEditingController _personController;
   late TextEditingController _amountController;
   late TextEditingController _descriptionController;
@@ -44,7 +44,6 @@ class _AddLoanFormState extends State<AddLoanForm> {
   @override
   void initState() {
     super.initState();
-    // Inicializar los controllers una sola vez
     _personController = TextEditingController();
     _amountController = TextEditingController();
     _descriptionController = TextEditingController();
@@ -52,7 +51,6 @@ class _AddLoanFormState extends State<AddLoanForm> {
 
   @override
   void dispose() {
-    // Limpiar los controllers cuando se desmonte el widget
     _personController.dispose();
     _amountController.dispose();
     _descriptionController.dispose();
@@ -64,10 +62,10 @@ class _AddLoanFormState extends State<AddLoanForm> {
     return BlocBuilder<AuthenticationBloc, AuthenticationState>(
       builder: (context, authState) {
         if (authState.status == AuthenticationStatus.unauthenticated) {
-          return const SizedBox.shrink(); // O un widget de error apropiado
+          return const SizedBox.shrink();
         }
 
-        final appUser = authState.user!; // Usuario real de la autenticación
+        final appUser = authState.user!;
 
         return SingleChildScrollView(
           controller: widget.scrollController,
@@ -381,29 +379,54 @@ class _AddLoanFormState extends State<AddLoanForm> {
               ),
               const SizedBox(height: 32),
 
-              // Botón de guardar
-              SizedBox(
-                width: double.infinity,
-                height: 56,
-                child: ElevatedButton(
-                  onPressed: () {
-                    if (_validateForm()) {
-                      _saveLoan(appUser);
-                      Navigator.pop(context);
-                    }
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF2D5BFF),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+              // 🔥 BOTÓN DE GUARDAR CON ADSPROVIDER
+              // En el botón de AddLoanForm - ORDEN CORRECTO
+              Consumer<AdsProvider>(
+                builder: (context, adsProvider, child) {
+                  return SizedBox(
+                    width: double.infinity,
+                    height: 56,
+                    child: ElevatedButton(
+                      onPressed: () async {
+                        if (!_validateForm()) return;
+
+                        print('📍 Validación exitosa, mostrando anuncio...');
+
+                        // 🔥 ORDEN CORRECTO: Usar showAdOnButtonTap con callback
+                        await adsProvider.showAdOnButtonTap(
+                          context: context,
+                          onAfterAd: () async {
+                            // Esto se ejecuta DESPUÉS del anuncio (o inmediatamente si es premium)
+                            print('✅ Guardando préstamo...');
+                            await _saveLoan(appUser);
+
+                            // Cerrar diálogo
+                            if (mounted) {
+                              Navigator.pop(context);
+                            }
+                          },
+                          onAdFailed: () {
+                            print('⚠️ Anuncio falló, pero guardando igual...');
+                          },
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF2D5BFF),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        elevation: 0,
+                      ),
+                      child: const Text(
+                        'Guardar Préstamo',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                     ),
-                    elevation: 0,
-                  ),
-                  child: const Text(
-                    'Guardar Préstamo',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                  ),
-                ),
+                  );
+                },
               ),
               const SizedBox(height: 20),
             ],
@@ -432,7 +455,6 @@ class _AddLoanFormState extends State<AddLoanForm> {
         verticalOffset: 70.0,
         backgroundColor: const Color(0xFFFF6B6B),
       );
-
       return false;
     }
 
@@ -443,17 +465,17 @@ class _AddLoanFormState extends State<AddLoanForm> {
         verticalOffset: 70.0,
         backgroundColor: const Color(0xFFFF6B6B),
       );
-
       return false;
     }
 
     return true;
   }
 
-  void _saveLoan(AppUser appUser) {
+  // 🔥 SIMPLIFICADO: Ya no necesita isPremium
+  Future<void> _saveLoan(AppUser appUser) async {
     final newLoan = Loan(
-      id: _uuid.v4(), // Generar un ID único usando UUID
-      lenderUserId: appUser, // Usuario real de autenticación
+      id: _uuid.v4(),
+      lenderUserId: appUser,
       borrowerUserId: _selectedUser!,
       description:
           _descriptionController.text.isNotEmpty
@@ -467,41 +489,24 @@ class _AddLoanFormState extends State<AddLoanForm> {
       createdAt: DateTime.now(),
     );
 
-    // Usar el BLoC para agregar el préstamo
+    // Guardar préstamo
     final loanBloc = context.read<LoanBloc>();
     loanBloc.add(AddLoan(newLoan));
 
+    // Mostrar mensaje de éxito
     TopSnackBarOverlay.show(
       context: context,
       message: 'Préstamo agregado',
-      verticalOffset: 70.0, // Ajusta este número: 50, 60, 70, 80, etc.
+      verticalOffset: 70.0,
       backgroundColor: const Color(0xFF00C896),
     );
 
-    // Limpiar controles después de guardar
+    // Limpiar controles
     _amountController.clear();
     _descriptionController.clear();
     _personController.clear();
     _selectedUser = null;
     _selectedDate = null;
-  }
-
-  String _getMonthName(int month) {
-    const months = [
-      'Ene',
-      'Feb',
-      'Mar',
-      'Abr',
-      'May',
-      'Jun',
-      'Jul',
-      'Ago',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dic',
-    ];
-    return months[month - 1];
   }
 
   Widget _buildPersonSearchField() {
@@ -617,7 +622,6 @@ class _AddLoanFormState extends State<AddLoanForm> {
             ],
           ),
         ),
-        // Mostrar información del usuario seleccionado
         if (_selectedUser != null)
           Padding(
             padding: const EdgeInsets.only(top: 8, left: 4),
